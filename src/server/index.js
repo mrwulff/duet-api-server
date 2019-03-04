@@ -12,7 +12,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", routes);
 
 app.use("/api/refugee", refugeeRoutes);
-app.use("/api/refugee", requireAuth, refugeeProtectedRoutes);
+//app.use("/api/refugee", requireAuth, refugeeProtectedRoutes);
+app.use("/api/refugee", refugeeProtectedRoutes);
 
 app.listen(PORT, () => {
   console.log(`Please navigate to port ${PORT}`);

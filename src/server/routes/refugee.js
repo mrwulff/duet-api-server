@@ -8,4 +8,8 @@ router.get("/needs", (req, res) => {
   controller.getNeeds(req, res);
 });
 
+router.get("/family", (req, res) => {
+  controller.getFamilyInfo(req, res);
+});
+
 export default router;
