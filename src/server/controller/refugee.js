@@ -6,7 +6,7 @@ function processTypeform(req, res) {
   let body = req.body;
   // insert entry into refugee (name -> fname, desc -> lname)
   // THIS WILL NEED TO BE MODIFIED LATER
-  console.log(req.body);
+  console.log(req);
   res.status(200).send();
   // conn.execute(
   //   "INSERT INTO requests (refugee_id,name,donor_id) VALUES (?,?,2)",
