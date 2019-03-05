@@ -109,45 +109,41 @@ function getNeeds(req, res) {
 
 function getFamilyInfo(req, res) {
   res.json({
-    id: 398,
+    beneficiaryId: 398,
     name: "Almasi",
     story: "",
-    origin: "Damascus, Syria",
-    currentResettled: "Munich, Germany",
+    originCity: "Damascus",
+    originCountry: "Syria",
+    currentCity: "Munich",
+    currentCountry: "Germany",
     familyImage:
       "https://www.rescue.org/sites/default/files/styles/window_width_breakpoints_theme_rescue_large_1x/public/article/1488/teaser/dsc_0997-edit.jpg?itok=GsB-pi9g&timestamp=1499184376",
     needs: [
       {
-        id: 1,
+        itemId: 1,
         image:
           "https://cdn.shopify.com/s/files/1/1143/7052/products/1_167caef8-830d-45e8-80ea-92e1d7167d13_600x.png?v=1518105578",
         name: "Coat",
-        blurb: "Clothes for Winter",
         price: 17.0,
-        qty: 1,
-        active: false,
-        fulfilled: false
+        fulfilled: false,
+        storeId: 1
       },
       {
-        id: 2,
+        itemId: 2,
         image:
           "https://i.pinimg.com/originals/68/5d/61/685d61a47e631a12cef4156a62cf2557.jpg",
         name: "Mathematics",
-        blurb: "Textbooks for children's education",
         price: 24.0,
-        qty: 1,
-        active: false,
-        fulfilled: false
+        fulfilled: false,
+        storeId: 2
       },
       {
-        id: 3,
+        itemId: 3,
         image: "https://www.chantal.com/images/D/init_image896.jpg",
         name: "Kettle",
-        blurb: "Kettle for making Tea",
         price: 10.0,
-        qty: 1,
-        active: false,
-        fulfilled: false
+        fulfilled: false,
+        storeId: 3
       }
     ]
   });
