@@ -2,23 +2,25 @@ import db from "./../config/config.js";
 
 const conn = db.dbInitConnect();
 
-function postNeeds(req, res) {
+function processTypeform(req, res) {
   let body = req.body;
   // insert entry into refugee (name -> fname, desc -> lname)
   // THIS WILL NEED TO BE MODIFIED LATER
-  conn.execute(
-    "INSERT INTO requests (refugee_id,name,donor_id) VALUES (?,?,2)",
-    [body.user_id, body.desc],
-    function(err) {
-      if (err) {
-        console.log(err);
-        res.status(500).send({ error: err });
-      } else {
-        console.log("inserted refugee need");
-        res.status(200).send({ status: "ok" });
-      }
-    }
-  );
+  console.log(req.body);
+  res.status(200).send();
+  // conn.execute(
+  //   "INSERT INTO requests (refugee_id,name,donor_id) VALUES (?,?,2)",
+  //   [body.user_id, body.desc],
+  //   function(err) {
+  //     if (err) {
+  //       console.log(err);
+  //       res.status(500).send({ error: err });
+  //     } else {
+  //       console.log("inserted refugee need");
+  //       res.status(200).send({ status: "ok" });
+  //     }
+  //   }
+  // );
 }
 
 function getNeeds(req, res) {
@@ -149,4 +151,4 @@ function getFamilyInfo(req, res) {
   });
 }
 
-export default { postNeeds, getNeeds, getFamilyInfo };
+export default { processTypeform, getNeeds, getFamilyInfo };

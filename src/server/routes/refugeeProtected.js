@@ -4,8 +4,8 @@ import controller from "./../controller/refugee";
 const router = express.Router();
 const app = express();
 
-router.post("/form-submit", (req, res) => {
-  controller.postNeeds(req, res);
+router.post("/typeform", (req, res) => {
+  controller.processTypeform(req, res);
 });
 
 export default router;
