@@ -2,18 +2,20 @@ import express from "express";
 import routes from "./routes/index";
 import refugeeRoutes from "./routes/refugee";
 import refugeeProtectedRoutes from "./routes/refugeeProtected";
+import donateRoutes from "./routes/donate";
 import jwt from "jsonwebtoken";
 
 const PORT = process.env.PORT || 8080;
 const app = express();
 
-//app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", routes);
 
 app.use("/api/refugee", refugeeRoutes);
 //app.use("/api/refugee", requireAuth, refugeeProtectedRoutes);
 app.use("/api/refugee", refugeeProtectedRoutes);
+app.use("/api/donate", donateRoutes);
 
 app.listen(PORT, () => {
   console.log(`Please navigate to port ${PORT}`);
