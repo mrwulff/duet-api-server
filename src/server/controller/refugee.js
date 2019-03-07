@@ -28,7 +28,7 @@ function getNeeds(req, res) {
           originCity: rows[0].origin_city,
           originCountry: rows[0].origin_country,
           currentCity: rows[0].current_city,
-          currentCountry: rows[0].currentCountry,
+          currentCountry: rows[0].current_country,
           familyImage: rows[0].family_image_url
         };
         conn.execute(
@@ -85,7 +85,7 @@ function getNeeds(req, res) {
               originCity: obj.origin_city,
               originCountry: obj.origin_country,
               currentCity: obj.current_city,
-              currentCountry: obj.currentCountry,
+              currentCountry: obj.current_country,
               familyImage: obj.family_image_url,
               needs: [
                 {
@@ -112,6 +112,7 @@ function getNeeds(req, res) {
           }
           current = obj.beneficiary_id;
         });
+        result.push(beneficiaryObj);
         res.json(result);
       }
     );
