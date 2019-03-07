@@ -1,7 +1,1 @@
 node_modules
-
-# Webpack dist directory
-dist/*
-
-# Babel dist directory
-dst/*
