@@ -32,8 +32,8 @@ function getNeeds(req, res) {
           familyImage: rows[0].family_image_url
         };
         conn.execute(
-          "SELECT item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url FROM items " +
-            "INNER JOIN categories USING(category_id) WHERE beneficiary_id = ?",
+          "SELECT item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url,stores.name as store_name FROM items " +
+            "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
           [beneficiaryId],
           function(err, rows) {
             if (err) {
@@ -49,6 +49,7 @@ function getNeeds(req, res) {
                 price: obj.price_euros,
                 fulfilled: obj.is_fulfilled,
                 storeId: obj.store_id,
+                storeName: obj.store_name,
                 icon: obj.icon_url
               };
               needs.push(item);
@@ -63,9 +64,9 @@ function getNeeds(req, res) {
     let result = [];
     conn.execute(
       query +
-        ", item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url " +
+        ", item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url, stores.name AS store_name " +
         "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
-        "WHERE beneficiaries.beneficiary_id = items.beneficiary_id",
+        "INNER JOIN stores USING(store_id) ORDER BY beneficiary_id",
       function(err, rows) {
         if (err) {
           console.log(err);
@@ -95,6 +96,7 @@ function getNeeds(req, res) {
                   price: obj.price_euros,
                   fulfilled: obj.is_fulfilled,
                   storeId: obj.store_id,
+                  storeName: obj.store_name,
                   icon: obj.icon_url
                 }
               ]
@@ -107,6 +109,7 @@ function getNeeds(req, res) {
               price: obj.price_euros,
               fulfilled: obj.is_fulfilled,
               storeId: obj.store_id,
+              storeName: obj.store_name,
               icon: obj.icon_url
             });
           }
