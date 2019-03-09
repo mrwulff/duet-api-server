@@ -20,6 +20,7 @@ function getNeeds(req, res) {
       function(err, rows) {
         if (err) {
           console.log(err);
+          res.status(400).send();
         }
         let beneficiaryObj = {
           beneficiaryId: beneficiaryId,
@@ -38,6 +39,7 @@ function getNeeds(req, res) {
           function(err, rows) {
             if (err) {
               console.log(err);
+              res.status(400).send();
             }
             let item;
             let needs = [];
@@ -70,6 +72,7 @@ function getNeeds(req, res) {
       function(err, rows) {
         if (err) {
           console.log(err);
+          res.status(400).send();
         }
         let current = -1;
         let beneficiaryObj;

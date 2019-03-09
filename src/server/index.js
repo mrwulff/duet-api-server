@@ -4,6 +4,7 @@ import refugeeRoutes from "./routes/refugee";
 import refugeeProtectedRoutes from "./routes/refugeeProtected";
 import donateRoutes from "./routes/donate";
 import jwt from "jsonwebtoken";
+import cors from "cors";
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -11,16 +12,7 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 
 // enable CORS
-app.use(function(req, res, next) {
-  console.log("ENABLING CORS");
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
+app.use(cors());
 
 app.use("/api", routes);
 
