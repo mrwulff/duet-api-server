@@ -4,7 +4,6 @@ const conn = db.dbInitConnect();
 
 function fulfillNeed(req, res) {
   let body = req.body;
-  console.log(req);
   if (body.itemIds) {
     // set item to fulfilled
     conn.execute(
