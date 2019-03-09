@@ -4,6 +4,7 @@ const conn = db.dbInitConnect();
 
 function fulfillNeed(req, res) {
   let body = req.body;
+  console.log(body);
   if (body.itemIds) {
     // set item to fulfilled
     conn.execute(
@@ -24,11 +25,12 @@ function fulfillNeed(req, res) {
           body.itemIds.forEach(function(id) {
             // add entry into donations table
             conn.execute(
-              "UPDATE items SET is_fulfilled=true,donation_id=SELECT LAST_INSERT_ID() WHERE item_id=?",
+              "UPDATE items SET is_fulfilled=true,donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
               [id],
               function(err) {
                 if (err) {
                   console.log(err);
+                  res.status(400).send();
                 } else {
                   res.status(200).send();
                 }
@@ -39,7 +41,7 @@ function fulfillNeed(req, res) {
       }
     );
   } else {
-    res.status(400).send();
+    res.status(400).json();
   }
 }
 
