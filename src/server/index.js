@@ -5,11 +5,13 @@ import refugeeProtectedRoutes from "./routes/refugeeProtected";
 import donateRoutes from "./routes/donate";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 const PORT = process.env.PORT || 8080;
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 // enable CORS
 app.use(cors());
