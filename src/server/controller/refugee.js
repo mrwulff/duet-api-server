@@ -3,7 +3,7 @@ import db from "./../config/config.js";
 const conn = db.dbInitConnect();
 
 function processTypeform(req, res) {
-  let body = req.body.definition.answers;
+  let body = req.body.form_response.definition.answers;
   console.log(body);
   res.status(200).send();
 }
