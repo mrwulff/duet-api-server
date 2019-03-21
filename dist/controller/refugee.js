@@ -3,7 +3,7 @@
 var conn = _config.default.dbInitConnect();
 
 function processTypeform(req, res) {
-  var body = req.body.form_response.definition;
+  var body = req.body.form_response;
   console.log(body);
   res.status(200).send();
 }
