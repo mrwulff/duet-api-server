@@ -3,7 +3,7 @@
 var conn = _config.default.dbInitConnect();
 
 function processTypeform(req, res) {
-  var body = req.body.form_response;
+  var body = req.body.token;
   console.log(body);
   res.status(200).send();
 }
@@ -21,45 +21,55 @@ function getNeeds(req, res) {
       if (err) {
         console.log(err);
         res.status(400).send();
-      }
-      var beneficiaryObj = {
-        beneficiaryId: beneficiaryId,
-        name: rows[0].beneficiary_name,
-        story: rows[0].story,
-        originCity: rows[0].origin_city,
-        originCountry: rows[0].origin_country,
-        currentCity: rows[0].current_city,
-        currentCountry: rows[0].current_country,
-        familyImage: rows[0].family_image_url };
+      } else if (rows.length == 0) {
+        res.status(400).json({
+          err: "Invalid Beneficiary ID" });
 
-      conn.execute(
-      "SELECT item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url,stores.name as store_name FROM items " +
-      "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
-      [beneficiaryId],
-      function (err, rows) {
-        if (err) {
-          console.log(err);
-          res.status(400).send();
-        }
-        var item;
-        var needs = [];
-        rows.forEach(function (obj) {
-          item = {
-            itemId: obj.item_id,
-            image: obj.display_link,
-            name: obj.name,
-            price: obj.price_euros,
-            fulfilled: obj.is_fulfilled,
-            storeId: obj.store_id,
-            storeName: obj.store_name,
-            icon: obj.icon_url };
+      } else {
+        var beneficiaryObj = {
+          beneficiaryId: beneficiaryId,
+          name: rows[0].beneficiary_name,
+          story: rows[0].story,
+          originCity: rows[0].origin_city,
+          originCountry: rows[0].origin_country,
+          currentCity: rows[0].current_city,
+          currentCountry: rows[0].current_country,
+          familyImage: rows[0].family_image_url };
 
-          needs.push(item);
+        conn.execute(
+        "SELECT item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url,stores.name as store_name FROM items " +
+        "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
+        [beneficiaryId],
+        function (err, rows) {
+          if (err) {
+            console.log(err);
+            res.status(400).send();
+          } else if (rows.length == 0) {
+            res.send({
+              msg: "Beneficiary Has No Item Needs" });
+
+          } else {
+            var item;
+            var needs = [];
+            rows.forEach(function (obj) {
+              item = {
+                itemId: obj.item_id,
+                image: obj.display_link,
+                name: obj.name,
+                price: obj.price_euros,
+                fulfilled: obj.is_fulfilled,
+                storeId: obj.store_id,
+                storeName: obj.store_name,
+                icon: obj.icon_url };
+
+              needs.push(item);
+            });
+            beneficiaryObj["needs"] = needs;
+            res.json(beneficiaryObj);
+          }
         });
-        beneficiaryObj["needs"] = needs;
-        res.json(beneficiaryObj);
-      });
 
+      }
     });
 
   } else {
@@ -73,26 +83,43 @@ function getNeeds(req, res) {
       if (err) {
         console.log(err);
         res.status(400).send();
-      }
-      var current = -1;
-      var beneficiaryObj;
-      var result = [];
-      rows.forEach(function (obj) {
-        if (current != obj.beneficiary_id) {
-          if (beneficiaryObj) {
-            result.push(beneficiaryObj);
-          }
-          beneficiaryObj = {
-            beneficiaryId: obj.beneficiary_id,
-            name: obj.beneficiary_name,
-            story: obj.story,
-            originCity: obj.origin_city,
-            originCountry: obj.origin_country,
-            currentCity: obj.current_city,
-            currentCountry: obj.current_country,
-            familyImage: obj.family_image_url,
-            needs: [
-            {
+      } else if (rows.length == 0) {
+        res.json({
+          msg: "No Item Needs" });
+
+      } else {
+        var current = -1;
+        var beneficiaryObj;
+        var _result = [];
+        rows.forEach(function (obj) {
+          if (current != obj.beneficiary_id) {
+            if (beneficiaryObj) {
+              _result.push(beneficiaryObj);
+            }
+            beneficiaryObj = {
+              beneficiaryId: obj.beneficiary_id,
+              name: obj.beneficiary_name,
+              story: obj.story,
+              originCity: obj.origin_city,
+              originCountry: obj.origin_country,
+              currentCity: obj.current_city,
+              currentCountry: obj.current_country,
+              familyImage: obj.family_image_url,
+              needs: [
+              {
+                itemId: obj.item_id,
+                image: obj.display_link,
+                name: obj.name,
+                price: obj.price_euros,
+                fulfilled: obj.is_fulfilled,
+                storeId: obj.store_id,
+                storeName: obj.store_name,
+                icon: obj.icon_url }] };
+
+
+
+          } else {
+            beneficiaryObj["needs"].push({
               itemId: obj.item_id,
               image: obj.display_link,
               name: obj.name,
@@ -100,26 +127,14 @@ function getNeeds(req, res) {
               fulfilled: obj.is_fulfilled,
               storeId: obj.store_id,
               storeName: obj.store_name,
-              icon: obj.icon_url }] };
+              icon: obj.icon_url });
 
-
-
-        } else {
-          beneficiaryObj["needs"].push({
-            itemId: obj.item_id,
-            image: obj.display_link,
-            name: obj.name,
-            price: obj.price_euros,
-            fulfilled: obj.is_fulfilled,
-            storeId: obj.store_id,
-            storeName: obj.store_name,
-            icon: obj.icon_url });
-
-        }
-        current = obj.beneficiary_id;
-      });
-      result.push(beneficiaryObj);
-      res.json(result);
+          }
+          current = obj.beneficiary_id;
+        });
+        _result.push(beneficiaryObj);
+        res.json(_result);
+      }
     });
 
   }
