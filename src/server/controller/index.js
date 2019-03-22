@@ -18,7 +18,7 @@ function login(req, res) {
     function(err, rows) {
       if (err) {
         console.log(err);
-        res.status(500).send({ error: err });
+        res.status(500).send({ err: err });
       } else if (rows.length > 0) {
         let storedPassword = rows[0]["password"];
         // hash password to check with stored password
@@ -36,9 +36,11 @@ function login(req, res) {
               lname: rows[0]["lname"]
             });
           } else {
-            res.status(400).send({ message: "Invalid Password" });
+            res.status(400).send({ err: "Invalid Password" });
           }
         });
+      } else {
+        res.status(400).send({ err: "Username Does Not Exist" });
       }
     }
   );
