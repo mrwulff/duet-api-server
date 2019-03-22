@@ -3,8 +3,8 @@ import db from "./../config/config.js";
 const conn = db.dbInitConnect();
 
 function processTypeform(req, res) {
-  let body = req.body;
-  console.log(req.body);
+  let body = req.body.token;
+  console.log(body);
   res.status(200).send();
 }
 
