@@ -4,8 +4,29 @@ const conn = db.dbInitConnect();
 
 function processTypeform(req, res) {
   console.log("processing typeform");
-  let body = req.body.form_response.answers;
-  console.log(body);
+  let answers = req.body.form_response.answers;
+
+  let id = answers[0].text;
+  let itemName = answers[1].text;
+  let url = answers[2].file_url;
+  let category = answers[3].choice.label;
+  let price = answers[4].text;
+  let store = answers[5].choice.label;
+
+  console.log(
+    "ID: " +
+      id +
+      "\nItem: " +
+      itemName +
+      "\nURL: " +
+      url +
+      "\nCategory: " +
+      category +
+      "\nPrice: " +
+      price +
+      "\nStore: " +
+      store
+  );
   res.status(200).send();
 }
 
