@@ -7,4 +7,8 @@ router.post("/fulfill", (req, res) => {
   controller.fulfillNeed(req, res);
 });
 
+router.post("/paid", (req, res) => {
+  controller.itemPaid(req, res);
+});
+
 export default router;

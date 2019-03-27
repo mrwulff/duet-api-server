@@ -43,4 +43,24 @@ function getItems(req, res) {
   });
 }
 
-export default { getItems };
+function verifyItems(req, res) {
+  if (req.body.itemIds.length > 0) {
+    let query = "UPDATE items SET is_verified=true WHERE 1=1 AND (";
+    req.body.itemIds.forEach(id => {
+      query += "item_id=" + id + " OR ";
+    });
+    query += "1=0);";
+    conn.query(query, (err, rows) => {
+      if (err) {
+        console.log(err);
+        res.status(400).send();
+      } else {
+        res.status(200).json({
+          msg: "Items verified"
+        });
+      }
+    });
+  }
+}
+
+export default { getItems, verifyItems };
