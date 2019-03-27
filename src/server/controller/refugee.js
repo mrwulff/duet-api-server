@@ -5,29 +5,67 @@ const conn = db.dbInitConnect();
 function processTypeform(req, res) {
   console.log("processing typeform");
   let answers = req.body.form_response.answers;
-
-  let id = answers[0].text;
-  let itemName = answers[1].text;
-  let url = answers[2].file_url;
-  let category = answers[3].choice.label;
-  let price = answers[4].text;
-  let store = answers[5].choice.label;
-
-  console.log(
-    "ID: " +
-      id +
-      "\nItem: " +
-      itemName +
-      "\nURL: " +
-      url +
-      "\nCategory: " +
-      category +
-      "\nPrice: " +
-      price +
-      "\nStore: " +
-      store
-  );
-  res.status(200).send();
+  if (answers.length > 0) {
+    let id = answers[0].text;
+    let itemName = answers[1].text;
+    let url = answers[2].file_url;
+    let category = answers[3].choice.label;
+    let price = answers[4].text;
+    let size = null;
+    let store = answers[5].choice.label;
+    if (answers.length == 7) {
+      size = answers[5].text;
+      store = answers[6].choice.label;
+    }
+    // get category id of item
+    conn.query(
+      "SELECT category_id FROM categories WHERE name='?'",
+      [category],
+      (err, rows) => {
+        if (err) {
+          console.log(err);
+          res.status(500).send();
+        } else if (rows.length == 0) {
+          res.status(400).json({
+            err: "Invalid Category Name"
+          });
+        } else {
+          let category_id = rows[0].category_id;
+          // get store id
+          store = store.substr(0, store.indexOf("(")).trim();
+          conn.query(
+            "SELECT store_id FROM stores WHERE name='?'",
+            [store],
+            (err, rows) => {
+              if (err) {
+                console.log(err);
+                res.status(500).send();
+              } else if (rows.length == 0) {
+                res.status(400).json({
+                  err: "Invalid Store Name"
+                });
+              } else {
+                let store_id = rows[0].store_id;
+                // insert item
+                conn.query(
+                  "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link) VALUES (?,?,?,?,?,?,?)",
+                  [itemName, size, price, id, category_id, store_id, url],
+                  err => {
+                    if (err) {
+                      console.log(err);
+                      res.status(500).send();
+                    } else {
+                      res.status(200).send();
+                    }
+                  }
+                );
+              }
+            }
+          );
+        }
+      }
+    );
+  }
 }
 
 function getNeeds(req, res) {
@@ -42,7 +80,7 @@ function getNeeds(req, res) {
       function(err, rows) {
         if (err) {
           console.log(err);
-          res.status(400).send();
+          res.status(500).send();
         } else if (rows.length == 0) {
           res.status(400).json({
             err: "Invalid Beneficiary ID"
@@ -104,7 +142,7 @@ function getNeeds(req, res) {
       function(err, rows) {
         if (err) {
           console.log(err);
-          res.status(400).send();
+          res.status(500).send();
         } else if (rows.length == 0) {
           res.json({
             msg: "No Item Needs"
