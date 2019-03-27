@@ -9,6 +9,7 @@ function processTypeform(req, res) {
     let id = answers[0].text;
     let itemName = answers[1].text;
     let url = answers[2].file_url;
+    console.log(answers[3].choice);
     let category = answers[3].choice.label;
     let price = answers[4].text;
     let size = null;
@@ -17,6 +18,7 @@ function processTypeform(req, res) {
       size = answers[5].text;
       store = answers[6].choice.label;
     } else {
+      console.log(answers[5].choice);
       store = answers[5].choice.label;
     }
     // get category id of item
