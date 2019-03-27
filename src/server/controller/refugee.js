@@ -4,7 +4,7 @@ const conn = db.dbInitConnect();
 
 function processTypeform(req, res) {
   console.log("processing typeform");
-  let body = req.body.token;
+  let body = req.body;
   console.log(body);
   res.status(200).send();
 }
