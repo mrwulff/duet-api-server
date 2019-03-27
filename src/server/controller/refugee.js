@@ -12,10 +12,12 @@ function processTypeform(req, res) {
     let category = answers[3].choice.label;
     let price = answers[4].text;
     let size = null;
-    let store = answers[5].choice.label;
+    let store;
     if (answers.length == 7) {
       size = answers[5].text;
       store = answers[6].choice.label;
+    } else {
+      store = answers[5].choice.label;
     }
     // get category id of item
     conn.query(
