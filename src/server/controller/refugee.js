@@ -22,7 +22,7 @@ function processTypeform(req, res) {
     }
     // get category id of item
     conn.query(
-      "SELECT category_id FROM categories WHERE name='?'",
+      "SELECT category_id FROM categories WHERE name=?",
       [category],
       (err, rows) => {
         if (err) {
@@ -37,7 +37,7 @@ function processTypeform(req, res) {
           // get store id
           store = store.substr(0, store.indexOf("(")).trim();
           conn.query(
-            "SELECT store_id FROM stores WHERE name='?'",
+            "SELECT store_id FROM stores WHERE name=?",
             [store],
             (err, rows) => {
               if (err) {
