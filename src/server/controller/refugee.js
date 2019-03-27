@@ -6,10 +6,11 @@ function processTypeform(req, res) {
   console.log("processing typeform");
   let answers = req.body.form_response.answers;
   if (answers.length > 0) {
+    console.log(answers.length);
     let id = answers[0].text;
     let itemName = answers[1].text;
     let url = answers[2].file_url;
-    console.log(answers[3].choice);
+    console.log(answers[3].choice.label);
     let category = answers[3].choice.label;
     let price = answers[4].text;
     let size = null;
