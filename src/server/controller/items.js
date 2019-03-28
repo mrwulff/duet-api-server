@@ -4,7 +4,7 @@ const conn = db.dbInitConnect();
 
 function getItems(req, res) {
   let query =
-    "SELECT item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url,stores.name as store_name FROM items " +
+    "SELECT item_id, display_link, items.name, price_euros, paid, store_id, icon_url,stores.name as store_name FROM items " +
     "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id)";
   let parameters = [];
   if (req.query.store_id) {
@@ -31,7 +31,7 @@ function getItems(req, res) {
           image: obj.display_link,
           name: obj.name,
           price: obj.price_euros,
-          fulfilled: obj.is_fulfilled,
+          paid: obj.paid,
           storeId: obj.store_id,
           storeName: obj.store_name,
           icon: obj.icon_url
