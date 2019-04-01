@@ -97,9 +97,11 @@ function sendConfirmationEmail(req, res) {
 
   const sgMail = require('@sendgrid/mail');
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
   const msg = {
     to: body.email,
     from: 'duet.giving@gmail.com',
+    text: 'test',
     templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
     dynamic_template_data: {
       name: body.firstName,
@@ -109,4 +111,5 @@ function sendConfirmationEmail(req, res) {
   sgMail.send(msg);  
 } 
 
-export default { fulfillNeed, itemPaid, sendConfirmationEmail };
+
+export default { fulfillNeed, itemPaid, sendConfirmationEmail};

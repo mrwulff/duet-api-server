@@ -3,7 +3,6 @@ import routes from "./routes/index";
 import refugeeRoutes from "./routes/refugee";
 import refugeeProtectedRoutes from "./routes/refugeeProtected";
 import donateRoutes from "./routes/donate";
-import confirmationRoutes from "./routes/confirmation";
 import itemsRoutes from "./routes/items";
 import jwt from "jsonwebtoken";
 import cors from "cors";
@@ -25,7 +24,6 @@ app.use("/api/refugee", refugeeRoutes);
 app.use("/api/refugee", refugeeProtectedRoutes);
 app.use("/api/donate", donateRoutes);
 app.use("/api/items", itemsRoutes);
-app.use("/api/confirmation", confirmationRoutes);
 
 app.listen(PORT, () => {
   console.log(`Please navigate to port ${PORT}`);

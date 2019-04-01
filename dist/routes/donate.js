@@ -5,6 +5,10 @@ var router = _express.default.Router();
 
 router.post("/fulfill", function (req, res) {
   _donate.default.fulfillNeed(req, res);
+});
+
+router.post("/paid", function (req, res) {
+  _donate.default.itemPaid(req, res);
 });var _default =
 
 router;exports.default = _default;
