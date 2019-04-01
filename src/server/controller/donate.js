@@ -7,14 +7,16 @@ function fulfillNeed(req, res) {
   if (body.itemIds) {
     // set item to fulfilled
     conn.execute(
-      "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donor_phone,donation_amt_usd) " +
-        " VALUES (NOW(),?,?,?,?,?)",
+      "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donor_phone,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd) " +
+        " VALUES (NOW(),?,?,?,?,?,?,?)",
       [
         body.firstName,
         body.lastName,
         body.email,
         body.phoneNumber,
-        body.amount
+        body.amount,
+        body.bankTransferFee,
+        body.serviceFee
       ],
       function(err) {
         if (err) {
@@ -49,14 +51,16 @@ function itemPaid(req, res) {
   if (body.itemIds) {
     // set item to fulfilled
     conn.execute(
-      "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donor_phone,donation_amt_usd) " +
+      "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donor_phone,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd) " +
         " VALUES (NOW(),?,?,?,?,?)",
       [
         body.firstName,
         body.lastName,
         body.email,
         body.phoneNumber,
-        body.amount
+        body.amount,
+        body.bankTransferFee,
+        body.serviceFee
       ],
       function(err) {
         if (err) {
