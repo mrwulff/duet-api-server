@@ -63,4 +63,50 @@ function verifyItems(req, res) {
   }
 }
 
-export default { getItems, verifyItems };
+function readyForPickup(req, res) {
+  req.body.forEach(item => {
+    if (item.itemId && item.pickup_code) {
+      conn.query(
+        "UPDATE items SET pickup_code=? WHERE item_id=?",
+        [item.pickup_code, item.itemId],
+        err => {
+          if (err) {
+            console.log(err);
+            res.status(500).json({
+              err: err
+            });
+          } else {
+            res.status(200).json({
+              msg: "Pickup code added"
+            });
+          }
+        }
+      );
+    }
+  });
+}
+
+function pickupConfirmation(req, res) {
+  req.body.forEach(item => {
+    if (item.itemId && item.url) {
+      conn.query(
+        "UPDATE items SET picked_up_photo_url=? WHERE item_id=?",
+        [item.url, item.itemId],
+        err => {
+          if (err) {
+            console.log(err);
+            res.status(500).json({
+              err: err
+            });
+          } else {
+            res.status(200).json({
+              msg: "Picked up item photo posted"
+            });
+          }
+        }
+      );
+    }
+  });
+}
+
+export default { getItems, verifyItems, readyForPickup, pickupConfirmation };

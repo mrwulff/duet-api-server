@@ -11,4 +11,12 @@ router.post("/verify", (req, res) => {
   controller.verifyItems(req, res);
 });
 
+router.post("/pickup/ready", (req, res) => {
+  controller.readyForPickup(req, res);
+});
+
+router.post("pickup/confirmation", (req, res) => {
+  controller.pickupConfirmation(req, res);
+});
+
 export default router;
