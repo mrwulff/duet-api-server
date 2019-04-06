@@ -3,9 +3,72 @@
 var conn = _config.default.dbInitConnect();
 
 function processTypeform(req, res) {
-  var body = req.body.token;
-  console.log(body);
-  res.status(200).send();
+  console.log("processing typeform");
+  var answers = req.body.form_response.answers;
+  if (answers.length > 0) {
+    var id = answers[0].text;
+    var itemName = answers[1].text;
+    var url = answers[2].file_url;
+    var category = answers[3].choice.label;
+    var price = answers[4].text;
+    var size = null;
+    var store;
+    if (answers.length == 8) {
+      size = answers[5].text;
+      store = answers[6].choice.label;
+    } else {
+      console.log(answers[5].choice);
+      store = answers[5].choice.label;
+    }
+    // get category id of item
+    conn.query(
+    "SELECT category_id FROM categories WHERE name=?",
+    [category],
+    function (err, rows) {
+      if (err) {
+        console.log(err);
+        res.status(500).send();
+      } else if (rows.length == 0) {
+        res.status(400).json({
+          err: "Invalid Category Name" });
+
+      } else {
+        var category_id = rows[0].category_id;
+        // get store id
+        store = store.substr(0, store.indexOf("(")).trim();
+        conn.query(
+        "SELECT store_id FROM stores WHERE name=?",
+        [store],
+        function (err, rows) {
+          if (err) {
+            console.log(err);
+            res.status(500).send();
+          } else if (rows.length == 0) {
+            res.status(400).json({
+              err: "Invalid Store Name" });
+
+          } else {
+            var store_id = rows[0].store_id;
+            // insert item
+            conn.query(
+            "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link) VALUES (?,?,?,?,?,?,?)",
+            [itemName, size, price, id, category_id, store_id, url],
+            function (err) {
+              if (err) {
+                console.log(err);
+                res.status(500).send();
+              } else {
+                res.status(200).send();
+              }
+            });
+
+          }
+        });
+
+      }
+    });
+
+  }
 }
 
 function getNeeds(req, res) {
@@ -20,7 +83,7 @@ function getNeeds(req, res) {
     function (err, rows) {
       if (err) {
         console.log(err);
-        res.status(400).send();
+        res.status(500).send();
       } else if (rows.length == 0) {
         res.status(400).json({
           err: "Invalid Beneficiary ID" });
@@ -37,7 +100,7 @@ function getNeeds(req, res) {
           familyImage: rows[0].family_image_url };
 
         conn.execute(
-        "SELECT item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url,stores.name as store_name FROM items " +
+        "SELECT item_id, display_link, items.name, price_euros, paid, store_id, icon_url,stores.name as store_name FROM items " +
         "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
         [beneficiaryId],
         function (err, rows) {
@@ -57,7 +120,7 @@ function getNeeds(req, res) {
                 image: obj.display_link,
                 name: obj.name,
                 price: obj.price_euros,
-                fulfilled: obj.is_fulfilled,
+                paid: obj.paid,
                 storeId: obj.store_id,
                 storeName: obj.store_name,
                 icon: obj.icon_url };
@@ -76,13 +139,13 @@ function getNeeds(req, res) {
     var result = [];
     conn.execute(
     query +
-    ", item_id, display_link, items.name, price_euros, is_fulfilled, store_id, icon_url, stores.name AS store_name " +
+    ", item_id, display_link, items.name, price_euros, paid, store_id, icon_url, stores.name AS store_name " +
     "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
     "INNER JOIN stores USING(store_id) ORDER BY beneficiary_id",
     function (err, rows) {
       if (err) {
         console.log(err);
-        res.status(400).send();
+        res.status(500).send();
       } else if (rows.length == 0) {
         res.json({
           msg: "No Item Needs" });
@@ -111,7 +174,7 @@ function getNeeds(req, res) {
                 image: obj.display_link,
                 name: obj.name,
                 price: obj.price_euros,
-                fulfilled: obj.is_fulfilled,
+                paid: obj.paid,
                 storeId: obj.store_id,
                 storeName: obj.store_name,
                 icon: obj.icon_url }] };
@@ -124,7 +187,7 @@ function getNeeds(req, res) {
               image: obj.display_link,
               name: obj.name,
               price: obj.price_euros,
-              fulfilled: obj.is_fulfilled,
+              paid: obj.paid,
               storeId: obj.store_id,
               storeName: obj.store_name,
               icon: obj.icon_url });
