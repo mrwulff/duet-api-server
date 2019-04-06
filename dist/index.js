@@ -3,6 +3,7 @@ var _index = _interopRequireDefault(require("./routes/index"));
 var _refugee = _interopRequireDefault(require("./routes/refugee"));
 var _refugeeProtected = _interopRequireDefault(require("./routes/refugeeProtected"));
 var _donate = _interopRequireDefault(require("./routes/donate"));
+var _items = _interopRequireDefault(require("./routes/items"));
 var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
 var _cors = _interopRequireDefault(require("cors"));
 var _bodyParser = _interopRequireDefault(require("body-parser"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
@@ -22,6 +23,7 @@ app.use("/api/refugee", _refugee.default);
 //app.use("/api/refugee", requireAuth, refugeeProtectedRoutes);
 app.use("/api/refugee", _refugeeProtected.default);
 app.use("/api/donate", _donate.default);
+app.use("/api/items", _items.default);
 
 app.listen(PORT, function () {
   console.log("Please navigate to port ".concat(PORT));
