@@ -1,6 +1,8 @@
 import db from "./../config/config.js";
 import { strict } from "assert";
 
+require('dotenv').config()
+
 // connect to DB
 const conn = db.dbInitConnect();
 
