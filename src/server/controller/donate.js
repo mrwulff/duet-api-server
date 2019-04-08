@@ -6,18 +6,13 @@ const conn = db.dbInitConnect();
 
 // connect to Paypal
 "use strict";
-var sandboxPaypalConfig = {
-  'mode': 'sandbox',
-  'client_id': 'AV3ltypuMuC0xe6uBYgWB2AsVp-82CUHmdrA60puHhtobKbZRrWQuQAjjVT5um0SxiJRwlonPwTc8b8y',
-  'client_secret': 'EAUP4mF7m3C7eIfsPC2DlmVaIKyVEzdg3IPHQ4zG740eYbr19Ezh0yVGS9B4Uq2QMdNjm-bRD07GanPE'
-};
-var prodPaypalConfig = {
-  'mode': 'live',
-  'client_id': 'AVHV4sRMFgyOiq0fNMSiDx2aisVUzKcV8INoF4BUaryjGRKa3LXeygjQgKdyVyzxIucbQvDS9WWhvk7T',
-  'client_secret': 'EMFOgJPHnQmKj7yVvgECJg0MYaF3ugt22BjhALcTdIOpIKXiG7zulGVXbuCyzeB8axSL_A4Lh8WpAg7H'
+var paypalConfig = {
+  'mode': process.env.PAYPAL_MODE,
+  'client_id': process.env.PAYPAL_CLIENT_ID,
+  'client_secret': process.env.PAYPAL_CLIENT_SERVER
 };
 var paypal = require('paypal-rest-sdk');
-paypal.configure(sandboxPaypalConfig);
+paypal.configure(paypalConfig);
 
 function fulfillNeed(req, res) {
   let body = req.body;
