@@ -11,8 +11,4 @@ router.post("/paid", (req, res) => {
   controller.itemPaid(req, res);
 });
 
-router.post("/payout", (req, res) => {
-  controller.sendPayout(req, res);
-});
-
 export default router;

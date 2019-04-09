@@ -106,15 +106,12 @@ function itemPaid(req, res) {
   }
 }
 
-// Send payout to store
-function sendPayout(req, res) {
-  var body = req.body;
+// Send payout to store, return true if successful
+// sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
+function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
 
-  var payeeEmail = body.payeeEmail;
-  var donationId = body.donationId;
-  var amount = body.amount;
-  var itemIds = body.itemIds.map(function (id) {return "#" + id.toString();}); // e.g. ["#63", "#43"]
-  var note = "Item IDs: " + itemIds.join(", "); // e.g. "Item IDs: #79, #75, #10"
+  var itemIdsStr = itemIds.map(function (id) {return "#" + id.toString();}); // e.g. ["#63", "#43"]
+  var note = "Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
 
   var payoutInfo = {
     "sender_batch_header": {
@@ -124,8 +121,8 @@ function sendPayout(req, res) {
     {
       "recipient_type": "EMAIL",
       "amount": {
-        "value": body.amount,
-        "currency": "USD" },
+        "value": amount,
+        "currency": currencyCode },
 
       "receiver": payeeEmail,
       "note": note }] };
@@ -138,11 +135,10 @@ function sendPayout(req, res) {
   paypal.payout.create(payoutInfo, sync_mode, function (error, payoutResp) {
     if (error) {
       console.log(error.response);
-      res.status(400).send();
+      return false;
     } else {
-      console.log("Create Single Payout Response");
       console.log(payoutResp);
-      res.status(200).send();
+      return true;
     }
   });
 }var _default =
