@@ -104,7 +104,6 @@ function itemPaid(req, res) {
   } else {
     res.status(400).json();
   }
-}
 
 // Send payout to store, return true if successful
 // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
@@ -143,4 +142,4 @@ function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   });
 }var _default =
 
-{ fulfillNeed: fulfillNeed, itemPaid: itemPaid, sendPayout: sendPayout };exports.default = _default;
+{ fulfillNeed: fulfillNeed, itemPaid: itemPaid };exports.default = _default;

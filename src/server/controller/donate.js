@@ -143,4 +143,25 @@ function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   });
 }
 
-export default { fulfillNeed, itemPaid, sendPayout };
+
+function sendConfirmationEmail(req, res) {
+  let body = req.body;
+
+  const sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  const msg = {
+    to: body.email,
+    from: 'duet.giving@gmail.com',
+    text: 'test',
+    templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
+    dynamic_template_data: {
+      name: body.firstName,
+    },
+  };
+  
+  sgMail.send(msg);  
+} 
+
+
+export default { fulfillNeed, itemPaid, sendConfirmationEmail};

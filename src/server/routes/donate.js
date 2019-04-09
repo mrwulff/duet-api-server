@@ -9,6 +9,7 @@ router.post("/fulfill", (req, res) => {
 
 router.post("/paid", (req, res) => {
   controller.itemPaid(req, res);
+  controller.sendConfirmationEmail(req, res);
 });
 
 export default router;
