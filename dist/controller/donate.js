@@ -104,6 +104,7 @@ function itemPaid(req, res) {
   } else {
     res.status(400).json();
   }
+}
 
 // Send payout to store, return true if successful
 // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
@@ -140,6 +141,27 @@ function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
       return true;
     }
   });
+}
+
+
+function sendConfirmationEmail(req, res) {
+  var body = req.body;
+
+  var sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  var msg = {
+    to: body.email,
+    from: 'duet.giving@gmail.com',
+    text: 'test',
+    templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
+    dynamic_template_data: {
+      name: body.firstName } };
+
+
+
+  sgMail.send(msg);
 }var _default =
 
-{ fulfillNeed: fulfillNeed, itemPaid: itemPaid };exports.default = _default;
+
+{ fulfillNeed: fulfillNeed, itemPaid: itemPaid, sendConfirmationEmail: sendConfirmationEmail };exports.default = _default;

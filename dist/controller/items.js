@@ -61,7 +61,52 @@ function verifyItems(req, res) {
       }
     });
   }
+}
 
+function readyForPickup(req, res) {
+  req.body.forEach(function (item) {
+    if (item.itemId && item.pickup_code) {
+      conn.query(
+      "UPDATE items SET pickup_code=? WHERE item_id=?",
+      [item.pickup_code, item.itemId],
+      function (err) {
+        if (err) {
+          console.log(err);
+          res.status(500).json({
+            err: err });
+
+        } else {
+          res.status(200).json({
+            msg: "Pickup code added" });
+
+        }
+      });
+
+    }
+  });
+}
+
+function pickupConfirmation(req, res) {
+  req.body.forEach(function (item) {
+    if (item.itemId && item.url) {
+      conn.query(
+      "UPDATE items SET picked_up_photo_url=? WHERE item_id=?",
+      [item.url, item.itemId],
+      function (err) {
+        if (err) {
+          console.log(err);
+          res.status(500).json({
+            err: err });
+
+        } else {
+          res.status(200).json({
+            msg: "Picked up item photo posted" });
+
+        }
+      });
+
+    }
+  });
 }var _default =
 
-{ getItems: getItems, verifyItems: verifyItems };exports.default = _default;
+{ getItems: getItems, verifyItems: verifyItems, readyForPickup: readyForPickup, pickupConfirmation: pickupConfirmation };exports.default = _default;
