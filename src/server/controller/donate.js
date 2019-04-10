@@ -164,4 +164,24 @@ function sendConfirmationEmail(req, res) {
 } 
 
 
-export default { fulfillNeed, itemPaid, sendConfirmationEmail};
+function sendStoreownerNotificationEmail(req, res) {
+  let body = req.body;
+
+  const sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  const msg = {
+    to: body.email,
+    from: 'duet.giving@gmail.com',
+    text: 'test',
+    templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
+    dynamic_template_data: {
+      name: body.firstName,
+    },
+  };
+  
+  sgMail.send(msg);  
+} 
+
+
+export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail};
