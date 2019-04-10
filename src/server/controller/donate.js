@@ -5,6 +5,8 @@ require('dotenv').config()
 
 // connect to DB
 const conn = db.dbInitConnect();
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // connect to Paypal
 "use strict";
@@ -145,10 +147,10 @@ function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
 
 
 function sendConfirmationEmail(req, res) {
-  let body = req.body;
+  var body = req.body;
 
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  // const sgMail = require('@sendgrid/mail');
+  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
   const msg = {
     to: body.email,
@@ -157,18 +159,20 @@ function sendConfirmationEmail(req, res) {
     templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
     dynamic_template_data: {
       name: body.firstName,
-    },
+    }
   };
   
   sgMail.send(msg);  
 } 
 
 
+// send email notification every 24 hours if donor's status has changed...
 function sendStoreownerNotificationEmail(req, res) {
-  let body = req.body;
+  var body = req.body;
+  console.log(body);
 
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  // const sgMail = require('@sendgrid/mail');
+  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
   const msg = {
     to: body.email,
@@ -177,10 +181,19 @@ function sendStoreownerNotificationEmail(req, res) {
     templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
     dynamic_template_data: {
       name: body.firstName,
-    },
+    }
   };
-  
-  sgMail.send(msg);  
+
+  sgMail
+    .send(msg)
+    .then(() => {
+      console.log("Message delived successfully.");
+      res.status(200).send("Message delivered.");
+    })
+    .catch(error => {
+       console.error(error.toString());
+       res.status(400).send("Failed to deliver message.");
+    });  
 } 
 
 

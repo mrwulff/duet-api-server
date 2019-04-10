@@ -161,7 +161,28 @@ function sendConfirmationEmail(req, res) {
 
 
   sgMail.send(msg);
+}
+
+
+// send email notification every 24 hours if donor's status has changed...
+function sendStoreownerNotificationEmail(req, res) {
+  var body = req.body;
+
+  var sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  var msg = {
+    to: body.email,
+    from: 'duet.giving@gmail.com',
+    text: 'test',
+    templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
+    dynamic_template_data: {
+      name: body.firstName } };
+
+
+
+  sgMail.send(msg);
 }var _default =
 
 
-{ fulfillNeed: fulfillNeed, itemPaid: itemPaid, sendConfirmationEmail: sendConfirmationEmail };exports.default = _default;
+{ fulfillNeed: fulfillNeed, itemPaid: itemPaid, sendConfirmationEmail: sendConfirmationEmail, sendStoreownerNotificationEmail: sendStoreownerNotificationEmail };exports.default = _default;
