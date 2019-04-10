@@ -155,14 +155,22 @@ function sendConfirmationEmail(req, res) {
   const msg = {
     to: body.email,
     from: 'duet.giving@gmail.com',
-    text: 'test',
     templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
     dynamic_template_data: {
       name: body.firstName,
     }
   };
   
-  sgMail.send(msg);  
+  sgMail
+    .send(msg)
+    .then(() => {
+      console.log("Message delived successfully.");
+      res.status(200).send("Message delivered.");
+    })
+    .catch(error => {
+       console.error(error.toString());
+       res.status(400).send("Failed to deliver message.");
+    });  
 } 
 
 
@@ -177,10 +185,9 @@ function sendStoreownerNotificationEmail(req, res) {
   const msg = {
     to: body.email,
     from: 'duet.giving@gmail.com',
-    text: 'test',
     templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
     dynamic_template_data: {
-      name: body.firstName,
+      storeName: body.storeName,
     }
   };
 
