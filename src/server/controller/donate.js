@@ -1,5 +1,6 @@
 import db from "./../config/config.js";
 import { strict } from "assert";
+import nodeSchedule from "node-schedule";
 
 require('dotenv').config()
 
@@ -203,5 +204,12 @@ function sendStoreownerNotificationEmail(req, res) {
     });  
 } 
 
+
+// set up a CRON job to send notification email to storeowner every day at 8:00 AM if there are 
+// novel items to that (1) need price approval or (2) need to be 
+
+var j = nodeSchedule.scheduleJob('00 8 * * *', function() {
+  
+});
 
 export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail};
