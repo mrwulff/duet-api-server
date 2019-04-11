@@ -10,6 +10,7 @@ import bodyParser from "body-parser";
 
 
 const PORT = process.env.PORT || 8080;
+console.log("port: " + process.env.PORT)
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));

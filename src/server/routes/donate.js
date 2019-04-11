@@ -21,4 +21,9 @@ router.post("/testResponse", (req, res) => {
   res.status(200).send("hit endpoint successfully");
 });
 
+router.use("/testDBConnection", (req, res) => {
+  var success = controller.testDBConnection(req, res);
+  
+});
+
 export default router;

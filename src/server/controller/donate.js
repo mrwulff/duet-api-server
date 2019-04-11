@@ -6,6 +6,7 @@ require('dotenv').config()
 
 // connect to DB
 const conn = db.dbInitConnect();
+
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -205,11 +206,34 @@ function sendStoreownerNotificationEmail(req, res) {
 } 
 
 
+function testDBConnection(req, res) {
+  console.log(process.env.DATABASE)
+
+  conn.connect(function(err) {
+    if (err) {
+      console.log("ERROR connection to db: " + err.stack);
+    }
+    return false;
+  });
+
+  conn.execute(
+    "SELECT * from stores",
+    function(err) {
+      if (err) {
+        console.log("error connecting to db: " + err);
+        res.status(400).send("ERROR: failed to connect to db.");
+      }
+      res.status(200).send("SUCCESS: connected to db.");
+    }
+    );
+
+}
+
 // set up a CRON job to send notification email to storeowner every day at 8:00 AM if there are 
 // novel items to that (1) need price approval or (2) need to be 
 
 var j = nodeSchedule.scheduleJob('00 8 * * *', function() {
-  
+  // TODO: set up daily job to send out email notifications
 });
 
-export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail};
+export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail, testDBConnection};
