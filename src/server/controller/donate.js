@@ -41,7 +41,7 @@ function fulfillNeed(req, res) {
           body.itemIds.forEach(function(id) {
             // add entry into donations table
             conn.execute(
-              "UPDATE items SET is_fulfilled=true,donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
+              "UPDATE items SET is_fulfilled=true,paid=true,donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
               [id],
               function(err) {
                 if (err) {
@@ -86,7 +86,7 @@ function itemPaid(req, res) {
           body.itemIds.forEach(function(id) {
             // add entry into donations table
             conn.execute(
-              "UPDATE items SET paid=true,donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
+              "UPDATE items SET status='PAID',donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
               [id],
               function(err) {
                 if (err) {
@@ -147,21 +147,20 @@ function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
 function sendConfirmationEmail(req, res) {
   let body = req.body;
 
-  const sgMail = require('@sendgrid/mail');
+  const sgMail = require("@sendgrid/mail");
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
   const msg = {
     to: body.email,
-    from: 'duet.giving@gmail.com',
-    text: 'test',
-    templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
+    from: "duet.giving@gmail.com",
+    text: "test",
+    templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
     dynamic_template_data: {
-      name: body.firstName,
-    },
+      name: body.firstName
+    }
   };
-  
-  sgMail.send(msg);  
-} 
 
+  sgMail.send(msg);
+}
 
-export default { fulfillNeed, itemPaid, sendConfirmationEmail};
+export default { fulfillNeed, itemPaid, sendConfirmationEmail };

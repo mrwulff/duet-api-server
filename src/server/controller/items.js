@@ -4,7 +4,7 @@ const conn = db.dbInitConnect();
 
 function getItems(req, res) {
   let query =
-    "SELECT item_id, display_link, items.name, price_euros, paid, store_id, icon_url,stores.name as store_name FROM items " +
+    "SELECT item_id, display_link, items.name, price_euros, store_id, icon_url,stores.name as store_name, items.status FROM items " +
     "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id)";
   let parameters = [];
   if (req.query.store_id) {
@@ -31,10 +31,10 @@ function getItems(req, res) {
           image: obj.display_link,
           name: obj.name,
           price: obj.price_euros,
-          paid: obj.paid,
           storeId: obj.store_id,
           storeName: obj.store_name,
-          icon: obj.icon_url
+          icon: obj.icon_url,
+          status: obj.status
         };
         needs.push(item);
       });
@@ -45,7 +45,7 @@ function getItems(req, res) {
 
 function verifyItems(req, res) {
   if (req.body.itemIds.length > 0) {
-    let query = "UPDATE items SET is_verified=true WHERE 1=1 AND (";
+    let query = "UPDATE items SET status='VERIFIED' WHERE 1=1 AND (";
     req.body.itemIds.forEach(id => {
       query += "item_id=" + id + " OR ";
     });
@@ -56,7 +56,7 @@ function verifyItems(req, res) {
         res.status(400).send();
       } else {
         res.status(200).json({
-          msg: "Items verified"
+          msg: "Item status updated to VERIFIED"
         });
       }
     });
@@ -64,49 +64,47 @@ function verifyItems(req, res) {
 }
 
 function readyForPickup(req, res) {
-  req.body.forEach(item => {
-    if (item.itemId && item.pickup_code) {
-      conn.query(
-        "UPDATE items SET pickup_code=? WHERE item_id=?",
-        [item.pickup_code, item.itemId],
-        err => {
-          if (err) {
-            console.log(err);
-            res.status(500).json({
-              err: err
-            });
-          } else {
-            res.status(200).json({
-              msg: "Pickup code added"
-            });
-          }
-        }
-      );
-    }
-  });
+  if (req.body.itemIds.length > 0) {
+    let query = "UPDATE items SET status='READY_FOR_PICKUP' WHERE 1=1 AND (";
+    req.body.itemIds.forEach(id => {
+      query += "item_id=" + id + " OR ";
+    });
+    query += "1=0);";
+    conn.query(query, err => {
+      if (err) {
+        console.log(err);
+        res.status(500).json({
+          err: err
+        });
+      } else {
+        res.status(200).json({
+          msg: "Item status updated to READY_FOR_PICKUP"
+        });
+      }
+    });
+  }
 }
 
 function pickupConfirmation(req, res) {
-  req.body.forEach(item => {
-    if (item.itemId && item.url) {
-      conn.query(
-        "UPDATE items SET picked_up_photo_url=? WHERE item_id=?",
-        [item.url, item.itemId],
-        err => {
-          if (err) {
-            console.log(err);
-            res.status(500).json({
-              err: err
-            });
-          } else {
-            res.status(200).json({
-              msg: "Picked up item photo posted"
-            });
-          }
-        }
-      );
-    }
-  });
+  if (req.body.itemIds.length > 0) {
+    let query = "UPDATE items SET status='PICKED_UP' WHERE 1=1 AND (";
+    req.body.itemIds.forEach(id => {
+      query += "item_id=" + id + " OR ";
+    });
+    query += "1=0);";
+    conn.query(query, err => {
+      if (err) {
+        console.log(err);
+        res.status(500).json({
+          err: err
+        });
+      } else {
+        res.status(200).json({
+          msg: "Item status updated to PICKED_UP"
+        });
+      }
+    });
+  }
 }
 
 export default { getItems, verifyItems, readyForPickup, pickupConfirmation };
