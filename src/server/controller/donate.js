@@ -72,7 +72,7 @@ function itemPaid(req, res) {
           body.itemIds.forEach(function(id) {
             // add entry into donations table
             conn.execute(
-              "UPDATE items SET paid=true,donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
+              "UPDATE items SET status='PAID',donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
               [id],
               function(err) {
                 if (err) {
