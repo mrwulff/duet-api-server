@@ -5,9 +5,11 @@ import refugeeProtectedRoutes from "./routes/refugeeProtected";
 import donateRoutes from "./routes/donate";
 import itemsRoutes from "./routes/items";
 import storeRoutes from "./routes/stores";
+import currencyRoutes from "./routes/currency";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import bodyParser from "body-parser";
+import currency from "./controller/currency";
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -26,6 +28,7 @@ app.use("/api/stores", storeRoutes);
 app.use("/api/refugee", refugeeProtectedRoutes);
 app.use("/api/donate", donateRoutes);
 app.use("/api/items", itemsRoutes);
+app.use("/api/currency/update", currencyRoutes);
 app.listen(PORT, () => {
   console.log(`Please navigate to port ${PORT}`);
 });
