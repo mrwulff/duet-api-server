@@ -1,6 +1,20 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
+var _assert = require("assert");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
 
+require('dotenv').config();
+
+// connect to DB
 var conn = _config.default.dbInitConnect();
+
+// connect to Paypal
+"use strict";
+var paypalConfig = {
+  'mode': process.env.PAYPAL_MODE,
+  'client_id': process.env.PAYPAL_CLIENT_ID,
+  'client_secret': process.env.PAYPAL_CLIENT_SECRET };
+
+var paypal = require('paypal-rest-sdk');
+paypal.configure(paypalConfig);
 
 function fulfillNeed(req, res) {
   var body = req.body;
@@ -90,6 +104,64 @@ function itemPaid(req, res) {
   } else {
     res.status(400).json();
   }
+}
+
+// Send payout to store, return true if successful
+// sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
+function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
+
+  var itemIdsStr = itemIds.map(function (id) {return "#" + id.toString();}); // e.g. ["#63", "#43"]
+  var note = "Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
+
+  var payoutInfo = {
+    "sender_batch_header": {
+      "email_subject": "You have a payment from Duet!" },
+
+    "items": [
+    {
+      "recipient_type": "EMAIL",
+      "amount": {
+        "value": amount,
+        "currency": currencyCode },
+
+      "receiver": payeeEmail,
+      "note": note }] };
+
+
+
+
+  var sync_mode = 'false';
+
+  paypal.payout.create(payoutInfo, sync_mode, function (error, payoutResp) {
+    if (error) {
+      console.log(error.response);
+      return false;
+    } else {
+      console.log(payoutResp);
+      return true;
+    }
+  });
+}
+
+
+function sendConfirmationEmail(req, res) {
+  var body = req.body;
+
+  var sgMail = require('@sendgrid/mail');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  var msg = {
+    to: body.email,
+    from: 'duet.giving@gmail.com',
+    text: 'test',
+    templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
+    dynamic_template_data: {
+      name: body.firstName } };
+
+
+
+  sgMail.send(msg);
 }var _default =
 
-{ fulfillNeed: fulfillNeed, itemPaid: itemPaid };exports.default = _default;
+
+{ fulfillNeed: fulfillNeed, itemPaid: itemPaid, sendConfirmationEmail: sendConfirmationEmail };exports.default = _default;

@@ -1,6 +1,20 @@
 import db from "./../config/config.js";
+import { strict } from "assert";
 
+require('dotenv').config()
+
+// connect to DB
 const conn = db.dbInitConnect();
+
+// connect to Paypal
+"use strict";
+var paypalConfig = {
+  'mode': process.env.PAYPAL_MODE,
+  'client_id': process.env.PAYPAL_CLIENT_ID,
+  'client_secret': process.env.PAYPAL_CLIENT_SECRET
+};
+var paypal = require('paypal-rest-sdk');
+paypal.configure(paypalConfig);
 
 function fulfillNeed(req, res) {
   let body = req.body;
@@ -91,6 +105,44 @@ function itemPaid(req, res) {
     res.status(400).json();
   }
 }
+
+// Send payout to store, return true if successful
+  // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
+function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
+
+  var itemIdsStr = itemIds.map(id => "#" + id.toString()); // e.g. ["#63", "#43"]
+  var note = "Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
+
+  var payoutInfo = {
+    "sender_batch_header": {
+      "email_subject": "You have a payment from Duet!"
+    },
+    "items": [
+      {
+        "recipient_type": "EMAIL",
+        "amount": {
+          "value": amount,
+          "currency": currencyCode
+        },
+        "receiver": payeeEmail,
+        "note": note
+      }
+    ]
+  };
+
+  var sync_mode = 'false';
+
+  paypal.payout.create(payoutInfo, sync_mode, function (error, payoutResp) {
+    if (error) {
+      console.log(error.response);
+      return false;
+    } else {
+      console.log(payoutResp);
+      return true;
+    }
+  });
+}
+
 
 function sendConfirmationEmail(req, res) {
   let body = req.body;

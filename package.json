@@ -31,8 +31,11 @@
     "bluebird": "^3.5.3",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
+    "dotenv": "^7.0.0",
     "express": "^4.16.4",
     "jsonwebtoken": "^8.4.0",
-    "mysql2": "^1.6.4"
+    "mysql2": "^1.6.4",
+    "paypal-rest-sdk": "^1.8.1",
+    "request": "^2.88.0"
   }
 }
