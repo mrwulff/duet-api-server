@@ -175,39 +175,7 @@ function sendConfirmationEmail(req, res) {
     });  
 } 
 
-
-// send email notification every 24 hours if donor's status has changed...
-function sendStoreownerNotificationEmail(req, res) {
-  var body = req.body;
-  console.log(body);
-
-  // const sgMail = require('@sendgrid/mail');
-  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-  const msg = {
-    to: body.email,
-    from: 'duet.giving@gmail.com',
-    templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
-    dynamic_template_data: {
-      storeName: body.storeName,
-    }
-  };
-
-  sgMail
-    .send(msg)
-    .then(() => {
-      console.log("Message delived successfully.");
-      res.status(200).send("Message delivered.");
-    })
-    .catch(error => {
-       console.error(error.toString());
-       res.status(400).send("Failed to deliver message.");
-    });  
-} 
-
-
 function testDBConnection(req, res) {
-  console.log(process.env.DATABASE)
 
   conn.connect(function(err) {
     if (err) {
@@ -233,7 +201,55 @@ function testDBConnection(req, res) {
 // novel items to that (1) need price approval or (2) need to be 
 
 var j = nodeSchedule.scheduleJob('00 8 * * *', function() {
+
+
+  conn.equery(
+    "SELECT * from stores where needs_notificaiton=false",
+    function (err, results, fields) {
+      if (err) {
+        console.log("Error querying database: " + err);
+      }
+
+      console.log(results);
+    })
   // TODO: set up daily job to send out email notifications
 });
+
+
+function sendStoreownerNotificationEmail(req, res) {
+  console.log("in send gstoreowner notification email");
+  conn.query(
+    "SELECT * from stores where needs_notification=false",
+    function (err, results, fields) {
+      if (err) {
+        console.log("Error querying database: " + err);
+      }
+
+      // TODO: send email notification to all store emails
+      results.forEach(function(result) {
+        console.log("prepping email for: " + result.name);
+        const msg = {
+          to: 'ankurras@usc.edu',
+          from: 'duet.giving@gmail.com',
+          templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
+          dynamic_template_data: {
+            storeName: result.name,
+          }
+        };
+
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log("Message delivered to " + result.name + " successfully.");
+          })
+          .catch(error => {
+             console.error("Error: " + error.toString());
+             res.status(400).send("Failed to deliver message.");
+          });
+      });
+      
+      res.status(200).send("All messages delivered successfully.");  
+    });
+}
 
 export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail, testDBConnection};

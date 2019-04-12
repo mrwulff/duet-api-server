@@ -8,9 +8,9 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import bodyParser from "body-parser";
 
+require('dotenv').config()
 
 const PORT = process.env.PORT || 8080;
-console.log("port: " + process.env.PORT)
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
