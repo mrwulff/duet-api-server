@@ -21,7 +21,6 @@ var paypal = require('paypal-rest-sdk');
 paypal.configure(paypalConfig);
 
 function fulfillNeed(req, res) {
-  let store_ids;
   let body = req.body;
   if (body.itemIds) {
     // set item to fulfilled
@@ -58,32 +57,6 @@ function fulfillNeed(req, res) {
               }
             );
           });
-
-          // find all the stores that paid items interact with
-          conn.query(
-            'SELECT store_id FROM table WHERE item_id IN (' + body.itemIds.join() + ')',
-            function(err, results, fields) {
-              if (err) {
-                console.log(err);
-                res.status(400).send();
-              }
-              
-              results.forEach(function(result) {
-                store_ids.push(result.store_id);
-              })
-            }
-          );
-
-          // update the needs_notification flag for each of these stores to true
-          conn.query(
-            'UPDATE stores SET needs_notification=true WHERE store_id IN (' + store_ids.join() + ')',
-            function(err, results, fields) {
-              if (err) {
-                console.log(err);
-                res.status(400).send();
-              }
-            }
-          );
         }
       }
     );
@@ -93,6 +66,7 @@ function fulfillNeed(req, res) {
 }
 
 function itemPaid(req, res) {
+  let store_ids;
   let body = req.body;
   if (body.itemIds) {
     // set item to fulfilled
@@ -127,6 +101,33 @@ function itemPaid(req, res) {
                   res.status(400).send();
                 } else {
                   res.status(200).send();
+                }
+              }
+            );
+
+            // find all the stores that paid items interact with
+            conn.query(
+              'SELECT store_id FROM table WHERE item_id IN (' + body.itemIds.join() + ')',
+              function(err, results, fields) {
+                if (err) {
+                  console.log(err);
+                  res.status(400).send();
+                }
+                
+                results.forEach(function(result) {
+                  store_ids.push(result.store_id);
+                })
+              }
+            );
+
+            // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before
+            // we can move them to be ready for pickup...
+            conn.query(
+              'UPDATE stores SET needs_notification=true WHERE store_id IN (' + store_ids.join() + ')',
+              function(err, results, fields) {
+                if (err) {
+                  console.log(err);
+                  res.status(400).send();
                 }
               }
             );
