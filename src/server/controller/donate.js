@@ -21,6 +21,7 @@ var paypal = require('paypal-rest-sdk');
 paypal.configure(paypalConfig);
 
 function fulfillNeed(req, res) {
+  let store_ids;
   let body = req.body;
   if (body.itemIds) {
     // set item to fulfilled
@@ -57,6 +58,32 @@ function fulfillNeed(req, res) {
               }
             );
           });
+
+          // find all the stores that paid items interact with
+          conn.query(
+            'SELECT store_id FROM table WHERE item_id IN (' + body.itemIds.join() + ')',
+            function(err, results, fields) {
+              if (err) {
+                console.log(err);
+                res.status(400).send();
+              }
+              
+              results.forEach(function(result) {
+                store_ids.push(result.store_id);
+              })
+            }
+          );
+
+          // update the needs_notification flag for each of these stores to true
+          conn.query(
+            'UPDATE stores SET needs_notification=true WHERE store_id IN (' + store_ids.join() + ')',
+            function(err, results, fields) {
+              if (err) {
+                console.log(err);
+                res.status(400).send();
+              }
+            }
+          );
         }
       }
     );
@@ -82,6 +109,8 @@ function itemPaid(req, res) {
         body.serviceFee,
         body.country
       ],
+
+      // need to get all the item_ids, see which store_ids they map to, and then set the needs_notification status of all those stores to true.
       function(err) {
         if (err) {
           console.log(err);
@@ -197,29 +226,19 @@ function testDBConnection(req, res) {
 
 }
 
-// set up a CRON job to send notification email to storeowner every day at 8:00 AM if there are 
-// novel items to that (1) need price approval or (2) need to be 
+
+// CRON job to send notification email to storeowner every day at 8:00 AM if there are 
+// novel items to that (1) need price approval or (2) need to be picked up.
 
 var j = nodeSchedule.scheduleJob('00 8 * * *', function() {
+  
+  // disable CRON job if we're working on sandbox.
+  if (process.env.DATABASE == "duet_sandbox") {
+    return;
+  }
 
-
-  conn.equery(
-    "SELECT * from stores where needs_notificaiton=false",
-    function (err, results, fields) {
-      if (err) {
-        console.log("Error querying database: " + err);
-      }
-
-      console.log(results);
-    })
-  // TODO: set up daily job to send out email notifications
-});
-
-
-function sendStoreownerNotificationEmail(req, res) {
-  console.log("in send gstoreowner notification email");
   conn.query(
-    "SELECT * from stores where needs_notification=false",
+    "SELECT * from stores where needs_notification=true",
     function (err, results, fields) {
       if (err) {
         console.log("Error querying database: " + err);
@@ -227,9 +246,8 @@ function sendStoreownerNotificationEmail(req, res) {
 
       // TODO: send email notification to all store emails
       results.forEach(function(result) {
-        console.log("prepping email for: " + result.name);
         const msg = {
-          to: 'ankurras@usc.edu',
+          to: result.email,
           from: 'duet.giving@gmail.com',
           templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
           dynamic_template_data: {
@@ -247,9 +265,80 @@ function sendStoreownerNotificationEmail(req, res) {
              res.status(400).send("Failed to deliver message.");
           });
       });
-      
-      res.status(200).send("All messages delivered successfully.");  
+
+      // set needs_notification to false for everyone...
+      conn.query('UPDATE stores SET needs_notification=false', function(err, results, fields) {
+        if (err) {
+          console.log("error: " + err);
+          res.status(400).send("Failed to update stores notification settings...");
+        }
+      });
+
+      res.status(200).send("All storeowner notifications delivered successfully.");  
+    });
+});
+
+
+// Tester function to go through all stores that need to receive a nudge email, send the email, and set all flags to false.
+// NOTE: the "to" email here is set to duet.giving@gmail.com to make sure we don't accidentally send stores a bunch of emails. 
+function sendStoreownerNotificationEmail(req, res) {
+  conn.query(
+    "SELECT * from stores where needs_notification=true",
+    function (err, results, fields) {
+      if (err) {
+        console.log("Error querying database: " + err);
+      }
+
+      // TODO: send email notification to all store emails
+      results.forEach(function(result) {
+        const msg = {
+          to: 'duet.giving@gmail.com',
+          from: 'duet.giving@gmail.com',
+          templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
+          dynamic_template_data: {
+            storeName: result.name,
+          }
+        };
+
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log("Message delivered to " + result.name + " successfully.");
+          })
+          .catch(error => {
+             console.error("Error: " + error.toString());
+             res.status(400).send("Failed to deliver message.");
+          });
+      });
+
+      // set needs_notification to false for everyone...
+      conn.query('UPDATE stores SET needs_notification=false', function(err, results, fields) {
+        if (err) {
+          console.log("error: " + err);
+          res.status(400).send("Failed to update stores notification settings...");
+        }
+      });
+
+      res.status(200).send("All storeowner notifications delivered successfully.");  
     });
 }
 
-export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail, testDBConnection};
+// Tester function to update the needs_notification flag of a particular store_id to true. 
+// Pass in store_id as a query parameter.
+function updateNotificationFlag(req, res) {
+  let store_id = req.query.storeId;
+  // console.log("updating store_id: " + store_id);
+  conn.query('UPDATE stores SET needs_notification=true WHERE store_id=' + store_id,
+    function(err, results, fields) {
+      if (err) {
+        console.log(err);
+        res.status(400).send();
+      }
+      res.status(200).send("Flag updated successfully.");
+    }
+  );
+
+
+}
+
+export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail, testDBConnection, updateNotificationFlag};

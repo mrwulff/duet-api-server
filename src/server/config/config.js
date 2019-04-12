@@ -5,7 +5,6 @@ require('dotenv').config()
 let conn;
 function dbInitConnect() {
   if (!conn) {
-    console.log(process.env.DATABASE)
     conn = mysql.createConnection({
       host: "duet-db.cb9zdhamycaz.us-east-2.rds.amazonaws.com",
       port: "3306",
