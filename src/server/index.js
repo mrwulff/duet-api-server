@@ -11,6 +11,8 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import currency from "./controller/currency";
 
+require('dotenv').config()
+
 const PORT = process.env.PORT || 8080;
 const app = express();
 

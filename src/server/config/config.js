@@ -1,4 +1,5 @@
 import mysql from "mysql2";
+require('dotenv').config()
 
 // will have to change these to env variables
 let conn;
@@ -9,7 +10,7 @@ function dbInitConnect() {
       port: "3306",
       user: "duet_admin",
       password: "twostepping",
-      database: "duet_db"
+      database: process.env.DATABASE
     });
   }
   return conn;

@@ -62,6 +62,20 @@ function processTypeform(req, res) {
                     }
                   }
                 );
+
+                // set notification status for store_id to be true...
+                conn.query(
+                  "UPDATE stores SET needs_notification=true where store_id=?",
+                  [store_id],
+                  err => {
+                    if (err) {
+                      console.log(err);
+                      res.status(500).send();
+                    } else {
+                      res.status(200).send();
+                    }
+                  }
+                );
               }
             }
           );
