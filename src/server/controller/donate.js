@@ -2,68 +2,23 @@ import db from "./../config/config.js";
 import { strict } from "assert";
 import nodeSchedule from "node-schedule";
 
-require('dotenv').config()
+require("dotenv").config();
 
 // connect to DB
 const conn = db.dbInitConnect();
 
-const sgMail = require('@sendgrid/mail');
+const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // connect to Paypal
-"use strict";
+("use strict");
 var paypalConfig = {
-  'mode': process.env.PAYPAL_MODE,
-  'client_id': process.env.PAYPAL_CLIENT_ID,
-  'client_secret': process.env.PAYPAL_CLIENT_SECRET
+  mode: process.env.PAYPAL_MODE,
+  client_id: process.env.PAYPAL_CLIENT_ID,
+  client_secret: process.env.PAYPAL_CLIENT_SECRET
 };
-var paypal = require('paypal-rest-sdk');
+var paypal = require("paypal-rest-sdk");
 paypal.configure(paypalConfig);
-
-function fulfillNeed(req, res) {
-  let body = req.body;
-  if (body.itemIds) {
-    // set item to fulfilled
-    conn.execute(
-      "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donor_phone,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
-        " VALUES (NOW(),?,?,?,?,?,?,?,?)",
-      [
-        body.firstName,
-        body.lastName,
-        body.email,
-        body.phoneNumber,
-        body.amount,
-        body.bankTransferFee,
-        body.serviceFee,
-        body.country
-      ],
-      function(err) {
-        if (err) {
-          console.log(err);
-          res.status(400).send();
-        } else {
-          body.itemIds.forEach(function(id) {
-            // add entry into donations table
-            conn.execute(
-              "UPDATE items SET is_fulfilled=true,paid=true,donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
-              [id],
-              function(err) {
-                if (err) {
-                  console.log(err);
-                  res.status(400).send();
-                } else {
-                  res.status(200).send();
-                }
-              }
-            );
-          });
-        }
-      }
-    );
-  } else {
-    res.status(400).json();
-  }
-}
 
 function itemPaid(req, res) {
   let store_ids;
@@ -107,23 +62,27 @@ function itemPaid(req, res) {
 
             // find all the stores that paid items interact with
             conn.query(
-              'SELECT store_id FROM table WHERE item_id IN (' + body.itemIds.join() + ')',
+              "SELECT store_id FROM table WHERE item_id IN (" +
+                body.itemIds.join() +
+                ")",
               function(err, results, fields) {
                 if (err) {
                   console.log(err);
                   res.status(400).send();
                 }
-                
+
                 results.forEach(function(result) {
                   store_ids.push(result.store_id);
-                })
+                });
               }
             );
 
             // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before
             // we can move them to be ready for pickup...
             conn.query(
-              'UPDATE stores SET needs_notification=true WHERE store_id IN (' + store_ids.join() + ')',
+              "UPDATE stores SET needs_notification=true WHERE store_id IN (" +
+                store_ids.join() +
+                ")",
               function(err, results, fields) {
                 if (err) {
                   console.log(err);
@@ -141,32 +100,31 @@ function itemPaid(req, res) {
 }
 
 // Send payout to store, return true if successful
-  // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
+// sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
 function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
-
   var itemIdsStr = itemIds.map(id => "#" + id.toString()); // e.g. ["#63", "#43"]
   var note = "Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
 
   var payoutInfo = {
-    "sender_batch_header": {
-      "email_subject": "You have a payment from Duet!"
+    sender_batch_header: {
+      email_subject: "You have a payment from Duet!"
     },
-    "items": [
+    items: [
       {
-        "recipient_type": "EMAIL",
-        "amount": {
-          "value": amount,
-          "currency": currencyCode
+        recipient_type: "EMAIL",
+        amount: {
+          value: amount,
+          currency: currencyCode
         },
-        "receiver": payeeEmail,
-        "note": note
+        receiver: payeeEmail,
+        note: note
       }
     ]
   };
 
-  var sync_mode = 'false';
+  var sync_mode = "false";
 
-  paypal.payout.create(payoutInfo, sync_mode, function (error, payoutResp) {
+  paypal.payout.create(payoutInfo, sync_mode, function(error, payoutResp) {
     if (error) {
       console.log(error.response);
       return false;
@@ -177,7 +135,6 @@ function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   });
 }
 
-
 function sendConfirmationEmail(req, res) {
   var body = req.body;
 
@@ -186,13 +143,13 @@ function sendConfirmationEmail(req, res) {
 
   const msg = {
     to: body.email,
-    from: 'duet.giving@gmail.com',
-    templateId: 'd-2780c6e3d4f3427ebd0b20bbbf2f8cfc',
+    from: "duet.giving@gmail.com",
+    templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
     dynamic_template_data: {
-      name: body.firstName,
+      name: body.firstName
     }
   };
-  
+
   sgMail
     .send(msg)
     .then(() => {
@@ -200,13 +157,12 @@ function sendConfirmationEmail(req, res) {
       res.status(200).send("Message delivered.");
     })
     .catch(error => {
-       console.error(error.toString());
-       res.status(400).send("Failed to deliver message.");
-    });  
-} 
+      console.error(error.toString());
+      res.status(400).send("Failed to deliver message.");
+    });
+}
 
 function testDBConnection(req, res) {
-
   conn.connect(function(err) {
     if (err) {
       console.log("ERROR connection to db: " + err.stack);
@@ -214,122 +170,136 @@ function testDBConnection(req, res) {
     return false;
   });
 
-  conn.execute(
-    "SELECT * from stores",
-    function(err) {
-      if (err) {
-        console.log("error connecting to db: " + err);
-        res.status(400).send("ERROR: failed to connect to db.");
-      }
-      res.status(200).send("SUCCESS: connected to db.");
+  conn.execute("SELECT * from stores", function(err) {
+    if (err) {
+      console.log("error connecting to db: " + err);
+      res.status(400).send("ERROR: failed to connect to db.");
     }
-    );
-
+    res.status(200).send("SUCCESS: connected to db.");
+  });
 }
 
-
-// CRON job to send notification email to storeowner every day at 8:00 AM if there are 
+// CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
 
-var j = nodeSchedule.scheduleJob('00 8 * * *', function() {
-  
+var j = nodeSchedule.scheduleJob("00 8 * * *", function() {
   // disable CRON job if we're working on sandbox.
   if (process.env.DATABASE == "duet_sandbox") {
     return;
   }
 
-  conn.query(
-    "SELECT * from stores where needs_notification=true",
-    function (err, results, fields) {
-      if (err) {
-        console.log("Error querying database: " + err);
-      }
+  conn.query("SELECT * from stores where needs_notification=true", function(
+    err,
+    results,
+    fields
+  ) {
+    if (err) {
+      console.log("Error querying database: " + err);
+    }
 
-      // TODO: send email notification to all store emails
-      results.forEach(function(result) {
-        const msg = {
-          to: result.email,
-          from: 'duet.giving@gmail.com',
-          templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
-          dynamic_template_data: {
-            storeName: result.name,
-          }
-        };
-
-        sgMail
-          .send(msg)
-          .then(() => {
-            console.log("Message delivered to " + result.name + " successfully.");
-          })
-          .catch(error => {
-             console.error("Error: " + error.toString());
-             res.status(400).send("Failed to deliver message.");
-          });
-      });
-
-      // set needs_notification to false for everyone...
-      conn.query('UPDATE stores SET needs_notification=false', function(err, results, fields) {
-        if (err) {
-          console.log("error: " + err);
-          res.status(400).send("Failed to update stores notification settings...");
+    // TODO: send email notification to all store emails
+    results.forEach(function(result) {
+      const msg = {
+        to: result.email,
+        from: "duet.giving@gmail.com",
+        templateId: "d-435a092f0be54b07b5135799ac7dfb01",
+        dynamic_template_data: {
+          storeName: result.name
         }
-      });
+      };
 
-      res.status(200).send("All storeowner notifications delivered successfully.");  
+      sgMail
+        .send(msg)
+        .then(() => {
+          console.log("Message delivered to " + result.name + " successfully.");
+        })
+        .catch(error => {
+          console.error("Error: " + error.toString());
+          res.status(400).send("Failed to deliver message.");
+        });
     });
+
+    // set needs_notification to false for everyone...
+    conn.query("UPDATE stores SET needs_notification=false", function(
+      err,
+      results,
+      fields
+    ) {
+      if (err) {
+        console.log("error: " + err);
+        res
+          .status(400)
+          .send("Failed to update stores notification settings...");
+      }
+    });
+
+    res
+      .status(200)
+      .send("All storeowner notifications delivered successfully.");
+  });
 });
 
-
 // Tester function to go through all stores that need to receive a nudge email, send the email, and set all flags to false.
-// NOTE: the "to" email here is set to duet.giving@gmail.com to make sure we don't accidentally send stores a bunch of emails. 
+// NOTE: the "to" email here is set to duet.giving@gmail.com to make sure we don't accidentally send stores a bunch of emails.
 function sendStoreownerNotificationEmail(req, res) {
-  conn.query(
-    "SELECT * from stores where needs_notification=true",
-    function (err, results, fields) {
-      if (err) {
-        console.log("Error querying database: " + err);
-      }
+  conn.query("SELECT * from stores where needs_notification=true", function(
+    err,
+    results,
+    fields
+  ) {
+    if (err) {
+      console.log("Error querying database: " + err);
+    }
 
-      // TODO: send email notification to all store emails
-      results.forEach(function(result) {
-        const msg = {
-          to: 'duet.giving@gmail.com',
-          from: 'duet.giving@gmail.com',
-          templateId: 'd-435a092f0be54b07b5135799ac7dfb01',
-          dynamic_template_data: {
-            storeName: result.name,
-          }
-        };
-
-        sgMail
-          .send(msg)
-          .then(() => {
-            console.log("Message delivered to " + result.name + " successfully.");
-          })
-          .catch(error => {
-             console.error("Error: " + error.toString());
-             res.status(400).send("Failed to deliver message.");
-          });
-      });
-
-      // set needs_notification to false for everyone...
-      conn.query('UPDATE stores SET needs_notification=false', function(err, results, fields) {
-        if (err) {
-          console.log("error: " + err);
-          res.status(400).send("Failed to update stores notification settings...");
+    // TODO: send email notification to all store emails
+    results.forEach(function(result) {
+      const msg = {
+        to: "duet.giving@gmail.com",
+        from: "duet.giving@gmail.com",
+        templateId: "d-435a092f0be54b07b5135799ac7dfb01",
+        dynamic_template_data: {
+          storeName: result.name
         }
-      });
+      };
 
-      res.status(200).send("All storeowner notifications delivered successfully.");  
+      sgMail
+        .send(msg)
+        .then(() => {
+          console.log("Message delivered to " + result.name + " successfully.");
+        })
+        .catch(error => {
+          console.error("Error: " + error.toString());
+          res.status(400).send("Failed to deliver message.");
+        });
     });
+
+    // set needs_notification to false for everyone...
+    conn.query("UPDATE stores SET needs_notification=false", function(
+      err,
+      results,
+      fields
+    ) {
+      if (err) {
+        console.log("error: " + err);
+        res
+          .status(400)
+          .send("Failed to update stores notification settings...");
+      }
+    });
+
+    res
+      .status(200)
+      .send("All storeowner notifications delivered successfully.");
+  });
 }
 
-// Tester function to update the needs_notification flag of a particular store_id to true. 
+// Tester function to update the needs_notification flag of a particular store_id to true.
 // Pass in store_id as a query parameter.
 function updateNotificationFlag(req, res) {
   let store_id = req.query.storeId;
   // console.log("updating store_id: " + store_id);
-  conn.query('UPDATE stores SET needs_notification=true WHERE store_id=' + store_id,
+  conn.query(
+    "UPDATE stores SET needs_notification=true WHERE store_id=" + store_id,
     function(err, results, fields) {
       if (err) {
         console.log(err);
@@ -338,8 +308,12 @@ function updateNotificationFlag(req, res) {
       res.status(200).send("Flag updated successfully.");
     }
   );
-
-
 }
 
-export default { fulfillNeed, itemPaid, sendConfirmationEmail, sendStoreownerNotificationEmail, testDBConnection, updateNotificationFlag};
+export default {
+  itemPaid,
+  sendConfirmationEmail,
+  sendStoreownerNotificationEmail,
+  testDBConnection,
+  updateNotificationFlag
+};
