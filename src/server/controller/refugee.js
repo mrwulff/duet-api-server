@@ -2,6 +2,18 @@ import db from "./../config/config.js";
 
 const conn = db.dbInitConnect();
 
+function generatePicupCode(itemId) {
+  let code = "DUET-";
+  let pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  // append 2 random letters to code
+  for (let i = 0; i < 2; i++) {
+    code += pool.charAt(Math.floor(Math.random() * pool.length));
+  }
+  // append item id
+  code += itemId;
+  return code;
+}
+
 function processTypeform(req, res) {
   console.log("processing typeform");
   let answers = req.body.form_response.answers;
@@ -58,7 +70,33 @@ function processTypeform(req, res) {
                       console.log(err);
                       res.status(500).send();
                     } else {
-                      res.status(200).send();
+                      // get item of id of inserted entry
+                      conn.execute("SELECT LAST_INSERT_ID()", function(
+                        err,
+                        rows
+                      ) {
+                        if (err && rows.length < 1) {
+                          console.log(err);
+                          res.status(500).send({ error: err });
+                        } else {
+                          let itemId = rows[0]["LAST_INSERT_ID()"];
+                          // get code for item
+                          let code = generatePickupCode(itemId);
+                          // update item pick up code
+                          conn.execute(
+                            "UPDATE items SET pickup_code=? WHERE item_id=?",
+                            [code, itemId],
+                            function(err) {
+                              if (err) {
+                                console.log(err);
+                                res.status(500).send({ error: err });
+                              } else {
+                                res.status(200).send();
+                              }
+                            }
+                          );
+                        }
+                      });
                     }
                   }
                 );
