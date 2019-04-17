@@ -2,7 +2,7 @@ import db from "./../config/config.js";
 
 const conn = db.dbInitConnect();
 
-function generatePicupCode(itemId) {
+function generatePickupCode(itemId) {
   let code = "DUET-";
   let pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   // append 2 random letters to code
