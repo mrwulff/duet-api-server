@@ -43,6 +43,40 @@ function getItems(req, res) {
   });
 }
 
+function updateItemStatus(req, res) {
+  const safeWords = ['LISTED', 'VERIFIED', 'PAID', 'READY_FOR_PICKUP', 'PICKED_UP'];
+  
+  if (req.body.newStatus && req.body.itemIds && Array.isArray(req.body.itemIds)) {
+    if (safeWords.includes(req.body.newStatus)) {
+      if (req.body.itemIds.length > 0) {
+        let query = `UPDATE items SET status='${req.body.newStatus}' WHERE 1=1 AND (`;
+        req.body.itemIds.forEach(id => {
+          query += `item_id=${id} OR `;
+        });
+        query += `1=0);`;
+        conn.query(query, (err, rows) => {
+          if (err) {
+            console.log(err);
+            res.status(400).send();
+          } else {
+            res.status(200).json({
+              msg: `Item status updated to ${req.body.newStatus}`,
+            });
+          }
+        });
+      }
+    } else {
+      res.status(400).json({
+        error: 'Invalid status type'
+      })
+    }
+  } else {
+    res.status(400).json({
+      error: 'invalid request body'
+    });
+  }
+}
+
 function verifyItems(req, res) {
   if (req.body.itemIds.length > 0) {
     let query = "UPDATE items SET status='VERIFIED' WHERE 1=1 AND (";
@@ -107,4 +141,4 @@ function pickupConfirmation(req, res) {
   }
 }
 
-export default { getItems, verifyItems, readyForPickup, pickupConfirmation };
+export default { getItems, verifyItems, readyForPickup, pickupConfirmation, updateItemStatus };
