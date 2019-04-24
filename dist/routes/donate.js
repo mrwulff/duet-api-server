@@ -3,18 +3,25 @@ var _donate = _interopRequireDefault(require("./../controller/donate"));function
 
 var router = _express.default.Router();
 
-router.post("/fulfill", function (req, res) {
-  _donate.default.fulfillNeed(req, res);
-});
-
 router.post("/paid", function (req, res) {
   _donate.default.itemPaid(req, res);
   _donate.default.sendConfirmationEmail(req, res);
 });
 
-
-router.post("/testConfirmationEmail", function (req, res) {
+router.post("/testStoreownerConfirmationEmail", function (req, res) {
   _donate.default.sendStoreownerNotificationEmail(req, res);
+});
+
+router.post("/testResponse", function (req, res) {
+  res.status(200).send("hit endpoint successfully");
+});
+
+router.use("/testDBConnection", function (req, res) {
+  var success = _donate.default.testDBConnection(req, res);
+});
+
+router.use("/updateNotificationFlag", function (req, res) {
+  var success = _donate.default.updateNotificationFlag(req, res);
 });var _default =
 
 router;exports.default = _default;
