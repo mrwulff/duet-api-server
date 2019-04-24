@@ -5,9 +5,13 @@ var _refugeeProtected = _interopRequireDefault(require("./routes/refugeeProtecte
 var _donate = _interopRequireDefault(require("./routes/donate"));
 var _items = _interopRequireDefault(require("./routes/items"));
 var _stores = _interopRequireDefault(require("./routes/stores"));
+var _currency = _interopRequireDefault(require("./routes/currency"));
 var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
 var _cors = _interopRequireDefault(require("cors"));
-var _bodyParser = _interopRequireDefault(require("body-parser"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+var _bodyParser = _interopRequireDefault(require("body-parser"));
+var _currency2 = _interopRequireDefault(require("./controller/currency"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+require('dotenv').config();
 
 var PORT = process.env.PORT || 8080;
 var app = (0, _express.default)();
@@ -26,6 +30,7 @@ app.use("/api/stores", _stores.default);
 app.use("/api/refugee", _refugeeProtected.default);
 app.use("/api/donate", _donate.default);
 app.use("/api/items", _items.default);
+app.use("/api/currency/update", _currency.default);
 app.listen(PORT, function () {
   console.log("Please navigate to port ".concat(PORT));
 });

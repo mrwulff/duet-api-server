@@ -2,6 +2,18 @@
 
 var conn = _config.default.dbInitConnect();
 
+function generatePickupCode(itemId) {
+  var code = "DUET-";
+  var pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  // append 2 random letters to code
+  for (var i = 0; i < 2; i++) {
+    code += pool.charAt(Math.floor(Math.random() * pool.length));
+  }
+  // append item id
+  code += itemId;
+  return code;
+}
+
 function processTypeform(req, res) {
   console.log("processing typeform");
   var answers = req.body.form_response.answers;
@@ -58,6 +70,46 @@ function processTypeform(req, res) {
                 console.log(err);
                 res.status(500).send();
               } else {
+                // get item of id of inserted entry
+                conn.execute("SELECT LAST_INSERT_ID()", function (
+                err,
+                rows)
+                {
+                  if (err && rows.length < 1) {
+                    console.log(err);
+                    res.status(500).send({ error: err });
+                  } else {
+                    var itemId = rows[0]["LAST_INSERT_ID()"];
+                    // get code for item
+                    var code = generatePickupCode(itemId);
+                    // update item pick up code
+                    conn.execute(
+                    "UPDATE items SET pickup_code=? WHERE item_id=?",
+                    [code, itemId],
+                    function (err) {
+                      if (err) {
+                        console.log(err);
+                        res.status(500).send({ error: err });
+                      } else {
+                        res.status(200).send();
+                      }
+                    });
+
+                  }
+                });
+              }
+            });
+
+
+            // set notification status for store_id to be true...
+            conn.query(
+            "UPDATE stores SET needs_notification=true where store_id=?",
+            [store_id],
+            function (err) {
+              if (err) {
+                console.log(err);
+                res.status(500).send();
+              } else {
                 res.status(200).send();
               }
             });
@@ -100,7 +152,7 @@ function getNeeds(req, res) {
           familyImage: rows[0].family_image_url };
 
         conn.execute(
-        "SELECT item_id, display_link, items.name, price_euros, paid, store_id, icon_url,stores.name as store_name FROM items " +
+        "SELECT item_id, link, items.name, price_euros, status, store_id, icon_url,stores.name as store_name FROM items " +
         "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
         [beneficiaryId],
         function (err, rows) {
@@ -117,13 +169,13 @@ function getNeeds(req, res) {
             rows.forEach(function (obj) {
               item = {
                 itemId: obj.item_id,
-                image: obj.display_link,
+                image: obj.link,
                 name: obj.name,
                 price: obj.price_euros,
-                paid: obj.paid,
                 storeId: obj.store_id,
                 storeName: obj.store_name,
-                icon: obj.icon_url };
+                icon: obj.icon_url,
+                status: obj.status };
 
               needs.push(item);
             });
@@ -139,7 +191,7 @@ function getNeeds(req, res) {
     var result = [];
     conn.execute(
     query +
-    ", item_id, display_link, items.name, price_euros, paid, store_id, icon_url, stores.name AS store_name " +
+    ", item_id, link, items.name, price_euros, status, store_id, icon_url, stores.name AS store_name " +
     "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
     "INNER JOIN stores USING(store_id) ORDER BY beneficiary_id",
     function (err, rows) {
@@ -171,26 +223,26 @@ function getNeeds(req, res) {
               needs: [
               {
                 itemId: obj.item_id,
-                image: obj.display_link,
+                image: obj.link,
                 name: obj.name,
                 price: obj.price_euros,
-                paid: obj.paid,
                 storeId: obj.store_id,
                 storeName: obj.store_name,
-                icon: obj.icon_url }] };
+                icon: obj.icon_url,
+                status: obj.status }] };
 
 
 
           } else {
             beneficiaryObj["needs"].push({
               itemId: obj.item_id,
-              image: obj.display_link,
+              image: obj.link,
               name: obj.name,
               price: obj.price_euros,
-              paid: obj.paid,
               storeId: obj.store_id,
               storeName: obj.store_name,
-              icon: obj.icon_url });
+              icon: obj.icon_url,
+              status: obj.status });
 
           }
           current = obj.beneficiary_id;
