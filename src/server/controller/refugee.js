@@ -125,7 +125,7 @@ function processTypeform(req, res) {
 
 function getNeeds(req, res) {
   let query =
-    "SELECT beneficiary_id, CONCAT(beneficiaries.first_name, ' ', beneficiaries.last_name) as 'beneficiary_name', story, " +
+    "SELECT beneficiary_id, first_name, last_name, story, " +
     "origin_city, origin_country, current_city, current_country, family_image_url";
   if (req.query.beneficiary_id) {
     let beneficiaryId = req.query.beneficiary_id;
@@ -143,7 +143,8 @@ function getNeeds(req, res) {
         } else {
           let beneficiaryObj = {
             beneficiaryId: beneficiaryId,
-            name: rows[0].beneficiary_name,
+            firstName: rows[0].first_name,
+            lastName: rows[0].last_name,
             story: rows[0].story,
             originCity: rows[0].origin_city,
             originCountry: rows[0].origin_country,
@@ -213,7 +214,8 @@ function getNeeds(req, res) {
               }
               beneficiaryObj = {
                 beneficiaryId: obj.beneficiary_id,
-                name: obj.beneficiary_name,
+                firstName: obj.first_name,
+                lastName: obj.last_name,
                 story: obj.story,
                 originCity: obj.origin_city,
                 originCountry: obj.origin_country,
