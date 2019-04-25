@@ -4,6 +4,8 @@ import nodeSchedule from "node-schedule";
 
 require("dotenv").config();
 
+const SET_STORE_NOTIFICATION_FLAG = false;
+
 // connect to DB
 const conn = db.dbInitConnect();
 
@@ -21,7 +23,7 @@ var paypal = require("paypal-rest-sdk");
 paypal.configure(paypalConfig);
 
 function itemPaid(req, res) {
-  let store_ids;
+  let store_ids = [];
   let body = req.body;
   if (body.itemIds) {
     // set item to fulfilled
@@ -52,6 +54,7 @@ function itemPaid(req, res) {
               [id],
               function(err) {
                 if (err) {
+                  console.log("Error when adding entry into donations table!");
                   console.log(err);
                   res.status(400).send();
                 } else {
@@ -60,36 +63,45 @@ function itemPaid(req, res) {
               }
             );
 
-            // find all the stores that paid items interact with
-            conn.query(
-              "SELECT store_id FROM table WHERE item_id IN (" +
+            if (SET_STORE_NOTIFICATION_FLAG) {
+              // find all the stores that paid items interact with
+              conn.query(
+                "SELECT store_id FROM items WHERE item_id IN (" +
                 body.itemIds.join() +
                 ")",
-              function(err, results, fields) {
-                if (err) {
-                  console.log(err);
-                  res.status(400).send();
+                function (err, results, fields) {
+                  if (err) {
+                    console.log("Error when finding stores that paid items interact with!");
+                    console.log(err);
+                    res.status(400).send();
+                  }
+
+                  results.forEach(function (result) {
+                    store_ids.push(result.store_id);
+                  });
                 }
+              );
 
-                results.forEach(function(result) {
-                  store_ids.push(result.store_id);
-                });
-              }
-            );
-
-            // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before
-            // we can move them to be ready for pickup...
-            conn.query(
-              "UPDATE stores SET needs_notification=true WHERE store_id IN (" +
+              // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before
+              // we can move them to be ready for pickup...
+              conn.query(
+                "UPDATE stores SET needs_notification=1 WHERE store_id IN (" +
                 store_ids.join() +
                 ")",
-              function(err, results, fields) {
-                if (err) {
-                  console.log(err);
-                  res.status(400).send();
+                function (err, results, fields) {
+                  if (err) {
+                    // TODO: fix this SQL syntax error
+                    console.log("Error when setting stores notification flag!");
+                    console.log("store_ids: ", store_ids);
+                    console.log("Query: " + "UPDATE stores SET needs_notification=1 WHERE store_id IN (" +
+                      store_ids.join() +
+                      ")");
+                    console.log(err);
+                    res.status(400).send();
+                  }
                 }
-              }
-            );
+              );
+            }
           });
         }
       }
@@ -158,7 +170,7 @@ function sendConfirmationEmail(req, res) {
     })
     .catch(error => {
       console.error(error.toString());
-      res.status(400).send("Failed to deliver message.");
+      res.send("Failed to deliver message.");
     });
 }
 
@@ -188,7 +200,10 @@ var j = nodeSchedule.scheduleJob("00 8 * * *", function() {
     return;
   }
 
-  conn.query("SELECT * from stores where needs_notification=true", function(
+  // TODO: make this active!
+  return;
+
+  conn.query("SELECT * from stores where needs_notification=1", function(
     err,
     results,
     fields
@@ -220,7 +235,7 @@ var j = nodeSchedule.scheduleJob("00 8 * * *", function() {
     });
 
     // set needs_notification to false for everyone...
-    conn.query("UPDATE stores SET needs_notification=false", function(
+    conn.query("UPDATE stores SET needs_notification=0", function(
       err,
       results,
       fields
@@ -242,7 +257,7 @@ var j = nodeSchedule.scheduleJob("00 8 * * *", function() {
 // Tester function to go through all stores that need to receive a nudge email, send the email, and set all flags to false.
 // NOTE: the "to" email here is set to duet.giving@gmail.com to make sure we don't accidentally send stores a bunch of emails.
 function sendStoreownerNotificationEmail(req, res) {
-  conn.query("SELECT * from stores where needs_notification=true", function(
+  conn.query("SELECT * from stores where needs_notification=1", function(
     err,
     results,
     fields
@@ -274,7 +289,7 @@ function sendStoreownerNotificationEmail(req, res) {
     });
 
     // set needs_notification to false for everyone...
-    conn.query("UPDATE stores SET needs_notification=false", function(
+    conn.query("UPDATE stores SET needs_notification=0", function(
       err,
       results,
       fields
@@ -299,7 +314,7 @@ function updateNotificationFlag(req, res) {
   let store_id = req.query.storeId;
   // console.log("updating store_id: " + store_id);
   conn.query(
-    "UPDATE stores SET needs_notification=true WHERE store_id=" + store_id,
+    "UPDATE stores SET needs_notification=1 WHERE store_id=" + store_id,
     function(err, results, fields) {
       if (err) {
         console.log(err);
