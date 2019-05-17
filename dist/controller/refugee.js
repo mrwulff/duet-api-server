@@ -14,7 +14,166 @@ function generatePickupCode(itemId) {
   return code;
 }
 
-function processTypeform(req, res) {
+
+// TODO
+function processTypeformV4(req, res) {
+  console.log("Processing TypeForm (V4)");
+  var answers = req.body.form_response.answers;
+  var formTitle = req.body.form_response.definition.title;
+  var formQuestions = req.body.form_response.definition.fields;
+
+  // Check which language was used
+  var language = null;
+  if (formTitle.includes("English")) {
+    language = "english";
+  } else if (formTitle.includes("Arabic")) {
+    language = "arabic";
+  } else if (formTitle.includes("Farsi")) {
+    language = "farsi";
+  } else {
+    console.log("Error! Unknown Typeform language.");
+    res.status(501).send();
+  }
+
+  // --- Refugee Info --- //
+  // beneficiary ID (text) - answers[0]
+  // phone number (???)
+
+  // --- Item Info --- //
+  // photo (file_url)
+  // category (choice.label) - TODO: find category index
+  // item name (choice.label) - TODO: find item index
+  // price (text)
+  // size (text, optional)
+  // store (choice.label)
+
+  // Get responses
+  if (answers.length >= 8) {
+    var beneficiaryId = answers[0].text;
+    var phoneNum = answers[1].phone_number;
+    var photoUrl = answers[2].file_url;
+    var itemName = answers[4].choice.label;
+    var price = answers[5].text;
+    var size = null;
+    var store = null;
+    if (answers.length == 8) {
+      store = answers[6].choice.label;
+    } else
+    if (answers.legnth == 9) {
+      size = answers[6].text;
+      store = answers[7].choice.label;
+    }
+    // Placeholders (require SQL lookups)
+    var itemNameEnglish = null;
+    var categoryId = null;
+    var storeId = null;
+
+    // Translate itemName to English by matching itemName in item_types table
+    // And get categoryId while we're at it
+    conn.query(
+    "SELECT name_english, category_id FROM item_types WHERE ?=?",
+    ["name_" + language, itemName],
+    function (err, rows) {
+      // Unknown error
+      if (err) {
+        console.log(err);
+        res.status(500).send();
+      }
+      // No matches
+      else if (rows.length == 0) {
+          res.status(400).json({
+            err: "Invalid Item Name" });
+
+        }
+        // Found a match!
+        else {
+            itemNameEnglish = rows[0].name_english;
+            categoryId = rows[0].category_id;
+            conn.query(
+            "SELECT store_id FROM stores WHERE name=?",
+            [store],
+            function (err, rows) {
+              // Unknown error
+              if (err) {
+                console.log(err);
+                res.status(500).send();
+              }
+              // No matches
+              else if (rows.length == 0) {
+                  res.status(400).json({
+                    err: "Invalid Store Name" });
+
+                }
+                // Successful lookup
+                else {
+                    storeId = rows[0].store_id;
+                    // insert item
+                    conn.query(
+                    "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link) VALUES (?,?,?,?,?,?,?)",
+                    [itemNameEnglish, size, price, beneficiaryId, categoryId, storeId, photoUrl],
+                    function (err) {
+                      if (err) {
+                        console.log(err);
+                        res.status(500).send();
+                      } else {
+                        // get item of id of inserted entry
+                        conn.execute("SELECT LAST_INSERT_ID()", function (
+                        err,
+                        rows)
+                        {
+                          if (err && rows.length < 1) {
+                            console.log(err);
+                            res.status(500).send({ error: err });
+                          } else {
+                            var itemId = rows[0]["LAST_INSERT_ID()"];
+                            // get code for item
+                            var code = generatePickupCode(itemId);
+                            // update item pick up code
+                            conn.execute(
+                            "UPDATE items SET pickup_code=? WHERE item_id=?",
+                            [code, itemId],
+                            function (err) {
+                              if (err) {
+                                console.log(err);
+                                res.status(500).send({ error: err });
+                              } else {
+                                res.status(200).send();
+                              }
+                            });
+
+                          }
+                        });
+                      }
+                    });
+
+
+                    // set notification status for store_id to be true...
+                    conn.query(
+                    "UPDATE stores SET needs_notification=true where store_id=?",
+                    [storeId],
+                    function (err) {
+                      if (err) {
+                        console.log(err);
+                        res.status(500).send();
+                      } else {
+                        res.status(200).send();
+                      }
+                    });
+
+                  }
+            });
+
+          }
+    });
+
+  } else
+  {
+    console.log("Error! Invalid number of answers.");
+    res.status(502).send();
+  }
+}
+
+function processTypeformV3(req, res) {
   console.log("processing typeform");
   var answers = req.body.form_response.answers;
   if (answers.length > 0) {
@@ -125,7 +284,7 @@ function processTypeform(req, res) {
 
 function getNeeds(req, res) {
   var query =
-  "SELECT beneficiary_id, CONCAT(beneficiaries.first_name, ' ', beneficiaries.last_name) as 'beneficiary_name', story, " +
+  "SELECT beneficiary_id, first_name, last_name, story, " +
   "origin_city, origin_country, current_city, current_country, family_image_url";
   if (req.query.beneficiary_id) {
     var beneficiaryId = req.query.beneficiary_id;
@@ -143,7 +302,8 @@ function getNeeds(req, res) {
       } else {
         var beneficiaryObj = {
           beneficiaryId: beneficiaryId,
-          name: rows[0].beneficiary_name,
+          firstName: rows[0].first_name,
+          lastName: rows[0].last_name,
           story: rows[0].story,
           originCity: rows[0].origin_city,
           originCountry: rows[0].origin_country,
@@ -213,7 +373,8 @@ function getNeeds(req, res) {
             }
             beneficiaryObj = {
               beneficiaryId: obj.beneficiary_id,
-              name: obj.beneficiary_name,
+              firstName: obj.first_name,
+              lastName: obj.last_name,
               story: obj.story,
               originCity: obj.origin_city,
               originCountry: obj.origin_country,

@@ -4,8 +4,12 @@ var _refugee = _interopRequireDefault(require("./../controller/refugee"));functi
 var router = _express.default.Router();
 var app = (0, _express.default)();
 
-router.post("/typeform", function (req, res) {
-  _refugee.default.processTypeform(req, res);
+router.post("/typeformV3", function (req, res) {
+  _refugee.default.processTypeformV3(req, res);
+});
+
+router.post("/typeformV4", function (req, res) {
+  _refugee.default.processTypeformV4(req, res);
 });var _default =
 
 router;exports.default = _default;

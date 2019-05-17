@@ -14,7 +14,166 @@ function generatePickupCode(itemId) {
   return code;
 }
 
-function processTypeform(req, res) {
+
+// TODO
+function processTypeformV4(req, res) {
+  console.log("Processing TypeForm (V4)");
+  let answers = req.body.form_response.answers;
+  let formTitle = req.body.form_response.definition.title;
+  let formQuestions = req.body.form_response.definition.fields;
+
+  // Check which language was used
+  let language = null;
+  if (formTitle.includes("English")) {
+    language = "english";
+  } else if (formTitle.includes("Arabic")) {
+    language = "arabic";
+  } else if (formTitle.includes("Farsi")) {
+    language = "farsi";
+  } else {
+    console.log("Error! Unknown Typeform language.");
+    res.status(501).send();
+  }
+
+  // --- Refugee Info --- //
+  // beneficiary ID (text) - answers[0]
+  // phone number (???)
+
+  // --- Item Info --- //
+  // photo (file_url)
+  // category (choice.label) - TODO: find category index
+  // item name (choice.label) - TODO: find item index
+  // price (text)
+  // size (text, optional)
+  // store (choice.label)
+
+  // Get responses
+  if (answers.length >= 8) {
+    let beneficiaryId = answers[0].text;
+    let phoneNum = answers[1].phone_number;
+    let photoUrl = answers[2].file_url;
+    let itemName = answers[4].choice.label;
+    let price = answers[5].text;
+    let size = null;
+    let store = null;
+    if (answers.length == 8) {
+      store = answers[6].choice.label;
+    }
+    else if (answers.legnth == 9) {
+      size = answers[6].text;
+      store = answers[7].choice.label;
+    }
+    // Placeholders (require SQL lookups)
+    let itemNameEnglish = null;
+    let categoryId = null;
+    let storeId = null;
+
+    // Translate itemName to English by matching itemName in item_types table
+      // And get categoryId while we're at it
+    conn.query(
+      "SELECT name_english, category_id FROM item_types WHERE ?=?",
+      ["name_" + language, itemName],
+      (err, rows) => {
+        // Unknown error
+        if (err) {
+          console.log(err);
+          res.status(500).send();
+        } 
+        // No matches
+        else if (rows.length == 0) {
+          res.status(400).json({
+            err: "Invalid Item Name"
+          });
+        } 
+        // Found a match!
+        else {
+          itemNameEnglish = rows[0].name_english;
+          categoryId = rows[0].category_id;
+          conn.query(
+            "SELECT store_id FROM stores WHERE name=?",
+            [store],
+            (err, rows) => {
+              // Unknown error
+              if (err) {
+                console.log(err);
+                res.status(500).send();
+              } 
+              // No matches
+              else if (rows.length == 0) {
+                res.status(400).json({
+                  err: "Invalid Store Name"
+                });
+              } 
+              // Successful lookup
+              else {
+                storeId = rows[0].store_id;
+                // insert item
+                conn.query(
+                  "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link) VALUES (?,?,?,?,?,?,?)",
+                  [itemNameEnglish, size, price, beneficiaryId, categoryId, storeId, photoUrl],
+                  err => {
+                    if (err) {
+                      console.log(err);
+                      res.status(500).send();
+                    } else {
+                      // get item of id of inserted entry
+                      conn.execute("SELECT LAST_INSERT_ID()", function (
+                        err,
+                        rows
+                      ) {
+                        if (err && rows.length < 1) {
+                          console.log(err);
+                          res.status(500).send({ error: err });
+                        } else {
+                          let itemId = rows[0]["LAST_INSERT_ID()"];
+                          // get code for item
+                          let code = generatePickupCode(itemId);
+                          // update item pick up code
+                          conn.execute(
+                            "UPDATE items SET pickup_code=? WHERE item_id=?",
+                            [code, itemId],
+                            function (err) {
+                              if (err) {
+                                console.log(err);
+                                res.status(500).send({ error: err });
+                              } else {
+                                res.status(200).send();
+                              }
+                            }
+                          );
+                        }
+                      });
+                    }
+                  }
+                );
+
+                // set notification status for store_id to be true...
+                conn.query(
+                  "UPDATE stores SET needs_notification=true where store_id=?",
+                  [storeId],
+                  err => {
+                    if (err) {
+                      console.log(err);
+                      res.status(500).send();
+                    } else {
+                      res.status(200).send();
+                    }
+                  }
+                );
+              }
+            }
+          );
+        }
+      }
+    );
+  }
+  else {
+    console.log("Error! Invalid number of answers.");
+    res.status(502).send();
+  }
+}
+
+function processTypeformV3(req, res) {
   console.log("processing typeform");
   let answers = req.body.form_response.answers;
   if (answers.length > 0) {
