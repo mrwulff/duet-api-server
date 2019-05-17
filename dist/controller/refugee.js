@@ -14,8 +14,6 @@ function generatePickupCode(itemId) {
   return code;
 }
 
-
-// TODO
 function processTypeformV4(req, res) {
   console.log("Processing TypeForm (V4)");
   var answers = req.body.form_response.answers;
@@ -416,4 +414,4 @@ function getNeeds(req, res) {
   }
 }var _default =
 
-{ processTypeform: processTypeform, getNeeds: getNeeds };exports.default = _default;
+{ processTypeformV3: processTypeformV3, processTypeformV4: processTypeformV4, getNeeds: getNeeds };exports.default = _default;
