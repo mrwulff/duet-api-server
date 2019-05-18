@@ -57,9 +57,14 @@ function processTypeformV4(req, res) {
     if (answers.length == 8) {
       store = answers[6].choice.label;
     }
-    else if (answers.legnth == 9) {
+    else if (answers.length == 9) {
       size = answers[6].text;
       store = answers[7].choice.label;
+    }
+    else {
+      res.status(400).json({
+        msg: ("Invalid number of answers :" + answers.length)
+      });
     }
     // Placeholders (require SQL lookups)
     let itemNameEnglish = null;
@@ -67,22 +72,23 @@ function processTypeformV4(req, res) {
     let storeId = null;
 
     // Translate itemName to English by matching itemName in item_types table
-      // And get categoryId while we're at it
+    // And get categoryId while we're at it
     conn.query(
-      "SELECT name_english, category_id FROM item_types WHERE ?=?",
+      "SELECT name_english, category_id FROM item_types WHERE ??=?",
       ["name_" + language, itemName],
       (err, rows) => {
         // Unknown error
         if (err) {
           console.log(err);
-          res.status(500).send();
-        } 
+          res.status(500).send({ error: err });
+        }
         // No matches
         else if (rows.length == 0) {
           res.status(400).json({
-            err: "Invalid Item Name"
+            msg: ("Invalid Item Name! Table: name_" + language + "; itemName: " + itemName),
+            error: err
           });
-        } 
+        }
         // Found a match!
         else {
           itemNameEnglish = rows[0].name_english;
@@ -94,14 +100,15 @@ function processTypeformV4(req, res) {
               // Unknown error
               if (err) {
                 console.log(err);
-                res.status(500).send();
-              } 
+                res.status(500).send({ error: err });
+              }
               // No matches
               else if (rows.length == 0) {
                 res.status(400).json({
-                  err: "Invalid Store Name"
+                  msg: "Invalid Store Name: " + store,
+                  error: err
                 });
-              } 
+              }
               // Successful lookup
               else {
                 storeId = rows[0].store_id;
@@ -112,7 +119,7 @@ function processTypeformV4(req, res) {
                   err => {
                     if (err) {
                       console.log(err);
-                      res.status(500).send();
+                      res.status(500).send({ error: err });
                     } else {
                       // get item of id of inserted entry
                       conn.execute("SELECT LAST_INSERT_ID()", function (
@@ -152,7 +159,7 @@ function processTypeformV4(req, res) {
                   err => {
                     if (err) {
                       console.log(err);
-                      res.status(500).send();
+                      res.status(500).send({ error: err });
                     } else {
                       res.status(200).send();
                     }
@@ -196,7 +203,7 @@ function processTypeformV3(req, res) {
       (err, rows) => {
         if (err) {
           console.log(err);
-          res.status(500).send();
+          res.status(500).send({ error: err });
         } else if (rows.length == 0) {
           res.status(400).json({
             err: "Invalid Category Name"
@@ -211,10 +218,11 @@ function processTypeformV3(req, res) {
             (err, rows) => {
               if (err) {
                 console.log(err);
-                res.status(500).send();
+                res.status(500).send({ error: err });
               } else if (rows.length == 0) {
                 res.status(400).json({
-                  err: "Invalid Store Name"
+                  msg: "Invalid Store Name: " + store,
+                  error: err
                 });
               } else {
                 let store_id = rows[0].store_id;
@@ -225,10 +233,10 @@ function processTypeformV3(req, res) {
                   err => {
                     if (err) {
                       console.log(err);
-                      res.status(500).send();
+                      res.status(500).send({ error: err });
                     } else {
                       // get item of id of inserted entry
-                      conn.execute("SELECT LAST_INSERT_ID()", function(
+                      conn.execute("SELECT LAST_INSERT_ID()", function (
                         err,
                         rows
                       ) {
@@ -243,7 +251,7 @@ function processTypeformV3(req, res) {
                           conn.execute(
                             "UPDATE items SET pickup_code=? WHERE item_id=?",
                             [code, itemId],
-                            function(err) {
+                            function (err) {
                               if (err) {
                                 console.log(err);
                                 res.status(500).send({ error: err });
@@ -265,7 +273,7 @@ function processTypeformV3(req, res) {
                   err => {
                     if (err) {
                       console.log(err);
-                      res.status(500).send();
+                      res.status(500).send({ error: err });
                     } else {
                       res.status(200).send();
                     }
@@ -289,10 +297,10 @@ function getNeeds(req, res) {
     conn.execute(
       query + " FROM beneficiaries WHERE beneficiary_id = ?",
       [beneficiaryId],
-      function(err, rows) {
+      function (err, rows) {
         if (err) {
           console.log(err);
-          res.status(500).send();
+          res.status(500).send({ error: err });
         } else if (rows.length == 0) {
           res.status(400).json({
             err: "Invalid Beneficiary ID"
@@ -311,9 +319,9 @@ function getNeeds(req, res) {
           };
           conn.execute(
             "SELECT item_id, link, items.name, price_euros, status, store_id, icon_url,stores.name as store_name FROM items " +
-              "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
+            "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
             [beneficiaryId],
-            function(err, rows) {
+            function (err, rows) {
               if (err) {
                 console.log(err);
                 res.status(400).send();
@@ -324,7 +332,7 @@ function getNeeds(req, res) {
               } else {
                 let item;
                 let needs = [];
-                rows.forEach(function(obj) {
+                rows.forEach(function (obj) {
                   item = {
                     itemId: obj.item_id,
                     image: obj.link,
@@ -349,13 +357,13 @@ function getNeeds(req, res) {
     let result = [];
     conn.execute(
       query +
-        ", item_id, link, items.name, price_euros, status, store_id, icon_url, stores.name AS store_name " +
-        "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
-        "INNER JOIN stores USING(store_id) ORDER BY beneficiary_id",
-      function(err, rows) {
+      ", item_id, link, items.name, price_euros, status, store_id, icon_url, stores.name AS store_name " +
+      "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
+      "INNER JOIN stores USING(store_id) ORDER BY beneficiary_id",
+      function (err, rows) {
         if (err) {
           console.log(err);
-          res.status(500).send();
+          res.status(500).send({ error: err });
         } else if (rows.length == 0) {
           res.json({
             msg: "No Item Needs"
@@ -364,7 +372,7 @@ function getNeeds(req, res) {
           let current = -1;
           let beneficiaryObj;
           let result = [];
-          rows.forEach(function(obj) {
+          rows.forEach(function (obj) {
             if (current != obj.beneficiary_id) {
               if (beneficiaryObj) {
                 result.push(beneficiaryObj);
