@@ -1,6 +1,14 @@
 import db from "./../config/config.js";
+import { getMaxListeners } from "cluster";
+
+require("dotenv").config();
+
+var sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const conn = db.dbInitConnect();
+const FBMessenger = require('fb-messenger');
+const messenger = new FBMessenger({ token: process.env.FB_ACCESS_TOKEN });
 
 function generatePickupCode(itemId) {
   let code = "DUET-";
@@ -12,6 +20,134 @@ function generatePickupCode(itemId) {
   // append item id
   code += itemId;
   return code;
+}
+
+// Adds support for GET requests to our webhook
+function fbAuth(req, res) {
+
+  // Your verify token. Should be a random string.
+  let VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
+
+  // Parse the query params
+  let mode = req.query['hub.mode'];
+  let token = req.query['hub.verify_token'];
+  let challenge = req.query['hub.challenge'];
+
+  // Checks if a token and mode is in the query string of the request
+  if (mode && token) {
+
+    // Checks the mode and token sent is correct
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+
+      // Responds with the challenge token from the request
+      console.log('WEBHOOK_VERIFIED');
+      res.status(200).send(challenge);
+
+    } else {
+      // Responds with '403 Forbidden' if verify tokens do not match
+      res.sendStatus(403);
+    }
+  }
+};
+
+// Handles FB message events
+// See: https://developers.facebook.com/docs/messenger-platform/getting-started/quick-start/
+function processFBMessage(req, res) {
+
+  // Parse the request body from the POST
+  let body = req.body;
+
+  // Check the webhook event is from a Page subscription
+  if (body.object === 'page') {
+
+    // Iterate over each entry - there may be multiple if batched
+    body.entry.forEach(function (entry) {
+
+      // Get the webhook event. entry.messaging is an array, but 
+      // will only ever contain one event, so we get index 0
+      if (entry.messaging) {
+        let message_obj = entry.messaging[0];
+        console.log(message_obj);
+
+        // Log message in SQL
+        let sender = message_obj.sender.id;
+        let recipient = message_obj.recipient.id;
+        let message = message_obj.message.text;
+
+        conn.query(
+          "INSERT INTO messages (source, sender, recipient, message) VALUES (?,?,?,?)",
+          ['fb', sender, recipient, message],
+          err => {
+            if (err) {
+              console.log(err);
+              res.status(500).send({ error: err });
+            }
+            else {
+              console.log("Message logged to database");
+              res.status(200).send();
+            }
+          }
+        );
+      }
+    });
+
+  } else {
+    // Return a '404 Not Found' if event is not from a page subscription
+    res.sendStatus(404);
+  }
+}
+
+function sendPickupNotification(itemId) {
+  conn.query(
+    "SELECT " +
+    "items.name AS item_name, items.pickup_code, " +
+    "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " +
+    "stores.name AS store_name " + 
+    "FROM items " + 
+    "INNER JOIN beneficiaries ON items.beneficiary_id = beneficiaries.beneficiary_id " + 
+    "INNER JOIN stores ON items.store_id = stores.store_id " +
+    "WHERE items.item_id=?",
+    [itemId],
+    (err, rows) => {
+      if (err) {
+        console.log(err);
+        return false;
+      } else if (rows.length == 0) {
+        console.log("No matches found when sending pickup notification!");
+        return false;
+      } else {
+        let message = "Hi " + rows[0].first_name + ", this is an automated message from Duet.\n" +
+          "Your " + rows[0].item_name + " is now available for pickup from " + rows[0].store_name + "!\n" +
+          "Please use pick-up code: " + rows[0].pickup_code;
+        try {
+          messenger.sendTextMessage({
+            id: rows[0].fb_psid,
+            text: message,
+            messaging_type: "MESSAGE_TAG",
+            tag: "SHIPPING_UPDATE"
+          });
+          console.log('Sent pickup notification to ' + rows[0].first_name + " " + rows[0].last_name +
+            " for " + rows[0].item_name + " with itemId: " + itemId);
+          return true;
+        } catch (e) {
+          console.error(e);
+          return false;
+        }
+      }
+    }
+  );
+}
+
+// TODO: delete this after testing
+function sendTestPickupNotification(req, res) {
+  let itemId = req.body.itemId;
+  try {
+    sendPickupNotification(itemId);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({ error: e });
+  }
+  res.status(200).send();
 }
 
 function processTypeformV4(req, res) {
@@ -32,18 +168,6 @@ function processTypeformV4(req, res) {
     console.log("Error! Unknown Typeform language.");
     res.status(501).send();
   }
-
-  // --- Refugee Info --- //
-  // beneficiary ID (text) - answers[0]
-  // phone number (???)
-
-  // --- Item Info --- //
-  // photo (file_url)
-  // category (choice.label) - TODO: find category index
-  // item name (choice.label) - TODO: find item index
-  // price (text)
-  // size (text, optional)
-  // store (choice.label)
 
   // Get responses
   if (answers.length >= 8) {
@@ -79,6 +203,8 @@ function processTypeformV4(req, res) {
       (err, rows) => {
         // Unknown error
         if (err) {
+
+          
           console.log(err);
           res.status(500).send({ error: err });
         }
@@ -118,7 +244,29 @@ function processTypeformV4(req, res) {
                   [itemNameEnglish, size, price, beneficiaryId, categoryId, storeId, photoUrl],
                   err => {
                     if (err) {
+                      console.log("Typeform Database entry error!");
                       console.log(err);
+
+                      // Sendgrid Error message (email)
+                      msg = {
+                        to: "duet.giving@gmail.com",
+                        from: "duet.giving@gmail.com",
+                        templateId: "d-6ecc5d7df32c4528b8527c248a212552",
+                        dynamic_template_data: {
+                          formTitle: formTitle,
+                          eventId: eventId,
+                          error: err
+                        }
+                      }
+                      sgMail
+                        .send(msg)
+                        .then(() => {
+                          console.log("Sendgrid error message delived successfully.");
+                        })
+                        .catch(error => {
+                          console.error(error.toString());
+                        });
+                      
                       res.status(500).send({ error: err });
                     } else {
                       // get item of id of inserted entry
@@ -422,4 +570,4 @@ function getNeeds(req, res) {
   }
 }
 
-export default { processTypeformV3, processTypeformV4, getNeeds };
+export default { processTypeformV3, processTypeformV4, fbAuth, sendTestPickupNotification, sendPickupNotification, processFBMessage, getNeeds };

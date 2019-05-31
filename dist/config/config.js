@@ -6,8 +6,8 @@ var conn;
 function dbInitConnect() {
   if (!conn) {
     conn = _mysql.default.createConnection({
-      host: "duet-db.cb9zdhamycaz.us-east-2.rds.amazonaws.com",
-      port: "3306",
+      host: process.env.DATABASE_HOST,
+      port: process.env.DATABASE_PORT,
       user: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASS,
       database: process.env.DATABASE });
