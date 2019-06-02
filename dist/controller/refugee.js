@@ -6,6 +6,16 @@ require("dotenv").config();
 var sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+var request = require('request');
+
+var path = require('path');
+var mime = require('mime-types');
+var AWS = require("aws-sdk");
+var s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY });
+
+
 var conn = _config.default.dbInitConnect();
 var FBMessenger = require('fb-messenger');
 var messenger = new FBMessenger({ token: process.env.FB_ACCESS_TOKEN });
@@ -20,6 +30,51 @@ function generatePickupCode(itemId) {
   // append item id
   code += itemId;
   return code;
+}
+
+function uploadItemImageToS3(itemId, imageUrl) {
+  var options = {
+    uri: imageUrl,
+    encoding: null };
+
+  var extension = path.extname(imageUrl);
+  var contentType = mime.contentType(extension);
+  request(options, function (error, response, body) {
+    if (error || response.statusCode !== 200) {
+      console.log("failed to get Typeform image: " + imageUrl);
+      console.log(error);
+      throw error;
+    } else {
+      s3.upload({
+        Body: body,
+        Key: 'item-photos/item-' + itemId + extension,
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        ACL: "public-read",
+        ContentType: contentType },
+      function (error, data) {
+        if (error) {
+          console.log("error uploading image to s3!");
+          console.log("itemId: " + itemId);
+          console.log("imageUrl: " + imageUrl);
+          console.log(error);
+          throw error;
+        } else {
+          console.log("success uploading image to s3. itemId: ", itemId);
+          console.log("contentType: " + contentType);
+          console.log("URL: ", data.Location);
+        }
+      });
+    }
+  });
+}
+
+function testUploadItemImageToS3(req, res) {
+  try {
+    uploadItemImageToS3(req.body.itemId, req.body.imageUrl);
+    res.status(200).send();
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
 }
 
 // Adds support for GET requests to our webhook
@@ -175,7 +230,8 @@ function processTypeformV4(req, res) {
     var phoneNum = answers[1].phone_number;
     var photoUrl = answers[2].file_url;
     var itemName = answers[4].choice.label;
-    var price = answers[5].text;
+    // replace "," with "."; remove non-numeric characters
+    var price = answers[5].text.replace(/,/g, '.').replace(/[^\d.]/g, '');
     var size = null;
     var store = null;
     if (answers.length == 8) {
@@ -203,8 +259,6 @@ function processTypeformV4(req, res) {
     function (err, rows) {
       // Unknown error
       if (err) {
-
-
         console.log(err);
         res.status(500).send({ error: err });
       }
@@ -290,7 +344,52 @@ function processTypeformV4(req, res) {
                                 console.log(err);
                                 res.status(500).send({ error: err });
                               } else {
-                                res.status(200).send();
+                                // Re-Host image to S3, update image URL in DB
+                                var options = {
+                                  uri: photoUrl,
+                                  encoding: null };
+
+                                var extension = path.extname(photoUrl);
+                                var contentType = mime.contentType(extension);
+                                request(options, function (error, response, body) {
+                                  if (error || response.statusCode !== 200) {
+                                    console.log("failed to get Typeform image: " + photoUrl);
+                                    console.log(error);
+                                    res.status(500).send({ error: err });
+                                  } else {
+                                    s3.upload({
+                                      Body: body,
+                                      Key: 'item-photos/item-' + itemId + extension,
+                                      Bucket: process.env.AWS_S3_BUCKET_NAME,
+                                      ACL: "public-read",
+                                      ContentType: contentType },
+                                    function (error, data) {
+                                      if (error) {
+                                        console.log("error uploading image to s3: " + itemId);
+                                        console.log("photoUrl: " + photoUrl);
+                                        console.log(error);
+                                        res.status(500).send({ error: err });
+                                      } else {
+                                        // Success
+                                        var s3PhotoUrl = data.Location;
+                                        console.log("success uploading image to s3. itemId: ", itemId);
+                                        console.log("URL: ", s3PhotoUrl);
+                                        // Update photo URL in DB
+                                        conn.execute(
+                                        "UPDATE items SET link=? WHERE item_id=?",
+                                        [s3PhotoUrl, itemId],
+                                        function (err) {
+                                          if (err) {
+                                            console.log(err);
+                                            res.status(500).send({ error: err });
+                                          } else {
+                                            res.status(200).send();
+                                          }
+                                        });
+                                      }
+                                    });
+                                  }
+                                });
                               }
                             });
 
@@ -570,4 +669,7 @@ function getNeeds(req, res) {
   }
 }var _default =
 
-{ processTypeformV3: processTypeformV3, processTypeformV4: processTypeformV4, fbAuth: fbAuth, sendTestPickupNotification: sendTestPickupNotification, sendPickupNotification: sendPickupNotification, processFBMessage: processFBMessage, getNeeds: getNeeds };exports.default = _default;
+{ processTypeformV3: processTypeformV3, processTypeformV4: processTypeformV4,
+  testUploadItemImageToS3: testUploadItemImageToS3,
+  fbAuth: fbAuth, sendTestPickupNotification: sendTestPickupNotification, sendPickupNotification: sendPickupNotification, processFBMessage: processFBMessage,
+  getNeeds: getNeeds };exports.default = _default;

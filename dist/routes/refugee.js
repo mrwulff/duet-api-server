@@ -8,6 +8,10 @@ router.get("/needs", function (req, res) {
   _refugee.default.getNeeds(req, res);
 });
 
+router.post("/testUploadItemImageToS3", function (req, res) {
+  _refugee.default.testUploadItemImageToS3(req, res);
+});
+
 // router.get("/family", (req, res) => {
 //   controller.getFamilyInfo(req, res);
 // });

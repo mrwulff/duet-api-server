@@ -8,6 +8,10 @@ router.get("/needs", (req, res) => {
   controller.getNeeds(req, res);
 });
 
+router.post("/testUploadItemImageToS3", (req, res) => {
+  controller.testUploadItemImageToS3(req, res);
+});
+
 // router.get("/family", (req, res) => {
 //   controller.getFamilyInfo(req, res);
 // });
