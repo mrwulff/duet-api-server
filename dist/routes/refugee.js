@@ -8,6 +8,18 @@ router.get("/needs", function (req, res) {
   _refugee.default.getNeeds(req, res);
 });
 
+router.get("/fb", function (req, res) {
+  _refugee.default.fbAuth(req, res);
+});
+
+router.post("/fb", function (req, res) {
+  _refugee.default.processFBMessage(req, res);
+});
+
+router.post("/fbTestPickupNotification", function (req, res) {
+  _refugee.default.sendTestPickupNotification(req, res);
+});
+
 router.post("/testUploadItemImageToS3", function (req, res) {
   _refugee.default.testUploadItemImageToS3(req, res);
 });

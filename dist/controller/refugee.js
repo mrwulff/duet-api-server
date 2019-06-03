@@ -16,6 +16,8 @@ var s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY });
 
 
+require("dotenv").config();
+
 var conn = _config.default.dbInitConnect();
 var FBMessenger = require('fb-messenger');
 var messenger = new FBMessenger({ token: process.env.FB_ACCESS_TOKEN });
@@ -293,9 +295,11 @@ function processTypeformV4(req, res) {
                 else {
                     storeId = rows[0].store_id;
                     // insert item
+                    var in_notification = 1;
                     conn.query(
-                    "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link) VALUES (?,?,?,?,?,?,?)",
-                    [itemNameEnglish, size, price, beneficiaryId, categoryId, storeId, photoUrl],
+                    // include item in notification email to store
+                    "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link,in_notification) VALUES (?,?,?,?,?,?,?,?)",
+                    [itemNameEnglish, size, price, beneficiaryId, categoryId, storeId, photoUrl, in_notification],
                     function (err) {
                       if (err) {
                         console.log("Typeform Database entry error!");

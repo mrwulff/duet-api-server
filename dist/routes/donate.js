@@ -5,7 +5,7 @@ var router = _express.default.Router();
 
 router.post("/paid", function (req, res) {
   _donate.default.itemPaid(req, res);
-  _donate.default.sendConfirmationEmail(req, res);
+  //controller.sendConfirmationEmail(req, res);
 });
 
 router.post("/testStoreownerConfirmationEmail", function (req, res) {
@@ -21,7 +21,7 @@ router.use("/testDBConnection", function (req, res) {
 });
 
 router.use("/updateNotificationFlag", function (req, res) {
-  var success = _donate.default.updateNotificationFlag(req, res);
+  _donate.default.updateNotificationFlag(req, res);
 });var _default =
 
 router;exports.default = _default;

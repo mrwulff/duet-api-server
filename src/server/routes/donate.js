@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/paid", (req, res) => {
   controller.itemPaid(req, res);
-  controller.sendConfirmationEmail(req, res);
+  //controller.sendConfirmationEmail(req, res);
 });
 
 router.post("/testStoreownerConfirmationEmail", (req, res) => {
@@ -21,7 +21,7 @@ router.use("/testDBConnection", (req, res) => {
 });
 
 router.use("/updateNotificationFlag", (req, res) => {
-  var success = controller.updateNotificationFlag(req, res);
+  controller.updateNotificationFlag(req, res);
 });
 
 export default router;
