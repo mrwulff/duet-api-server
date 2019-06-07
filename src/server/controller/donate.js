@@ -59,6 +59,37 @@ function itemPaid(req, res) {
             );
           });
 
+          // Send PayPal payout to stores with payment_method='paypal'
+          if (process.env.PAYPAL_MODE === "live") {
+            conn.query("SELECT stores.paypal AS paypal, " +
+              "payouts.payment_amount AS payment_amount, " +
+              "payouts.item_ids AS item_ids " +
+              "FROM stores AS stores " +
+              "INNER JOIN (" +
+                "SELECT store_id, " +
+                "SUM(price_euros) AS payment_amount, " +
+                "GROUP_CONCAT(item_id) AS item_ids " +
+                "FROM items " +
+                "WHERE item_id IN (?) " +
+                "GROUP BY store_id" +
+              ") AS payouts " +
+              "USING(store_id) " +
+              "WHERE stores.payment_method = 'paypal'",
+              [body.itemIds],
+              function (err, results, fields) {
+                if (err) {
+                  console.log(err);
+                }
+                else {
+                  // console.log("Payouts query results: " + String(results));
+                  results.forEach(result => {
+                    let itemIdsList = result.item_ids.split(",");
+                    sendPayout(result.paypal, result.payment_amount, "EUR", itemIdsList);
+                  });
+                }
+              });
+          }
+
           if (SET_STORE_NOTIFICATION_FLAG) {
             // find all the stores that paid items interact with
             conn.query(
@@ -118,8 +149,10 @@ function itemPaid(req, res) {
 // Send payout to store, return true if successful
 // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
 function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
-  var itemIdsStr = itemIds.map(id => "#" + id.toString()); // e.g. ["#63", "#43"]
-  var note = "Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
+  var itemIdsStr = itemIds.map(id => "#" + String(id)); // e.g. ["#63", "#43"]
+  var note = "Payment for Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
+
+  console.log("Attempting payout of " + String(amount) + " " + String(currencyCode) + " to " + payeeEmail);
 
   var payoutInfo = {
     sender_batch_header: {

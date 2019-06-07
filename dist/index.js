@@ -1,5 +1,6 @@
 "use strict";
 
+
 var _express = _interopRequireDefault(require("express"));
 var _index = _interopRequireDefault(require("./routes/index"));
 var _refugee = _interopRequireDefault(require("./routes/refugee"));
@@ -11,7 +12,7 @@ var _currency = _interopRequireDefault(require("./routes/currency"));
 var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
 var _cors = _interopRequireDefault(require("cors"));
 var _bodyParser = _interopRequireDefault(require("body-parser"));
-var _currency2 = _interopRequireDefault(require("./controller/currency"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}require("babel-polyfill");
+var _currency2 = _interopRequireDefault(require("./controller/currency"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}global._babelPolyfill = false;require("babel-polyfill");
 
 require('dotenv').config();
 
