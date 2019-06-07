@@ -108,6 +108,7 @@ function itemPaid(req, res) {
     });
 
   } else {
+    console.log('Item ids not found in request body for item donation');
     return res.status(200).json();
   }
 }
@@ -198,7 +199,7 @@ setInterval(function () {
     console.log('checking if stores need to be notified...');
     sendStoreownerNotificationEmail();
   }
-}, 5 * 60 * 1000);
+}, 1 * 60 * 1000);
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
