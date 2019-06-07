@@ -28,13 +28,12 @@ function itemPaid(req, res) {
   if (body.itemIds) {
     // set item to fulfilled
     conn.execute(
-    "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donor_phone,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
-    " VALUES (NOW(),?,?,?,?,?,?,?,?)",
+    "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
+    " VALUES (NOW(),?,?,?,?,?,?,?)",
     [
     body.firstName,
     body.lastName,
     body.email,
-    body.phoneNumber,
     body.amount,
     body.bankTransferFee,
     body.serviceFee,
