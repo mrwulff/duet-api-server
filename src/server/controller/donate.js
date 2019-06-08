@@ -60,7 +60,7 @@ function itemPaid(req, res) {
           });
 
           // Send PayPal payout to stores with payment_method='paypal'
-          if (process.env.PAYPAL_MODE === "live") {
+          if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
             conn.query("SELECT stores.paypal AS paypal, " +
               "payouts.payment_amount AS payment_amount, " +
               "payouts.item_ids AS item_ids " +

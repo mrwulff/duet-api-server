@@ -60,7 +60,7 @@ function itemPaid(req, res) {
         });
 
         // Send PayPal payout to stores with payment_method='paypal'
-        if (process.env.PAYPAL_MODE === "live") {
+        if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
           conn.query("SELECT stores.paypal AS paypal, " +
           "payouts.payment_amount AS payment_amount, " +
           "payouts.item_ids AS item_ids " +
@@ -150,7 +150,7 @@ function itemPaid(req, res) {
 // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
 function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   var itemIdsStr = itemIds.map(function (id) {return "#" + String(id);}); // e.g. ["#63", "#43"]
-  var note = "Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
+  var note = "Payment for Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
 
   console.log("Attempting payout of " + String(amount) + " " + String(currencyCode) + " to " + payeeEmail);
 
