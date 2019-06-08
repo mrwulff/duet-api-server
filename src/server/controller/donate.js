@@ -26,6 +26,7 @@ function itemPaid(req, res) {
   console.log('in item paid route');
   let store_ids = [];
   let body = req.body;
+  console.log(`Request body: ${JSON.stringify(body)}`);
   if (body.itemIds) {
     // set item to fulfilled
     conn.execute(
@@ -44,7 +45,7 @@ function itemPaid(req, res) {
       // need to get all the item_ids, see which store_ids they map to, and then set the needs_notification status of all those stores to true.
       function(err) {
         if (err) {
-          console.log(err);
+          console.log(`Error when inserting into donations table: ${err}`);
         } else {
           body.itemIds.forEach(function(id) {
             // add entry into donations table
@@ -78,7 +79,7 @@ function itemPaid(req, res) {
               [body.itemIds],
               function (err, results, fields) {
                 if (err) {
-                  console.log(err);
+                  console.log(`Error when running payouts SQL query: ${err}`);
                 }
                 else {
                   // console.log("Payouts query results: " + String(results));
