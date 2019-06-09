@@ -29,23 +29,48 @@ function itemPaid(req, res) {
   console.log("Request body: ".concat(JSON.stringify(body)));
   if (body.itemIds) {
     // set item to fulfilled
+
+    var insertDonationQuery = "";
+    var insertDonationValues = [];
+
+    // if we got the donor email, then insert that into the donation entry
+    if (body.email) {
+      insertDonationQuery = "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
+      " VALUES (NOW(),?,?,?,?,?,?,?)";
+      insertDonationValues = [
+      body.firstName,
+      body.lastName,
+      body.email,
+      body.amount,
+      body.bankTransferFee,
+      body.serviceFee,
+      body.country];
+
+    } else if (process.env.PAYPAL_MODE === "sandbox") {
+      console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");
+      insertDonationQuery = "INSERT INTO donations (timestamp,donor_fname,donor_lname,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
+      " VALUES (NOW(),?,?,?,?,?,?)";
+      insertDonationValues = [
+      body.firstName,
+      body.lastName,
+      body.amount,
+      body.bankTransferFee,
+      body.serviceFee,
+      body.country];
+
+    } else {
+      console.log("Error: Call to itemPaid() without donor email in live mode!");
+      res.status(500).send("Error: Could not retrieve donor email!");
+    }
+
     conn.execute(
-    "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
-    " VALUES (NOW(),?,?,?,?,?,?,?)",
-    [
-    body.firstName,
-    body.lastName,
-    body.email,
-    body.amount,
-    body.bankTransferFee,
-    body.serviceFee,
-    body.country],
-
-
+    insertDonationQuery,
+    insertDonationValues,
     // need to get all the item_ids, see which store_ids they map to, and then set the needs_notification status of all those stores to true.
     function (err) {
       if (err) {
         console.log("Error when inserting into donations table: ".concat(err));
+        res.status(500).send(err);
       } else {
         body.itemIds.forEach(function (id) {
           // add entry into donations table
@@ -118,24 +143,25 @@ function itemPaid(req, res) {
 
 
           // SEND EMAIL TO DONOR
-          var msg = {
-            to: body.email,
-            from: "duet.giving@gmail.com",
-            templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
-            dynamic_template_data: {
-              name: body.firstName } };
+          if (body.email) {
+            var msg = {
+              to: body.email,
+              from: "duet.giving@gmail.com",
+              templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
+              dynamic_template_data: {
+                name: body.firstName } };
 
 
 
-          sgMail.
-          send(msg).
-          then(function () {
-            console.log("Donation confirmation sent ".concat(body.email, " to successfully."));
-          }).
-          catch(function (error) {
-            console.error(error.toString());
-          });
-
+            sgMail.
+            send(msg).
+            then(function () {
+              console.log("Donation confirmation sent ".concat(body.email, " to successfully."));
+            }).
+            catch(function (error) {
+              console.error(error.toString());
+            });
+          }
           return res.status(200).send();
         }
       }
