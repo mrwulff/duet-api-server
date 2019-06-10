@@ -1,6 +1,9 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
 var _assert = require("assert");
 var _nodeSchedule = _interopRequireDefault(require("node-schedule"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
+var CronJob = require('cron').CronJob;
+
+
 
 require("dotenv").config();
 
@@ -146,7 +149,7 @@ function itemPaid(req, res) {
           if (body.email) {
             var msg = {
               to: body.email,
-              from: "duet.giving@gmail.com",
+              from: "duet@giveduet.org",
               templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
               dynamic_template_data: {
                 name: body.firstName } };
@@ -218,7 +221,7 @@ function sendConfirmationEmail(req, res) {
   // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   var msg = {
     to: body.email,
-    from: "duet.giving@gmail.com",
+    from: "duet@giveduet.org",
     templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
     dynamic_template_data: {
       name: body.firstName } };
@@ -256,24 +259,19 @@ function testDBConnection(req, res) {
 
 
 // Testing out cron job in sandbox.
-setInterval(function () {
-  if (process.env.DATABASE === 'duet_sandbox') {
-    console.log('checking if stores need to be notified...');
-    sendStoreownerNotificationEmail();
-  }
-}, 1 * 60 * 1000);
+// setInterval(function () { 
+//   if (process.env.DATABASE === 'duet_sandbox') {
+//     console.log('checking if stores need to be notified...');
+//     sendStoreownerNotificationEmail();
+//   }
+// }, 5*60*1000); 
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
-var j = _nodeSchedule.default.scheduleJob("00 8 * * * *", function () {
-  // disable CRON job if we're working on sandbox.
-  if (process.env.DATABASE == "duet_sandbox") {
-    return;
-  }
-
-  // TODO: make this active!
+new CronJob('00 8 * * *', function () {
+  console.log('running cron job and checking if stores need to be notified...');
   sendStoreownerNotificationEmail();
-});
+}, null, true, 'America/Los_Angeles');
 
 function getItemsForNotificationEmail(result) {
   return new Promise(function (resolve, reject) {
@@ -320,7 +318,7 @@ function sendStoreownerNotificationEmail(req, res) {
     }
 
     // Loop through each of the stores that require a notification
-    results.forEach( /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(result) {var updatedItems, msg, updateItemNotificationQuery;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.prev = 0;_context.next = 3;return (
+    results.forEach( /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(result) {var updatedItems, recipientList, msg, updateItemNotificationQuery;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.prev = 0;_context.next = 3;return (
 
                   getItemsForNotificationEmail(result));case 3:updatedItems = _context.sent;if (!(
                 updatedItems.length === 0)) {_context.next = 7;break;}
@@ -328,10 +326,16 @@ function sendStoreownerNotificationEmail(req, res) {
 
 
 
-                // TODO: change "to" email address to real address
+
+                if (process.env.DATABASE === 'duet_sandbox') {
+                  recipientList = ['duet.giving@gmail.com'];
+                } else {
+                  recipientList = ['duet.giving@gmail.com', result.email];
+                }
+
                 msg = {
-                  to: "duet.giving@gmail.com",
-                  from: "duet.giving@gmail.com",
+                  to: recipientList,
+                  from: "duet@giveduet.org",
                   templateId: "d-435a092f0be54b07b5135799ac7dfb01",
                   dynamic_template_data: {
                     storeName: result.name,
@@ -340,7 +344,7 @@ function sendStoreownerNotificationEmail(req, res) {
 
 
                 sgMail.
-                send(msg).
+                sendMultiple(msg).
                 then(function () {
                   console.log("Message delivered to ".concat(result.name, " at ").concat(result.email, " successfully."));
                 }).
@@ -354,9 +358,9 @@ function sendStoreownerNotificationEmail(req, res) {
                   if (err) {
                     console.log("error: " + err);
                   }
-                });_context.next = 17;break;case 13:_context.prev = 13;_context.t0 = _context["catch"](0);
+                });_context.next = 18;break;case 14:_context.prev = 14;_context.t0 = _context["catch"](0);
 
-                console.log("Error getting new updated items: " + _context.t0);return _context.abrupt("return");case 17:case "end":return _context.stop();}}}, _callee, this, [[0, 13]]);}));return function (_x) {return _ref.apply(this, arguments);};}());
+                console.log("Error getting new updated items: " + _context.t0);return _context.abrupt("return");case 18:case "end":return _context.stop();}}}, _callee, this, [[0, 14]]);}));return function (_x) {return _ref.apply(this, arguments);};}());
 
 
 

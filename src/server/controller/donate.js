@@ -1,6 +1,9 @@
 import db from "./../config/config.js";
 import { strict } from "assert";
 import nodeSchedule from "node-schedule";
+var CronJob = require('cron').CronJob;
+
+
 
 require("dotenv").config();
 
@@ -146,7 +149,7 @@ function itemPaid(req, res) {
             if (body.email) {
               const msg = {
                 to: body.email,
-                from: "duet.giving@gmail.com",
+                from: "duet@giveduet.org",
                 templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
                 dynamic_template_data: {
                   name: body.firstName
@@ -218,7 +221,7 @@ function sendConfirmationEmail(req, res) {
   // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   const msg = {
     to: body.email,
-    from: "duet.giving@gmail.com",
+    from: "duet@giveduet.org",
     templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
     dynamic_template_data: {
       name: body.firstName
@@ -256,24 +259,19 @@ function testDBConnection(req, res) {
 
 
 // Testing out cron job in sandbox.
-setInterval(function () { 
-  if (process.env.DATABASE === 'duet_sandbox') {
-    console.log('checking if stores need to be notified...');
-    sendStoreownerNotificationEmail();
-  }
-}, 1*60*1000); 
+// setInterval(function () { 
+//   if (process.env.DATABASE === 'duet_sandbox') {
+//     console.log('checking if stores need to be notified...');
+//     sendStoreownerNotificationEmail();
+//   }
+// }, 5*60*1000); 
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
-var j = nodeSchedule.scheduleJob("00 8 * * * *", function() {
-  // disable CRON job if we're working on sandbox.
-  if (process.env.DATABASE == "duet_sandbox") {
-    return;
-  }
-
-  // TODO: make this active!
+new CronJob('00 8 * * *', function() {
+  console.log('running cron job and checking if stores need to be notified...');
   sendStoreownerNotificationEmail();
-});
+}, null, true, 'America/Los_Angeles');
 
 function getItemsForNotificationEmail(result) {
   return new Promise(function(resolve, reject) {
@@ -328,10 +326,16 @@ function sendStoreownerNotificationEmail(req, res) {
           return;
         }
 
-        // TODO: change "to" email address to real address
+        let recipientList;
+        if (process.env.DATABASE === 'duet_sandbox') {
+          recipientList = ['duet.giving@gmail.com'];
+        } else {
+          recipientList = ['duet.giving@gmail.com', result.email];
+        }
+
         const msg = {
-          to: "duet.giving@gmail.com",
-          from: "duet.giving@gmail.com",
+          to: recipientList,
+          from: "duet@giveduet.org",
           templateId: "d-435a092f0be54b07b5135799ac7dfb01",
           dynamic_template_data: {
             storeName: result.name,
@@ -340,7 +344,7 @@ function sendStoreownerNotificationEmail(req, res) {
         };
 
         sgMail
-          .send(msg)
+          .sendMultiple(msg)
           .then(() => {
             console.log(`Message delivered to ${result.name} at ${result.email} successfully.`);
           })
