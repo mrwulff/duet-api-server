@@ -258,18 +258,15 @@ function testDBConnection(req, res) {
 }
 
 
-// Testing out cron job in sandbox.
-// setInterval(function () { 
-//   if (process.env.DATABASE === 'duet_sandbox') {
-//     console.log('checking if stores need to be notified...');
-//     sendStoreownerNotificationEmail();
-//   }
-// }, 5*60*1000); 
+//Testing out cron job in sandbox.
+setInterval(function () {
+  console.log('keep staging running');
+}, 3 * 60 * 1000);
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
 new CronJob('00 8 * * *', function () {
-  console.log('running cron job and checking if stores need to be notified...');
+  console.log('running cron job at 8:00am and checking if stores need to be notified...');
   sendStoreownerNotificationEmail();
 }, null, true, 'America/Los_Angeles');
 
