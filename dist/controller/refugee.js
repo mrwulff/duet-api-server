@@ -569,7 +569,7 @@ function getNeeds(req, res) {
           familyImage: rows[0].family_image_url };
 
         conn.execute(
-        "SELECT item_id, link, items.name, price_euros, status, store_id, icon_url,stores.name as store_name FROM items " +
+        "SELECT item_id, link, items.name, price_euros, status, store_id, icon_url, stores.name as store_name, stores.google_maps as store_maps_link FROM items " +
         "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
         [beneficiaryId],
         function (err, rows) {
@@ -591,6 +591,7 @@ function getNeeds(req, res) {
                 price: obj.price_euros,
                 storeId: obj.store_id,
                 storeName: obj.store_name,
+                storeMapsLink: obj.store_maps_link,
                 icon: obj.icon_url,
                 status: obj.status };
 

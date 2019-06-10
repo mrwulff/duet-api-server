@@ -7,7 +7,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 function getItems(req, res) {
   let query =
-    "SELECT item_id, link, items.name, pickup_code, price_euros, store_id, icon_url,stores.name as store_name, items.status FROM items " +
+    "SELECT item_id, link, items.name, pickup_code, price_euros, store_id, icon_url, stores.name as store_name, stores.google_maps as store_maps_link, items.status FROM items " +
     "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id)";
   let parameters = [];
   if (req.query.store_id) {
@@ -36,6 +36,7 @@ function getItems(req, res) {
           price: obj.price_euros,
           storeId: obj.store_id,
           storeName: obj.store_name,
+          storeMapsLink: obj.store_maps_link,
           icon: obj.icon_url,
           status: obj.status,
           pickupCode: obj.pickup_code
