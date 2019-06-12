@@ -258,15 +258,11 @@ function testDBConnection(req, res) {
 }
 
 
-//Testing out cron job in sandbox.
-setInterval(function () { 
-  console.log('keep staging running');
-}, 3*60*1000); 
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
-new CronJob('00 8 * * *', function() {
-  console.log('running cron job at 8:00am and checking if stores need to be notified...');
+new CronJob(process.env.cronInterval, function() {
+  console.log('running cron job checking if stores need to be notified...');
   sendStoreownerNotificationEmail();
 }, null, true, 'America/Los_Angeles');
 
