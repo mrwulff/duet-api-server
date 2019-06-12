@@ -569,8 +569,15 @@ function getNeeds(req, res) {
           familyImage: rows[0].family_image_url };
 
         conn.execute(
-        "SELECT item_id, link, items.name, price_euros, status, store_id, icon_url, stores.name as store_name, stores.google_maps as store_maps_link FROM items " +
-        "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id) WHERE beneficiary_id = ?",
+        "SELECT item_id, link, items.name, price_euros, " +
+        "status, store_id, icon_url, " +
+        "stores.name as store_name, stores.google_maps as store_maps_link, " +
+        "donations.timestamp as donation_timestamp " +
+        "FROM items " +
+        "INNER JOIN categories USING(category_id) " +
+        "INNER JOIN stores USING(store_id) " +
+        "LEFT JOIN donations USING(donation_id)" +
+        "WHERE beneficiary_id = ?",
         [beneficiaryId],
         function (err, rows) {
           if (err) {
@@ -593,7 +600,8 @@ function getNeeds(req, res) {
                 storeName: obj.store_name,
                 storeMapsLink: obj.store_maps_link,
                 icon: obj.icon_url,
-                status: obj.status };
+                status: obj.status,
+                donationTimestamp: obj.donation_timestamp };
 
               needs.push(item);
             });
@@ -609,9 +617,10 @@ function getNeeds(req, res) {
     var result = [];
     conn.execute(
     query +
-    ", item_id, link, items.name, price_euros, status, store_id, icon_url, stores.name AS store_name " +
+    ", item_id, link, items.name, price_euros, status, store_id, icon_url, " +
+    "stores.name AS store_name, donations.timestamp AS donation_timestamp " +
     "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
-    "INNER JOIN stores USING(store_id) ORDER BY beneficiary_id",
+    "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id",
     function (err, rows) {
       if (err) {
         console.log(err);
@@ -648,7 +657,8 @@ function getNeeds(req, res) {
                 storeId: obj.store_id,
                 storeName: obj.store_name,
                 icon: obj.icon_url,
-                status: obj.status }] };
+                status: obj.status,
+                donationTimestamp: obj.donation_timestamp }] };
 
 
 
@@ -661,7 +671,8 @@ function getNeeds(req, res) {
               storeId: obj.store_id,
               storeName: obj.store_name,
               icon: obj.icon_url,
-              status: obj.status });
+              status: obj.status,
+              donationTimestamp: obj.donation_timestamp });
 
           }
           current = obj.beneficiary_id;

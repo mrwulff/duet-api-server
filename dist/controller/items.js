@@ -7,8 +7,14 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 function getItems(req, res) {
   var query =
-  "SELECT item_id, link, items.name, pickup_code, price_euros, store_id, icon_url, stores.name as store_name, stores.google_maps as store_maps_link, items.status FROM items " +
-  "INNER JOIN categories USING(category_id) INNER JOIN stores USING(store_id)";
+  "SELECT item_id, link, items.name, price_euros, " +
+  "status, store_id, icon_url, " +
+  "stores.name as store_name, stores.google_maps as store_maps_link, " +
+  "donations.timestamp as donation_timestamp " +
+  "FROM items " +
+  "INNER JOIN categories USING(category_id) " +
+  "INNER JOIN stores USING(store_id) " +
+  "LEFT JOIN donations USING(donation_id)";
   var parameters = [];
   if (req.query.store_id) {
     query += " WHERE store_id=?";
@@ -39,7 +45,8 @@ function getItems(req, res) {
           storeMapsLink: obj.store_maps_link,
           icon: obj.icon_url,
           status: obj.status,
-          pickupCode: obj.pickup_code };
+          pickupCode: obj.pickup_code,
+          donationTimestamp: obj.donation_timestamp };
 
         needs.push(item);
       });
