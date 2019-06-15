@@ -569,7 +569,7 @@ function getNeeds(req, res) {
           familyImage: rows[0].family_image_url };
 
         conn.execute(
-        "SELECT item_id, link, items.name, price_euros, " +
+        "SELECT item_id, link, items.name, pickup_code, price_euros, " +
         "status, store_id, icon_url, " +
         "stores.name as store_name, stores.google_maps as store_maps_link, " +
         "donations.timestamp as donation_timestamp " +
@@ -601,6 +601,7 @@ function getNeeds(req, res) {
                 storeMapsLink: obj.store_maps_link,
                 icon: obj.icon_url,
                 status: obj.status,
+                pickupCode: obj.pickup_code,
                 donationTimestamp: obj.donation_timestamp };
 
               needs.push(item);
@@ -617,7 +618,7 @@ function getNeeds(req, res) {
     var result = [];
     conn.execute(
     query +
-    ", item_id, link, items.name, price_euros, status, store_id, icon_url, " +
+    ", item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " +
     "stores.name AS store_name, donations.timestamp AS donation_timestamp " +
     "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
     "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id",
@@ -658,6 +659,7 @@ function getNeeds(req, res) {
                 storeName: obj.store_name,
                 icon: obj.icon_url,
                 status: obj.status,
+                pickupCode: obj.pickup_code,
                 donationTimestamp: obj.donation_timestamp }] };
 
 
@@ -672,6 +674,7 @@ function getNeeds(req, res) {
               storeName: obj.store_name,
               icon: obj.icon_url,
               status: obj.status,
+              pickupCode: obj.pickup_code,
               donationTimestamp: obj.donation_timestamp });
 
           }
