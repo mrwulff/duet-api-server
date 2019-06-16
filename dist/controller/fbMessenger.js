@@ -1,6 +1,7 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
 
-var conn = _config["default"].dbInitConnect(); // SQL
+var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
+require("dotenv").config();var conn = _config["default"].dbInitConnect(); // SQL
 var messenger = _config["default"].fbMessengerInit(); // FB Messenger
 
 // Adds support for GET requests to our webhook

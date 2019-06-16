@@ -1,20 +1,7 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
-var _cluster = require("cluster");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
-
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
+var _config = _interopRequireDefault(require("./../config/config.js"));
+var _cluster = require("cluster");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
 var conn = _config["default"].dbInitConnect();
-
-function generatePickupCode(itemId) {
-  var code = "DUET-";
-  var pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  // append 2 random letters to code
-  for (var i = 0; i < 2; i++) {
-    code += pool.charAt(Math.floor(Math.random() * pool.length));
-  }
-  // append item id
-  code += itemId;
-  return code;
-}
-
 
 function getNeeds(req, res) {
   var query =

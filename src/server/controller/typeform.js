@@ -1,9 +1,12 @@
 // Imports
+require("dotenv").config();
 import config from './../config/config.js';
 const conn = config.dbInitConnect();
 const sgMail = config.sendgridInit();
 const s3 = config.s3Init();
-require("dotenv").config();
+const request = require('request');
+const path = require('path');
+const mime = require('mime-types');
 
 function generatePickupCode(itemId) {
     let code = "DUET-";
