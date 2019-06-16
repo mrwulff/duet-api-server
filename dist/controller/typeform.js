@@ -5,6 +5,18 @@ var sgMail = _config["default"].sendgridInit();
 var s3 = _config["default"].s3Init();
 require("dotenv").config();
 
+function generatePickupCode(itemId) {
+  var code = "DUET-";
+  var pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  // append 2 random letters to code
+  for (var i = 0; i < 2; i++) {
+    code += pool.charAt(Math.floor(Math.random() * pool.length));
+  }
+  // append item id
+  code += itemId;
+  return code;
+}
+
 function processTypeformV4(req, res) {
   console.log("Processing TypeForm (V4)");
   var answers = req.body.form_response.answers;
