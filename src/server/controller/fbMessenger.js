@@ -1,6 +1,6 @@
 // Imports
 require("dotenv").config();
-import config from './../config/config.js';
+import config from '../util/config.js';
 const conn = config.dbInitConnect(); // SQL
 const messenger = config.fbMessengerInit(); // FB Messenger
 

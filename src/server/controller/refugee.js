@@ -1,5 +1,5 @@
 // Imports
-import config from "./../config/config.js";
+import config from "../util/config.js";
 import { getMaxListeners } from "cluster";
 const conn = config.dbInitConnect();
 

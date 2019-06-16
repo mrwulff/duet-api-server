@@ -1,5 +1,5 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
-var _config = _interopRequireDefault(require("../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
+var _config = _interopRequireDefault(require("../util/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
 var s3 = _config["default"].s3Init();
 var request = require('request');
 var path = require('path');

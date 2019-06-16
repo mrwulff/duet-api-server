@@ -1,5 +1,5 @@
 // Imports
-import config from '../config/config.js';
+import config from '../util/config.js';
 const s3 = config.s3Init();
 const request = require('request');
 const path = require('path');

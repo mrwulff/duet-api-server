@@ -1,5 +1,5 @@
 require("dotenv").config();
-import config from "./../config/config.js";
+import config from "../util/config.js";
 import { strict } from "assert";
 import nodeSchedule from "node-schedule";
 var CronJob = require('cron').CronJob;
