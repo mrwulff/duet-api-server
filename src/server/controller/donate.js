@@ -1,29 +1,14 @@
-import db from "./../config/config.js";
+require("dotenv").config();
+import config from "./../config/config.js";
 import { strict } from "assert";
 import nodeSchedule from "node-schedule";
 var CronJob = require('cron').CronJob;
 
-
-
-require("dotenv").config();
-
 const SET_STORE_NOTIFICATION_FLAG = true;
 
-// connect to DB
-const conn = db.dbInitConnect();
-
-const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-// connect to Paypal
-("use strict");
-var paypalConfig = {
-  mode: process.env.PAYPAL_MODE,
-  client_id: process.env.PAYPAL_CLIENT_ID,
-  client_secret: process.env.PAYPAL_CLIENT_SECRET
-};
-var paypal = require("paypal-rest-sdk");
-paypal.configure(paypalConfig);
+const conn = config.dbInitConnect(); // SQL
+const sgMail = config.sendgridInit(); // Sendgrid
+const paypal = config.paypalInit(); // PayPal
 
 function itemPaid(req, res) {
   console.log('in item paid route');

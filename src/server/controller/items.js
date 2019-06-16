@@ -1,9 +1,8 @@
-import db from "./../config/config.js";
+import config from "./../config/config.js";
 import refugee from "./refugee.js";
 
-const conn = db.dbInitConnect();
-const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const conn = config.dbInitConnect();
+const sgMail = config.sendgridInit();
 
 function getItems(req, res) {
   let query =

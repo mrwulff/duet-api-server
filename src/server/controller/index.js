@@ -1,16 +1,16 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import db from "./../config/config.js";
+import config from "./../config/config.js";
 
 // store this in environment variable later
 const secret = "secretkey";
+const conn = config.dbInitConnect();
 
 function login(req, res) {
   console.log("getting token");
   // check if username and password match
   let username = req.body.username;
   let password = req.body.password;
-  let conn = db.dbInitConnect();
   // check username in db and get stored password
   conn.execute(
     "SELECT refugee_id,fname,lname,password FROM refugees WHERE username=?",
@@ -48,7 +48,6 @@ function login(req, res) {
 
 function createUser(req, res) {
   let body = req.body;
-  let conn = db.dbInitConnect();
   conn.execute(
     "INSERT INTO addresses (street_name) VALUES (?)",
     [body.address],

@@ -1,28 +1,30 @@
 import express from "express";
-import controller from "./../controller/refugee";
+import refugeeController from "./../controller/refugee";
+import s3Controller from "../controller/awsS3";
+import fbController from "./../controller/fbMessenger";
 
 const router = express.Router();
 const app = express();
 
 router.get("/needs", (req, res) => {
-  controller.getNeeds(req, res);
+  refugeeController.getNeeds(req, res);
 });
 
 router.get("/fb", (req, res) => {
-  controller.fbAuth(req, res);
+  fbController.fbAuth(req, res);
 });
 
 router.post("/fb", (req, res) => {
-  controller.processFBMessage(req, res);
+  fbController.processFBMessage(req, res);
 });
 
 router.post("/fbTestPickupNotification", (req, res) => {
-  controller.sendTestPickupNotification(req, res);
+  fbController.sendTestPickupNotification(req, res);
 });
 
-router.post("/testUploadItemImageToS3", (req, res) => {
-  controller.testUploadItemImageToS3(req, res);
-});
+// router.post("/testUploadItemImageToS3", (req, res) => {
+//   s3Controller.testUploadItemImageToS3(req, res);
+// });
 
 // router.get("/family", (req, res) => {
 //   controller.getFamilyInfo(req, res);

@@ -1,9 +1,8 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
-var _refugee = _interopRequireDefault(require("./refugee.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
+var _refugee = _interopRequireDefault(require("./refugee.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 
-var conn = _config.default.dbInitConnect();
-var sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+var conn = _config["default"].dbInitConnect();
+var sgMail = _config["default"].sendgridInit();
 
 function getItems(req, res) {
   var query =
@@ -89,7 +88,7 @@ function updateItemStatus(req, res) {
         // Facebook messenger pickup notification
         if (newStatus === 'READY_FOR_PICKUP') {
           req.body.items.forEach(function (item) {
-            _refugee.default.sendPickupNotification(item.itemId);
+            _refugee["default"].sendPickupNotification(item.itemId);
           });
         }
 
@@ -130,8 +129,8 @@ function updateItemStatus(req, res) {
                 send(msg).
                 then(function () {
                   console.log("Item pickup or ready to be picked up message delivered to Duet successfully.");
-                }).
-                catch(function (error) {
+                })["catch"](
+                function (error) {
                   console.error("Error: " + error.toString());
                   return;
                 });
@@ -214,4 +213,4 @@ function pickupConfirmation(req, res) {
   }
 }var _default =
 
-{ getItems: getItems, verifyItems: verifyItems, readyForPickup: readyForPickup, pickupConfirmation: pickupConfirmation, updateItemStatus: updateItemStatus };exports.default = _default;
+{ getItems: getItems, verifyItems: verifyItems, readyForPickup: readyForPickup, pickupConfirmation: pickupConfirmation, updateItemStatus: updateItemStatus };exports["default"] = _default;

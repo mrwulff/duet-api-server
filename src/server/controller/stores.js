@@ -1,6 +1,6 @@
-import db from "./../config/config.js";
+import config from "./../config/config.js";
 
-const conn = db.dbInitConnect();
+const conn = config.dbInitConnect();
 
 function login(req, res) {
   let email = req.body.email;
