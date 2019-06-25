@@ -2,6 +2,8 @@ require("dotenv").config();
 import config from "../util/config.js";
 import { strict } from "assert";
 import nodeSchedule from "node-schedule";
+import sqlHelpers from "../util/sqlHelpers.js";
+import errorHandler from "../util/errorHandler.js";
 var CronJob = require('cron').CronJob;
 
 const SET_STORE_NOTIFICATION_FLAG = true;
@@ -10,151 +12,120 @@ const conn = config.dbInitConnect(); // SQL
 const sgMail = config.sendgridInit(); // Sendgrid
 const paypal = config.paypalInit(); // PayPal
 
-function itemPaid(req, res) {
+async function itemPaid(req, res) {
   console.log('in item paid route');
   let store_ids = [];
-  let body = req.body;
-  console.log(`Request body: ${JSON.stringify(body)}`);
-  if (body.itemIds) {
-    // set item to fulfilled
+  let donationInfo = req.body;
+  console.log(`Donation info: ${JSON.stringify(donationInfo)}`);
+  if (donationInfo.itemIds) {
+    try {
+      // set item to fulfilled
+      let donationId;
+      if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
+        console.log("Error: Call to itemPaid() without donor email in live mode!");
+        res.status(500).send("Error: Could not retrieve donor email!");
+      } else if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
+        console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");
+        donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
+      } else {
+        donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
+      }
 
-    let insertDonationQuery = "";
-    let insertDonationValues = [];
-
-    // if we got the donor email, then insert that into the donation entry
-    if (body.email) {
-      insertDonationQuery = "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
-        " VALUES (NOW(),?,?,?,?,?,?,?)";
-      insertDonationValues = [
-        body.firstName,
-        body.lastName,
-        body.email,
-        body.amount,
-        body.bankTransferFee,
-        body.serviceFee,
-        body.country
-      ]
-    } else if (process.env.PAYPAL_MODE === "sandbox") {
-      console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");
-      insertDonationQuery = "INSERT INTO donations (timestamp,donor_fname,donor_lname,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
-        " VALUES (NOW(),?,?,?,?,?,?)";
-      insertDonationValues = [
-        body.firstName,
-        body.lastName,
-        body.amount,
-        body.bankTransferFee,
-        body.serviceFee,
-        body.country
-      ]
-    } else {
-      console.log("Error: Call to itemPaid() without donor email in live mode!");
-      res.status(500).send("Error: Could not retrieve donor email!");
-    }
-
-    conn.execute(
-      insertDonationQuery,
-      insertDonationValues,
-      // need to get all the item_ids, see which store_ids they map to, and then set the needs_notification status of all those stores to true.
-      function(err) {
-        if (err) {
-          console.log(`Error when inserting into donations table: ${err}`);
-          res.status(500).send(err);
-        } else {
-          body.itemIds.forEach(function(id) {
-            // add entry into donations table
-            conn.execute(
-              "UPDATE items SET status='PAID', in_notification=1, donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
-              [id],
-              function(err) {
-                if (err) {
-                  console.log(`Error when adding entry for item id=${id} into donations table! ${err}`);
-                }
-              }
-            );
-          });
-
-          // Send PayPal payout to stores with payment_method='paypal'
-          if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
-            conn.query("SELECT stores.paypal AS paypal, " +
-              "payouts.payment_amount AS payment_amount, " +
-              "payouts.item_ids AS item_ids " +
-              "FROM stores AS stores " +
-              "INNER JOIN (" +
-                "SELECT store_id, " +
-                "SUM(price_euros) AS payment_amount, " +
-                "GROUP_CONCAT(item_id) AS item_ids " +
-                "FROM items " +
-                "WHERE item_id IN (?) " +
-                "GROUP BY store_id" +
-              ") AS payouts " +
-              "USING(store_id) " +
-              "WHERE stores.payment_method = 'paypal'",
-              [body.itemIds],
-              function (err, results, fields) {
-                if (err) {
-                  console.log(`Error when running payouts SQL query: ${err}`);
-                }
-                else {
-                  // console.log("Payouts query results: " + String(results));
-                  results.forEach(result => {
-                    let itemIdsList = result.item_ids.split(",");
-                    sendPayout(result.paypal, result.payment_amount, "EUR", itemIdsList);
-                  });
-                }
-              });
+      donationInfo.itemIds.forEach(function (id) {
+        // add entry into donations table
+        conn.execute(
+          "UPDATE items SET status='PAID', in_notification=1, donation_id=? WHERE item_id=?",
+          [donationId, id],
+          function (err) {
+            if (err) {
+              console.log(`Error when adding entry for item id=${id} into donations table! ${err}`);
+            }
           }
+        );
+      });
 
-          if (SET_STORE_NOTIFICATION_FLAG) {
-            // find all the stores that paid items interact with
+      // Send PayPal payout to stores with payment_method='paypal'
+      if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
+        conn.query("SELECT stores.paypal AS paypal, " +
+          "payouts.payment_amount AS payment_amount, " +
+          "payouts.item_ids AS item_ids " +
+          "FROM stores AS stores " +
+          "INNER JOIN (" +
+          "SELECT store_id, " +
+          "SUM(price_euros) AS payment_amount, " +
+          "GROUP_CONCAT(item_id) AS item_ids " +
+          "FROM items " +
+          "WHERE item_id IN (?) " +
+          "GROUP BY store_id" +
+          ") AS payouts " +
+          "USING(store_id) " +
+          "WHERE stores.payment_method = 'paypal'",
+          [donationInfo.itemIds],
+          function (err, results, fields) {
+            if (err) {
+              console.log(`Error when running payouts SQL query: ${err}`);
+            }
+            else {
+              // console.log("Payouts query results: " + String(results));
+              results.forEach(result => {
+                let itemIdsList = result.item_ids.split(",");
+                sendPayout(result.paypal, result.payment_amount, "EUR", itemIdsList);
+              });
+            }
+          });
+      }
+
+      if (SET_STORE_NOTIFICATION_FLAG) {
+        // find all the stores that paid items interact with
+        conn.query(
+          `SELECT store_id FROM items WHERE item_id IN (${donationInfo.itemIds.join()})`,
+          function (err, results, fields) {
+            if (err) {
+              console.log(err);
+            }
+
+            results.forEach(function (result) {
+              store_ids.push(result.store_id);
+            });
+
+            // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before we can move them to be ready for pickup...
             conn.query(
-              `SELECT store_id FROM items WHERE item_id IN (${body.itemIds.join()})`,
+              `UPDATE stores SET needs_notification=1 WHERE store_id IN (${store_ids.join()})`,
               function (err, results, fields) {
                 if (err) {
                   console.log(err);
                 }
-
-                results.forEach(function (result) {
-                  store_ids.push(result.store_id);
-                });
-
-                // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before we can move them to be ready for pickup...
-                conn.query(
-                  `UPDATE stores SET needs_notification=1 WHERE store_id IN (${store_ids.join()})`,
-                  function(err, results, fields) {
-                    if (err) {
-                      console.log(err);
-                    }
-                    console.log(`Notification flag updated sucessfully for stores: ${store_ids}`);
-                  }
-                );
+                console.log(`Notification flag updated sucessfully for stores: ${store_ids}`);
               }
             );
-
-            // SEND EMAIL TO DONOR
-            if (body.email) {
-              const msg = {
-                to: body.email,
-                from: "duet@giveduet.org",
-                templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
-                dynamic_template_data: {
-                  name: body.firstName
-                }
-              };
-
-              sgMail
-                .send(msg)
-                .then(() => {
-                  console.log(`Donation confirmation sent ${body.email} to successfully.`);
-                })
-                .catch(error => {
-                  console.error(error.toString());
-                });
-            }
-            return res.status(200).send();
           }
-        }
+        );
       }
-    );
+
+      // SEND EMAIL TO DONOR
+      if (donationInfo.email) {
+        const msg = {
+          to: donationInfo.email,
+          from: "duet@giveduet.org",
+          templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
+          dynamic_template_data: {
+            name: donationInfo.firstName
+          }
+        };
+
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log(`Donation confirmation sent ${donationInfo.email} to successfully.`);
+          })
+          .catch(error => {
+            console.error(error.toString());
+          });
+      }
+    } catch (err) {
+      res.status(500).send({ error: err });
+    }
+    return res.status(200).send();
   } else {
     console.log('Item ids not found in request body for item donation');
     return res.status(200).json();
