@@ -1,6 +1,5 @@
 import express from "express";
 import refugeeController from "./../controller/refugee";
-import s3Controller from "../controller/awsS3";
 import fbController from "./../controller/fbMessenger";
 
 const router = express.Router();
