@@ -16,6 +16,22 @@ function dbInitConnect() {
   return conn;
 }
 
+// SQL, Promise version (TODO: transition to this)
+let connPromise;
+async function dbInitConnectPromise() {
+  if (!connPromise) {
+    let mysqlPromise = require('mysql2/promise');
+    connPromise = await mysqlPromise.createConnection({
+      host: process.env.DATABASE_HOST,
+      port: process.env.DATABASE_PORT,
+      user: process.env.DATABASE_USER,
+      password: process.env.DATABASE_PASS,
+      database: process.env.DATABASE
+    });
+  }
+  return connPromise;
+}
+
 // Sendgrid
 let sendgridMail;
 function sendgridInit() {
@@ -66,4 +82,9 @@ function paypalInit() {
 }
 
 
-export default { dbInitConnect, sendgridInit, s3Init, fbMessengerInit, paypalInit };
+export default { 
+  dbInitConnect, dbInitConnectPromise,
+  sendgridInit, 
+  s3Init, 
+  fbMessengerInit, 
+  paypalInit };

@@ -1,6 +1,7 @@
 // Imports
 require("dotenv").config();
 import config from '../util/config.js';
+import sqlHelpers from '../util/sqlHelpers.js';
 const conn = config.dbInitConnect(); // SQL
 const messenger = config.fbMessengerInit(); // FB Messenger
 
@@ -48,28 +49,24 @@ function processFBMessage(req, res) {
             // Get the webhook event. entry.messaging is an array, but 
             // will only ever contain one event, so we get index 0
             if (entry.messaging) {
-                let message_obj = entry.messaging[0];
-                console.log(message_obj);
+                let fb_message = entry.messaging[0];
 
                 // Log message in SQL
-                let sender = message_obj.sender.id;
-                let recipient = message_obj.recipient.id;
-                let message = message_obj.message.text;
+                let message = {
+                    source: 'fb',
+                    sender: fb_message.sender.id,
+                    recipient: fb_message.recipient.id,
+                    content: fb_message.message.text
+                }
 
-                conn.query(
-                    "INSERT INTO messages (source, sender, recipient, message) VALUES (?,?,?,?)",
-                    ['fb', sender, recipient, message],
-                    err => {
-                        if (err) {
-                            console.log(err);
-                            res.status(500).send({ error: err });
-                        }
-                        else {
-                            console.log("Message logged to database");
-                            res.status(200).send();
-                        }
-                    }
-                );
+                try {
+                    sqlHelpers.insertMessageIntoDB(message);
+                    res.sendStatus(200);
+                } catch (err) {
+                    console.log("Error when inserting message into SQL: " + err);
+                    res.sendStatus(500);
+                }
+                
             }
         });
 

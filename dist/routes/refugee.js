@@ -1,6 +1,5 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _express = _interopRequireDefault(require("express"));
 var _refugee = _interopRequireDefault(require("./../controller/refugee"));
-var _awsS = _interopRequireDefault(require("../controller/awsS3"));
 var _fbMessenger = _interopRequireDefault(require("./../controller/fbMessenger"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 
 var router = _express["default"].Router();

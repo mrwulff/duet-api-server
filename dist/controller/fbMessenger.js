@@ -1,6 +1,7 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
 
-var _config = _interopRequireDefault(require("../util/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
+var _config = _interopRequireDefault(require("../util/config.js"));
+var _sqlHelpers = _interopRequireDefault(require("../util/sqlHelpers.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
 require("dotenv").config();var conn = _config["default"].dbInitConnect(); // SQL
 var messenger = _config["default"].fbMessengerInit(); // FB Messenger
 
@@ -48,27 +49,23 @@ function processFBMessage(req, res) {
       // Get the webhook event. entry.messaging is an array, but 
       // will only ever contain one event, so we get index 0
       if (entry.messaging) {
-        var message_obj = entry.messaging[0];
-        console.log(message_obj);
+        var fb_message = entry.messaging[0];
 
         // Log message in SQL
-        var sender = message_obj.sender.id;
-        var recipient = message_obj.recipient.id;
-        var message = message_obj.message.text;
+        var message = {
+          source: 'fb',
+          sender: fb_message.sender.id,
+          recipient: fb_message.recipient.id,
+          content: fb_message.message.text };
 
-        conn.query(
-        "INSERT INTO messages (source, sender, recipient, message) VALUES (?,?,?,?)",
-        ['fb', sender, recipient, message],
-        function (err) {
-          if (err) {
-            console.log(err);
-            res.status(500).send({ error: err });
-          } else
-          {
-            console.log("Message logged to database");
-            res.status(200).send();
-          }
-        });
+
+        try {
+          _sqlHelpers["default"].insertMessageIntoDB(message);
+          res.sendStatus(200);
+        } catch (err) {
+          console.log("Error when inserting message into SQL: " + err);
+          res.sendStatus(500);
+        }
 
       }
     });
