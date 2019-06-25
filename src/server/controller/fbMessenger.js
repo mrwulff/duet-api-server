@@ -2,11 +2,11 @@
 require("dotenv").config();
 import config from '../util/config.js';
 import sqlHelpers from '../util/sqlHelpers.js';
-const conn = config.dbInitConnect(); // SQL
+import errorHandler from '../util/errorHandler.js'
 const messenger = config.fbMessengerInit(); // FB Messenger
 
-// Adds support for GET requests to our webhook
 function fbAuth(req, res) {
+    // Adds support for GET requests to our webhook
 
     // Your verify token. Should be a random string.
     let VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
@@ -33,9 +33,11 @@ function fbAuth(req, res) {
     }
 };
 
-// Handles FB message events
-// See: https://developers.facebook.com/docs/messenger-platform/getting-started/quick-start/
+
+
 function processFBMessage(req, res) {
+    // Handles FB message events
+    // See: https://developers.facebook.com/docs/messenger-platform/getting-started/quick-start/
 
     // Parse the request body from the POST
     let body = req.body;
@@ -76,45 +78,25 @@ function processFBMessage(req, res) {
     }
 }
 
-function sendPickupNotification(itemId) {
-    conn.query(
-        "SELECT " +
-        "items.name AS item_name, items.pickup_code, " +
-        "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " +
-        "stores.name AS store_name " +
-        "FROM items " +
-        "INNER JOIN beneficiaries ON items.beneficiary_id = beneficiaries.beneficiary_id " +
-        "INNER JOIN stores ON items.store_id = stores.store_id " +
-        "WHERE items.item_id=?",
-        [itemId],
-        (err, rows) => {
-            if (err) {
-                console.log(err);
-                return false;
-            } else if (rows.length == 0) {
-                console.log("No matches found when sending pickup notification!");
-                return false;
-            } else {
-                let message = "Hi " + rows[0].first_name + ", this is an automated message from Duet.\n" +
-                    "Your " + rows[0].item_name + " is now available for pickup from " + rows[0].store_name + "!\n" +
-                    "Please use pick-up code: " + rows[0].pickup_code;
-                try {
-                    messenger.sendTextMessage({
-                        id: rows[0].fb_psid,
-                        text: message,
-                        messaging_type: "MESSAGE_TAG",
-                        tag: "SHIPPING_UPDATE"
-                    });
-                    console.log('Sent pickup notification to ' + rows[0].first_name + " " + rows[0].last_name +
-                        " for " + rows[0].item_name + " with itemId: " + itemId);
-                    return true;
-                } catch (e) {
-                    console.error(e);
-                    return false;
-                }
-            }
-        }
-    );
+
+async function sendPickupNotification(itemId) {
+    // Send pickup notification for itemId
+    try {
+        let fbMessengerInfo = await sqlHelpers.getFBMessengerInfoFromItemId(itemId);
+        let message = "Hi " + fbMessengerInfo.first_name + ", this is an automated message from Duet.\n" +
+            "Your " + fbMessengerInfo.item_name + " is now available for pickup from " + fbMessengerInfo.store_name + "!\n" +
+            "Please use pick-up code: " + fbMessengerInfo.pickup_code;
+        messenger.sendTextMessage({
+            id: fbMessengerInfo.fb_psid,
+            text: message,
+            messaging_type: "MESSAGE_TAG",
+            tag: "SHIPPING_UPDATE"
+        });
+        console.log('Sent pickup notification to ' + fbMessengerInfo.first_name + " " + fbMessengerInfo.last_name +
+            " for " + fbMessengerInfo.item_name + " with itemId: " + itemId);
+    } catch (err) {
+        errorHandler.handleError(err, "fbMessenger/sendPickupNotification");
+    }
 }
 
 // TODO: delete this after testing
@@ -122,11 +104,16 @@ function sendTestPickupNotification(req, res) {
     let itemId = req.body.itemId;
     try {
         sendPickupNotification(itemId);
+        res.status(200).send();
     } catch (e) {
-        console.log(e);
-        res.status(500).send({ error: e });
+        errorHandler.handleError(e, "fbMessenger/sendTestPickupNotification");
+        res.status(500).send();
     }
-    res.status(200).send();
 }
 
-export default { fbAuth, sendTestPickupNotification, sendPickupNotification, processFBMessage };
+export default { 
+    fbAuth, 
+    sendTestPickupNotification, 
+    sendPickupNotification, 
+    processFBMessage 
+};
