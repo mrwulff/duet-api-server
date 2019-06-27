@@ -9,7 +9,6 @@ import errorHandler from "../util/errorHandler.js";
 var CronJob = require('cron').CronJob;
 
 const conn = config.dbInitConnect(); // SQL
-const sgMail = config.sendgridInit(); // Sendgrid
 
 async function itemPaid(req, res) {
   console.log('in item paid route');
@@ -74,25 +73,6 @@ async function itemPaid(req, res) {
   }
 }
 
-function testDBConnection(req, res) {
-  conn.connect(function(err) {
-    if (err) {
-      console.log("ERROR connection to db: " + err.stack);
-    }
-    return false;
-  });
-
-  conn.execute("SELECT * from stores", function(err) {
-    if (err) {
-      console.log("error connecting to db: " + err);
-      res.status(400).send("ERROR: failed to connect to db.");
-    }
-    res.status(200).send("SUCCESS: connected to db.");
-  });
-}
-
-
-
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
 new CronJob(process.env.CRON_INTERVAL, function() {
@@ -152,6 +132,5 @@ async function sendStoreownerNotificationEmail(req, res) {
 
 export default {
   itemPaid,
-  sendStoreownerNotificationEmail,
-  testDBConnection,
+  sendStoreownerNotificationEmail
 };

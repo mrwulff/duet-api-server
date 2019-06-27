@@ -14,10 +14,6 @@ router.post("/testStoreownerConfirmationEmail", function (req, res) {
 
 router.post("/testResponse", function (req, res) {
   res.status(200).send("hit endpoint successfully");
-});
-
-router.use("/testDBConnection", function (req, res) {
-  var success = _donate["default"].testDBConnection(req, res);
 });var _default =
 
 router;exports["default"] = _default;
