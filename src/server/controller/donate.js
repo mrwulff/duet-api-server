@@ -8,8 +8,6 @@ import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 var CronJob = require('cron').CronJob;
 
-const SET_STORE_NOTIFICATION_FLAG = true;
-
 const conn = config.dbInitConnect(); // SQL
 const sgMail = config.sendgridInit(); // Sendgrid
 
@@ -52,7 +50,7 @@ async function itemPaid(req, res) {
         });
       }
 
-      if (SET_STORE_NOTIFICATION_FLAG) {
+      if (process.env.SET_STORE_NOTIFICATION_FLAG === 'true') {
         await sqlHelpers.setStoreNotificationFlags(donationInfo.itemIds);
       }
 
