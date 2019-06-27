@@ -85,8 +85,41 @@ insertDonationIntoDB(_x3) {return _insertDonationIntoDB.apply(this, arguments);}
             console.log("Successfully entered donation into DB: %j", donationInfo);return _context3.abrupt("return",
             results.insertId);case 17:_context3.prev = 17;_context3.t0 = _context3["catch"](2);
 
-            _errorHandler["default"].handleError(_context3.t0, "sqlHelpers/insertDonationIntoDB");throw _context3.t0;case 21:case "end":return _context3.stop();}}}, _callee3, null, [[2, 17]]);}));return _insertDonationIntoDB.apply(this, arguments);}var _default =
+            _errorHandler["default"].handleError(_context3.t0, "sqlHelpers/insertDonationIntoDB");throw _context3.t0;case 21:case "end":return _context3.stop();}}}, _callee3, null, [[2, 17]]);}));return _insertDonationIntoDB.apply(this, arguments);}function
 
+
+
+
+getPayoutInfo(_x4) {return _getPayoutInfo.apply(this, arguments);}function _getPayoutInfo() {_getPayoutInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(itemIds) {var conn, _ref5, _ref6, rows, fields;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:_context4.prev = 0;
+
+
+
+            console.log("Attemping to retrieve payout info for item IDs: " + itemIds);_context4.next = 4;return (
+              _config["default"].dbInitConnectPromise());case 4:conn = _context4.sent;_context4.next = 7;return (
+              conn.query("SELECT stores.paypal AS paypal, " +
+              "payouts.payment_amount AS payment_amount, " +
+              "payouts.item_ids AS item_ids " +
+              "FROM stores AS stores " +
+              "INNER JOIN (" +
+              "SELECT store_id, " +
+              "SUM(price_euros) AS payment_amount, " +
+              "GROUP_CONCAT(item_id) AS item_ids " +
+              "FROM items " +
+              "WHERE item_id IN (?) " +
+              "GROUP BY store_id" +
+              ") AS payouts " +
+              "USING(store_id) " +
+              "WHERE stores.payment_method = 'paypal'",
+              [itemIds]));case 7:_ref5 = _context4.sent;_ref6 = _slicedToArray(_ref5, 2);rows = _ref6[0];fields = _ref6[1];
+            // convert item_ids from string to list
+            rows.forEach(function (singleStoreResult) {
+              singleStoreResult.item_ids = singleStoreResult.item_ids.split(",");
+            });
+            console.log("Successfully retrieved payout info for item IDs: " + itemIds);
+            console.log("Result: %j", rows);return _context4.abrupt("return",
+            rows);case 17:_context4.prev = 17;_context4.t0 = _context4["catch"](0);
+
+            _errorHandler["default"].handleError(_context4.t0, "sqlHelpers/getPayoutInfo");throw _context4.t0;case 21:case "end":return _context4.stop();}}}, _callee4, null, [[0, 17]]);}));return _getPayoutInfo.apply(this, arguments);}var _default =
 
 
 
@@ -94,4 +127,5 @@ insertDonationIntoDB(_x3) {return _insertDonationIntoDB.apply(this, arguments);}
 {
   insertMessageIntoDB: insertMessageIntoDB,
   getFBMessengerInfoFromItemId: getFBMessengerInfoFromItemId,
-  insertDonationIntoDB: insertDonationIntoDB };exports["default"] = _default;
+  insertDonationIntoDB: insertDonationIntoDB,
+  getPayoutInfo: getPayoutInfo };exports["default"] = _default;

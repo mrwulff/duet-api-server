@@ -88,11 +88,45 @@ async function insertDonationIntoDB(donationInfo) {
         errorHandler.handleError(err, "sqlHelpers/insertDonationIntoDB");
         throw err;
     }
-    
+}
+
+async function getPayoutInfo(itemIds) {
+    // Get stores' Payout info for list of items
+    // Returns a list containing payout info for each store that we have to send a payout to
+    try {
+        console.log("Attemping to retrieve payout info for item IDs: " + itemIds);
+        let conn = await config.dbInitConnectPromise();
+        let [rows, fields] = await conn.query("SELECT stores.paypal AS paypal, " +
+            "payouts.payment_amount AS payment_amount, " +
+            "payouts.item_ids AS item_ids " +
+            "FROM stores AS stores " +
+            "INNER JOIN (" +
+            "SELECT store_id, " +
+            "SUM(price_euros) AS payment_amount, " +
+            "GROUP_CONCAT(item_id) AS item_ids " +
+            "FROM items " +
+            "WHERE item_id IN (?) " +
+            "GROUP BY store_id" +
+            ") AS payouts " +
+            "USING(store_id) " +
+            "WHERE stores.payment_method = 'paypal'",
+            [itemIds]);
+        // convert item_ids from string to list
+        rows.forEach(singleStoreResult => {
+            singleStoreResult.item_ids = singleStoreResult.item_ids.split(",");
+        });
+        console.log("Successfully retrieved payout info for item IDs: " + itemIds);
+        console.log("Result: %j", rows);
+        return rows;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getPayoutInfo");
+        throw err;
+    }
 }
 
 export default {
     insertMessageIntoDB,
     getFBMessengerInfoFromItemId,
-    insertDonationIntoDB
+    insertDonationIntoDB,
+    getPayoutInfo
 }

@@ -46,33 +46,11 @@ async function itemPaid(req, res) {
 
       // Send PayPal payout to stores with payment_method='paypal'
       if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
-        conn.query("SELECT stores.paypal AS paypal, " +
-          "payouts.payment_amount AS payment_amount, " +
-          "payouts.item_ids AS item_ids " +
-          "FROM stores AS stores " +
-          "INNER JOIN (" +
-          "SELECT store_id, " +
-          "SUM(price_euros) AS payment_amount, " +
-          "GROUP_CONCAT(item_id) AS item_ids " +
-          "FROM items " +
-          "WHERE item_id IN (?) " +
-          "GROUP BY store_id" +
-          ") AS payouts " +
-          "USING(store_id) " +
-          "WHERE stores.payment_method = 'paypal'",
-          [donationInfo.itemIds],
-          function (err, results, fields) {
-            if (err) {
-              console.log(`Error when running payouts SQL query: ${err}`);
-            }
-            else {
-              // console.log("Payouts query results: " + String(results));
-              results.forEach(result => {
-                let itemIdsList = result.item_ids.split(",");
-                sendPayout(result.paypal, result.payment_amount, "EUR", itemIdsList);
-              });
-            }
-          });
+        let payoutInfo = await sqlHelpers.getPayoutInfo(donationInfo.itemIds);
+        payoutInfo.forEach(singleStoreResult => {
+          sendPayout(singleStoreResult.paypal, singleStoreResult.payment_amount, "EUR", singleStoreResult.item_ids);
+          console.log("Successfully sent payout(s) for item IDs: " + donationInfo.itemIds);
+        });
       }
 
       if (SET_STORE_NOTIFICATION_FLAG) {
@@ -123,6 +101,7 @@ async function itemPaid(req, res) {
           });
       }
     } catch (err) {
+      errorHandler.handleError(err, "donate/itemPaid");
       res.status(500).send({ error: err });
     }
     return res.status(200).send();
