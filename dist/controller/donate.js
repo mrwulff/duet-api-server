@@ -3,6 +3,8 @@ var _config = _interopRequireDefault(require("../util/config.js"));
 var _assert = require("assert");
 var _nodeSchedule = _interopRequireDefault(require("node-schedule"));
 var _sqlHelpers = _interopRequireDefault(require("../util/sqlHelpers.js"));
+var _paypalHelpers = _interopRequireDefault(require("../util/paypalHelpers.js"));
+var _sendgridHelpers = _interopRequireDefault(require("../util/sendgridHelpers.js"));
 var _errorHandler = _interopRequireDefault(require("../util/errorHandler.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}require("dotenv").config();
 var CronJob = require('cron').CronJob;
 
@@ -10,140 +12,69 @@ var SET_STORE_NOTIFICATION_FLAG = true;
 
 var conn = _config["default"].dbInitConnect(); // SQL
 var sgMail = _config["default"].sendgridInit(); // Sendgrid
-var paypal = _config["default"].paypalInit(); // PayPal
 function
-itemPaid(_x, _x2) {return _itemPaid.apply(this, arguments);}
+itemPaid(_x, _x2) {return _itemPaid.apply(this, arguments);}function _itemPaid() {_itemPaid = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(req, res) {var store_ids, donationInfo, donationId, payoutInfo, donorInfo;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+            console.log('in item paid route');
+            store_ids = [];
+            donationInfo = req.body;
+            console.log("Donation info: ".concat(JSON.stringify(donationInfo)));if (!
+            donationInfo.itemIds) {_context3.next = 41;break;}_context3.prev = 5;if (!(
 
 
 
+            process.env.PAYPAL_MODE === "live" && !donationInfo.email)) {_context3.next = 11;break;}
+            console.log("Error: Call to itemPaid() without donor email in live mode!");
+            res.status(500).send("Error: Could not retrieve donor email!");_context3.next = 21;break;case 11:if (!(
+            process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email)) {_context3.next = 18;break;}
+            console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");_context3.next = 15;return (
+              _sqlHelpers["default"].insertDonationIntoDB(donationInfo));case 15:donationId = _context3.sent;_context3.next = 21;break;case 18:_context3.next = 20;return (
 
+              _sqlHelpers["default"].insertDonationIntoDB(donationInfo));case 20:donationId = _context3.sent;case 21:
 
 
+            // Mark items as donated
+            donationInfo.itemIds.forEach( /*#__PURE__*/function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(itemId) {return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
+                          _sqlHelpers["default"].markItemAsDonated(itemId, donationId));case 2:case "end":return _context2.stop();}}}, _callee2);}));return function (_x4) {return _ref2.apply(this, arguments);};}());
 
+            console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
+            // Send PayPal payout to stores with payment_method='paypal'
+            if (!(process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox")) {_context3.next = 28;break;}_context3.next = 26;return (
+              _sqlHelpers["default"].getPayoutInfo(donationInfo.itemIds));case 26:payoutInfo = _context3.sent;
+            payoutInfo.forEach(function (singleStoreResult) {
+              _paypalHelpers["default"].sendPayout(
+              singleStoreResult.paypal,
+              singleStoreResult.payment_amount,
+              "EUR",
+              singleStoreResult.item_ids);
 
+              console.log("Successfully sent payout(s) for item IDs: " + donationInfo.itemIds);
+            });case 28:if (!
 
 
+            SET_STORE_NOTIFICATION_FLAG) {_context3.next = 31;break;}_context3.next = 31;return (
+              _sqlHelpers["default"].setStoreNotificationFlags(donationInfo.itemIds));case 31:
 
 
+            // SEND EMAIL TO DONOR
+            if (donationInfo.email) {
+              donorInfo = {
+                email: donationInfo.email,
+                firstName: donationInfo.firstName };
 
+              _sendgridHelpers["default"].sendDonorThankYouEmail(donorInfo);
+            }_context3.next = 38;break;case 34:_context3.prev = 34;_context3.t0 = _context3["catch"](5);
 
 
+            _errorHandler["default"].handleError(_context3.t0, "donate/itemPaid");
+            res.status(500).send({ error: _context3.t0 });case 38:return _context3.abrupt("return",
 
+            res.status(200).send());case 41:
 
+            console.log('Item ids not found in request body for item donation');return _context3.abrupt("return",
+            res.status(200).json());case 43:case "end":return _context3.stop();}}}, _callee3, null, [[5, 34]]);}));return _itemPaid.apply(this, arguments);}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Send payout to store, return true if successful
-// sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
-function _itemPaid() {_itemPaid = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(req, res) {var store_ids, donationInfo, donationId, payoutInfo, msg;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:console.log('in item paid route');store_ids = [];donationInfo = req.body;console.log("Donation info: ".concat(JSON.stringify(donationInfo)));if (!donationInfo.itemIds) {_context3.next = 41;break;}_context3.prev = 5;if (!(process.env.PAYPAL_MODE === "live" && !donationInfo.email)) {_context3.next = 11;break;}console.log("Error: Call to itemPaid() without donor email in live mode!");res.status(500).send("Error: Could not retrieve donor email!");_context3.next = 21;break;case 11:if (!(process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email)) {_context3.next = 18;break;}console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");_context3.next = 15;return _sqlHelpers["default"].insertDonationIntoDB(donationInfo);case 15:donationId = _context3.sent;_context3.next = 21;break;case 18:_context3.next = 20;return _sqlHelpers["default"].insertDonationIntoDB(donationInfo);case 20:donationId = _context3.sent;case 21: // Mark items as donated
-            donationInfo.itemIds.forEach( /*#__PURE__*/function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(itemId) {return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return _sqlHelpers["default"].markItemAsDonated(itemId, donationId);case 2:case "end":return _context2.stop();}}}, _callee2);}));return function (_x4) {return _ref2.apply(this, arguments);};}());console.log("Successfully marked items as donated: " + donationInfo.itemIds); // Send PayPal payout to stores with payment_method='paypal'
-            if (!(process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox")) {_context3.next = 28;break;}_context3.next = 26;return _sqlHelpers["default"].getPayoutInfo(donationInfo.itemIds);case 26:payoutInfo = _context3.sent;payoutInfo.forEach(function (singleStoreResult) {sendPayout(singleStoreResult.paypal, singleStoreResult.payment_amount, "EUR", singleStoreResult.item_ids);console.log("Successfully sent payout(s) for item IDs: " + donationInfo.itemIds);});case 28:if (!SET_STORE_NOTIFICATION_FLAG) {_context3.next = 31;break;}_context3.next = 31;return _sqlHelpers["default"].setStoreNotificationFlags(donationInfo.itemIds);case 31: // SEND EMAIL TO DONOR
-            if (donationInfo.email) {msg = { to: donationInfo.email, from: "duet@giveduet.org", templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc", dynamic_template_data: { name: donationInfo.firstName } };sgMail.send(msg).then(function () {console.log("Donation confirmation sent ".concat(donationInfo.email, " to successfully."));})["catch"](function (error) {console.error(error.toString());});}_context3.next = 38;break;case 34:_context3.prev = 34;_context3.t0 = _context3["catch"](5);_errorHandler["default"].handleError(_context3.t0, "donate/itemPaid");res.status(500).send({ error: _context3.t0 });case 38:return _context3.abrupt("return", res.status(200).send());case 41:console.log('Item ids not found in request body for item donation');return _context3.abrupt("return", res.status(200).json());case 43:case "end":return _context3.stop();}}}, _callee3, null, [[5, 34]]);}));return _itemPaid.apply(this, arguments);}function sendPayout(payeeEmail, amount, currencyCode, itemIds) {var itemIdsStr = itemIds.map(function (id) {return "#" + String(id);}); // e.g. ["#63", "#43"]
-  var note = "Payment for Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
-  console.log("Attempting payout of " + String(amount) + " " + String(currencyCode) + " to " + payeeEmail);
-  var payoutInfo = {
-    sender_batch_header: {
-      email_subject: "You have a payment from Duet!" },
-
-    items: [
-    {
-      recipient_type: "EMAIL",
-      amount: {
-        value: amount,
-        currency: currencyCode },
-
-      receiver: payeeEmail,
-      note: note }] };
-
-
-
-
-  var sync_mode = "false";
-
-  paypal.payout.create(payoutInfo, sync_mode, function (error, payoutResp) {
-    if (error) {
-      console.log(error.response);
-      return false;
-    } else {
-      console.log(payoutResp);
-      return true;
-    }
-  });
-}
-
-function sendConfirmationEmail(req, res) {
-  var body = req.body;
-
-  // const sgMail = require('@sendgrid/mail');
-  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  var msg = {
-    to: body.email,
-    from: "duet@giveduet.org",
-    templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
-    dynamic_template_data: {
-      name: body.firstName } };
-
-
-
-  sgMail.
-  send(msg).
-  then(function () {
-    console.log("Message delived successfully.");
-    res.status(200).send("Message delivered.");
-  })["catch"](
-  function (error) {
-    console.error(error.toString());
-    res.send("Failed to deliver message.");
-  });
-}
 
 function testDBConnection(req, res) {
   conn.connect(function (err) {
@@ -295,7 +226,6 @@ function updateNotificationFlag(req, res) {
 
 {
   itemPaid: itemPaid,
-  sendConfirmationEmail: sendConfirmationEmail,
   sendStoreownerNotificationEmail: sendStoreownerNotificationEmail,
   testDBConnection: testDBConnection,
   updateNotificationFlag: updateNotificationFlag };exports["default"] = _default;

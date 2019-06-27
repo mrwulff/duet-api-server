@@ -3,6 +3,8 @@ import config from "../util/config.js";
 import { strict } from "assert";
 import nodeSchedule from "node-schedule";
 import sqlHelpers from "../util/sqlHelpers.js";
+import paypalHelpers from "../util/paypalHelpers.js";
+import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 var CronJob = require('cron').CronJob;
 
@@ -10,7 +12,6 @@ const SET_STORE_NOTIFICATION_FLAG = true;
 
 const conn = config.dbInitConnect(); // SQL
 const sgMail = config.sendgridInit(); // Sendgrid
-const paypal = config.paypalInit(); // PayPal
 
 async function itemPaid(req, res) {
   console.log('in item paid route');
@@ -41,7 +42,12 @@ async function itemPaid(req, res) {
       if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
         let payoutInfo = await sqlHelpers.getPayoutInfo(donationInfo.itemIds);
         payoutInfo.forEach(singleStoreResult => {
-          sendPayout(singleStoreResult.paypal, singleStoreResult.payment_amount, "EUR", singleStoreResult.item_ids);
+          paypalHelpers.sendPayout(
+            singleStoreResult.paypal,
+            singleStoreResult.payment_amount,
+            "EUR",
+            singleStoreResult.item_ids
+            );
           console.log("Successfully sent payout(s) for item IDs: " + donationInfo.itemIds);
         });
       }
@@ -52,24 +58,13 @@ async function itemPaid(req, res) {
 
       // SEND EMAIL TO DONOR
       if (donationInfo.email) {
-        const msg = {
-          to: donationInfo.email,
-          from: "duet@giveduet.org",
-          templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
-          dynamic_template_data: {
-            name: donationInfo.firstName
-          }
-        };
-
-        sgMail
-          .send(msg)
-          .then(() => {
-            console.log(`Donation confirmation sent ${donationInfo.email} to successfully.`);
-          })
-          .catch(error => {
-            console.error(error.toString());
-          });
+        let donorInfo = {
+          email: donationInfo.email,
+          firstName: donationInfo.firstName
+        }
+        sendgridHelpers.sendDonorThankYouEmail(donorInfo);
       }
+
     } catch (err) {
       errorHandler.handleError(err, "donate/itemPaid");
       res.status(500).send({ error: err });
@@ -79,70 +74,6 @@ async function itemPaid(req, res) {
     console.log('Item ids not found in request body for item donation');
     return res.status(200).json();
   }
-}
-
-// Send payout to store, return true if successful
-// sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
-function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
-  var itemIdsStr = itemIds.map(id => "#" + String(id)); // e.g. ["#63", "#43"]
-  var note = "Payment for Item IDs: " + itemIdsStr.join(", "); // e.g. "Item IDs: #79, #75, #10"
-
-  console.log("Attempting payout of " + String(amount) + " " + String(currencyCode) + " to " + payeeEmail);
-
-  var payoutInfo = {
-    sender_batch_header: {
-      email_subject: "You have a payment from Duet!"
-    },
-    items: [
-      {
-        recipient_type: "EMAIL",
-        amount: {
-          value: amount,
-          currency: currencyCode
-        },
-        receiver: payeeEmail,
-        note: note
-      }
-    ]
-  };
-
-  var sync_mode = "false";
-
-  paypal.payout.create(payoutInfo, sync_mode, function(error, payoutResp) {
-    if (error) {
-      console.log(error.response);
-      return false;
-    } else {
-      console.log(payoutResp);
-      return true;
-    }
-  });
-}
-
-function sendConfirmationEmail(req, res) {
-  var body = req.body;
-
-  // const sgMail = require('@sendgrid/mail');
-  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const msg = {
-    to: body.email,
-    from: "duet@giveduet.org",
-    templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
-    dynamic_template_data: {
-      name: body.firstName
-    }
-  };
-
-  sgMail
-    .send(msg)
-    .then(() => {
-      console.log("Message delived successfully.");
-      res.status(200).send("Message delivered.");
-    })
-    .catch(error => {
-      console.error(error.toString());
-      res.send("Failed to deliver message.");
-    });
 }
 
 function testDBConnection(req, res) {
@@ -295,7 +226,6 @@ function updateNotificationFlag(req, res) {
 
 export default {
   itemPaid,
-  sendConfirmationEmail,
   sendStoreownerNotificationEmail,
   testDBConnection,
   updateNotificationFlag
