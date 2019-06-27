@@ -19,7 +19,7 @@ async function itemPaid(req, res) {
   console.log(`Donation info: ${JSON.stringify(donationInfo)}`);
   if (donationInfo.itemIds) {
     try {
-      // set item to fulfilled
+      // Create Donation entry
       let donationId;
       if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
         console.log("Error: Call to itemPaid() without donor email in live mode!");
@@ -31,18 +31,11 @@ async function itemPaid(req, res) {
         donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
       }
 
-      donationInfo.itemIds.forEach(function (id) {
-        // add entry into donations table
-        conn.execute(
-          "UPDATE items SET status='PAID', in_notification=1, donation_id=? WHERE item_id=?",
-          [donationId, id],
-          function (err) {
-            if (err) {
-              console.log(`Error when adding entry for item id=${id} into donations table! ${err}`);
-            }
-          }
-        );
+      // Mark items as donated
+      donationInfo.itemIds.forEach(async function (itemId) {
+        await sqlHelpers.markItemAsDonated(itemId, donationId);
       });
+      console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
       // Send PayPal payout to stores with payment_method='paypal'
       if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
@@ -54,30 +47,7 @@ async function itemPaid(req, res) {
       }
 
       if (SET_STORE_NOTIFICATION_FLAG) {
-        // find all the stores that paid items interact with
-        conn.query(
-          `SELECT store_id FROM items WHERE item_id IN (${donationInfo.itemIds.join()})`,
-          function (err, results, fields) {
-            if (err) {
-              console.log(err);
-            }
-
-            results.forEach(function (result) {
-              store_ids.push(result.store_id);
-            });
-
-            // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before we can move them to be ready for pickup...
-            conn.query(
-              `UPDATE stores SET needs_notification=1 WHERE store_id IN (${store_ids.join()})`,
-              function (err, results, fields) {
-                if (err) {
-                  console.log(err);
-                }
-                console.log(`Notification flag updated sucessfully for stores: ${store_ids}`);
-              }
-            );
-          }
-        );
+        await sqlHelpers.setStoreNotificationFlags(donationInfo.itemIds);
       }
 
       // SEND EMAIL TO DONOR

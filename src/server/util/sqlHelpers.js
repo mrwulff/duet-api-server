@@ -90,11 +90,24 @@ async function insertDonationIntoDB(donationInfo) {
     }
 }
 
+async function markItemAsDonated(itemId, donationId) {
+    // Mark item as donated, note that it requires store notification
+    try {
+        let conn = await config.dbInitConnectPromise();
+        await conn.query(
+            "UPDATE items SET status='PAID', in_notification=1, donation_id=? WHERE item_id=?",
+            [donationId, itemId]
+            );
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/markItemAsDoanted");
+        throw err;
+    }
+}
+
 async function getPayoutInfo(itemIds) {
     // Get stores' Payout info for list of items
     // Returns a list containing payout info for each store that we have to send a payout to
     try {
-        console.log("Attemping to retrieve payout info for item IDs: " + itemIds);
         let conn = await config.dbInitConnectPromise();
         let [rows, fields] = await conn.query("SELECT stores.paypal AS paypal, " +
             "payouts.payment_amount AS payment_amount, " +
@@ -115,8 +128,6 @@ async function getPayoutInfo(itemIds) {
         rows.forEach(singleStoreResult => {
             singleStoreResult.item_ids = singleStoreResult.item_ids.split(",");
         });
-        console.log("Successfully retrieved payout info for item IDs: " + itemIds);
-        console.log("Result: %j", rows);
         return rows;
     } catch (err) {
         errorHandler.handleError(err, "sqlHelpers/getPayoutInfo");
@@ -124,9 +135,33 @@ async function getPayoutInfo(itemIds) {
     }
 }
 
+async function setStoreNotificationFlags(itemIds) {
+    // Set store notification flag to 1 for all stores that interacdt with these items
+    try {
+        let conn = await config.dbInitConnectPromise();
+
+        // Get list of all store IDs that need notification flag set
+        let [storeIdResults, fields] = await conn.query(
+            "SELECT store_id FROM items WHERE item_id IN (?)",
+            [itemIds]);
+        let storeIdsList = storeIdResults.map(storeIdResult => storeIdResult.store_id);
+
+        // Set needs_notification to 1
+        await conn.query(
+            "UPDATE stores SET needs_notification=1 WHERE store_id IN (?)",
+            [storeIdsList]);
+        console.log(`Notification flag updated sucessfully for stores: ${storeIdsList}`)
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/setStoreNotificationFlags");
+        throw err;
+    }
+}
+
 export default {
     insertMessageIntoDB,
+    markItemAsDonated,
     getFBMessengerInfoFromItemId,
     insertDonationIntoDB,
-    getPayoutInfo
+    getPayoutInfo,
+    setStoreNotificationFlags
 }

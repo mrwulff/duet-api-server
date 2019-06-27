@@ -90,12 +90,25 @@ insertDonationIntoDB(_x3) {return _insertDonationIntoDB.apply(this, arguments);}
 
 
 
-getPayoutInfo(_x4) {return _getPayoutInfo.apply(this, arguments);}function _getPayoutInfo() {_getPayoutInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(itemIds) {var conn, _ref5, _ref6, rows, fields;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:_context4.prev = 0;
+markItemAsDonated(_x4, _x5) {return _markItemAsDonated.apply(this, arguments);}function _markItemAsDonated() {_markItemAsDonated = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(itemId, donationId) {var conn;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:_context4.prev = 0;_context4.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context4.sent;_context4.next = 6;return (
+              conn.query(
+              "UPDATE items SET status='PAID', in_notification=1, donation_id=? WHERE item_id=?",
+              [donationId, itemId]));case 6:_context4.next = 12;break;case 8:_context4.prev = 8;_context4.t0 = _context4["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context4.t0, "sqlHelpers/markItemAsDoanted");throw _context4.t0;case 12:case "end":return _context4.stop();}}}, _callee4, null, [[0, 8]]);}));return _markItemAsDonated.apply(this, arguments);}function
 
 
 
-            console.log("Attemping to retrieve payout info for item IDs: " + itemIds);_context4.next = 4;return (
-              _config["default"].dbInitConnectPromise());case 4:conn = _context4.sent;_context4.next = 7;return (
+
+getPayoutInfo(_x6) {return _getPayoutInfo.apply(this, arguments);}function _getPayoutInfo() {_getPayoutInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(itemIds) {var conn, _ref5, _ref6, rows, fields;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:_context5.prev = 0;_context5.next = 3;return (
+
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context5.sent;_context5.next = 6;return (
               conn.query("SELECT stores.paypal AS paypal, " +
               "payouts.payment_amount AS payment_amount, " +
               "payouts.item_ids AS item_ids " +
@@ -110,22 +123,44 @@ getPayoutInfo(_x4) {return _getPayoutInfo.apply(this, arguments);}function _getP
               ") AS payouts " +
               "USING(store_id) " +
               "WHERE stores.payment_method = 'paypal'",
-              [itemIds]));case 7:_ref5 = _context4.sent;_ref6 = _slicedToArray(_ref5, 2);rows = _ref6[0];fields = _ref6[1];
+              [itemIds]));case 6:_ref5 = _context5.sent;_ref6 = _slicedToArray(_ref5, 2);rows = _ref6[0];fields = _ref6[1];
             // convert item_ids from string to list
             rows.forEach(function (singleStoreResult) {
               singleStoreResult.item_ids = singleStoreResult.item_ids.split(",");
-            });
-            console.log("Successfully retrieved payout info for item IDs: " + itemIds);
-            console.log("Result: %j", rows);return _context4.abrupt("return",
-            rows);case 17:_context4.prev = 17;_context4.t0 = _context4["catch"](0);
+            });return _context5.abrupt("return",
+            rows);case 14:_context5.prev = 14;_context5.t0 = _context5["catch"](0);
 
-            _errorHandler["default"].handleError(_context4.t0, "sqlHelpers/getPayoutInfo");throw _context4.t0;case 21:case "end":return _context4.stop();}}}, _callee4, null, [[0, 17]]);}));return _getPayoutInfo.apply(this, arguments);}var _default =
+            _errorHandler["default"].handleError(_context5.t0, "sqlHelpers/getPayoutInfo");throw _context5.t0;case 18:case "end":return _context5.stop();}}}, _callee5, null, [[0, 14]]);}));return _getPayoutInfo.apply(this, arguments);}function
+
+
+
+
+setStoreNotificationFlags(_x7) {return _setStoreNotificationFlags.apply(this, arguments);}function _setStoreNotificationFlags() {_setStoreNotificationFlags = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(itemIds) {var conn, _ref7, _ref8, storeIdResults, fields, storeIdsList;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:_context6.prev = 0;_context6.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context6.sent;_context6.next = 6;return (
+
+
+              conn.query(
+              "SELECT store_id FROM items WHERE item_id IN (?)",
+              [itemIds]));case 6:_ref7 = _context6.sent;_ref8 = _slicedToArray(_ref7, 2);storeIdResults = _ref8[0];fields = _ref8[1];
+            storeIdsList = storeIdResults.map(function (storeIdResult) {return storeIdResult.store_id;});
+
+            // Set needs_notification to 1
+            _context6.next = 13;return conn.query(
+            "UPDATE stores SET needs_notification=1 WHERE store_id IN (?)",
+            [storeIdsList]);case 13:
+            console.log("Notification flag updated sucessfully for stores: ".concat(storeIdsList));_context6.next = 20;break;case 16:_context6.prev = 16;_context6.t0 = _context6["catch"](0);
+
+            _errorHandler["default"].handleError(_context6.t0, "sqlHelpers/setStoreNotificationFlags");throw _context6.t0;case 20:case "end":return _context6.stop();}}}, _callee6, null, [[0, 16]]);}));return _setStoreNotificationFlags.apply(this, arguments);}var _default =
 
 
 
 
 {
   insertMessageIntoDB: insertMessageIntoDB,
+  markItemAsDonated: markItemAsDonated,
   getFBMessengerInfoFromItemId: getFBMessengerInfoFromItemId,
   insertDonationIntoDB: insertDonationIntoDB,
-  getPayoutInfo: getPayoutInfo };exports["default"] = _default;
+  getPayoutInfo: getPayoutInfo,
+  setStoreNotificationFlags: setStoreNotificationFlags };exports["default"] = _default;
