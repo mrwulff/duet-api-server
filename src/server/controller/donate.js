@@ -103,43 +103,11 @@ new CronJob(process.env.CRON_INTERVAL, function() {
 }, null, true, 'America/Los_Angeles');
 
 
-function getItemsForNotificationEmail(result) {
-  return new Promise(function(resolve, reject) {
-    let updatedItems=[];
-    conn.query(`SELECT * from items where store_id=${result.store_id} and in_notification=1`, function(err, rows) {
-      if (err) {
-        console.log("Error querying database: " + err);
-        return reject(err);
-      }
-      if (rows.length === 0) {
-        console.log('no items included in notification');
-      } 
-      else {
-        let item;
-        rows.forEach(function(obj) {
-          item = {
-            itemId: obj.item_id,
-            itemImage: obj.link,
-            itemName: obj.name,
-            itemPrice: obj.price_euros,
-          }
-          updatedItems.push(item);
-        });
-      }
-      resolve(updatedItems);
-    });
-  });
-}
 
-function sendStoreownerNotificationEmail(req, res) {
-  conn.query("SELECT * from stores where needs_notification=1", function(
-    err,
-    results,
-  ) {
-    if (err) {
-      console.log("Error querying database: " + err);
-      return;
-    }
+async function sendStoreownerNotificationEmail(req, res) {
+  try {
+    // Get stores that need notifying
+    let results = await sqlHelpers.getStoresThatNeedNotification();
 
     if (results.length < 1) {
       // no stores need notification
@@ -148,64 +116,40 @@ function sendStoreownerNotificationEmail(req, res) {
     }
 
     // Loop through each of the stores that require a notification
-    results.forEach(async function(result) {
-      try {
-        const updatedItems = await getItemsForNotificationEmail(result);
-        if (updatedItems.length === 0) {
-          console.log('No new updates to items');
-          return;
-        }
-
-        let recipientList;
-        if (process.env.DATABASE === 'duet_sandbox') {
-          recipientList = ['duet.giving@gmail.com'];
-        } else {
-          recipientList = ['duet.giving@gmail.com', result.email];
-        }
-
-        const msg = {
-          to: recipientList,
-          from: "duet@giveduet.org",
-          templateId: "d-435a092f0be54b07b5135799ac7dfb01",
-          dynamic_template_data: {
-            storeName: result.name,
-            items: updatedItems,
-          }
-        };
-
-        sgMail
-          .sendMultiple(msg)
-          .then(() => {
-            console.log(`Message delivered to ${result.name} at ${result.email} successfully.`);
-          })
-          .catch(error => {
-            console.error("Error: " + error.toString());
-            return;
-          });
-
-        let updateItemNotificationQuery = `UPDATE items SET in_notification=0 where item_id IN (${updatedItems.map(item => item.itemId).join()})`;
-        conn.query(updateItemNotificationQuery, function(err) {
-          if (err) {
-            console.log("error: " + err);
-          }
-        })
-      } catch (err) {
-        console.log("Error getting new updated items: " + err);
-        return; 
+    results.forEach(async function (result) {
+      // Get items for store
+      const updatedItems = await sqlHelpers.getItemsForNotificationEmail(result.store_id);
+      if (updatedItems.length === 0) {
+        console.log('No new updates to items');
+        return;
       }
+
+      // Get recipient list
+      let recipientList = [];
+      if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'sandbox') {
+        recipientList = ['duet.giving@gmail.com'];
+      } else if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'live') {
+        recipientList = ['duet.giving@gmail.com', result.email];
+      }
+
+      // Send email
+      sendgridHelpers.sendStoreNotificationEmail({
+        recipientList: recipientList,
+        name: result.name,
+        email: result.email,
+        updatedItems: updatedItems
+      });
+
+      // Reset items' notification flags
+      sqlHelpers.unsetItemsNotificationFlag(updatedItems.map(item => item.itemId));
     });
 
     // set needs_notification to false for everyone...
-    // TODO: Once we have a lot of stores, setting all of them to false will be inefficient
-    conn.query("UPDATE stores SET needs_notification=0", function(
-      err,
-    ) {
-      if (err) {
-        console.log("error: " + err);
-        return;
-      }
-    });
-  });
+    sqlHelpers.resetStoreNotificationFlags();
+  } catch (err) {
+    errorHandler.handleError(err, "donate/sendStoreownerNotificationEmail");
+    res.status(500).send();
+  }
 }
 
 export default {

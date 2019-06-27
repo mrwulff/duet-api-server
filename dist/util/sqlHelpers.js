@@ -135,24 +135,95 @@ getPayoutInfo(_x6) {return _getPayoutInfo.apply(this, arguments);}function _getP
 
 
 
-setStoreNotificationFlags(_x7) {return _setStoreNotificationFlags.apply(this, arguments);}function _setStoreNotificationFlags() {_setStoreNotificationFlags = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(itemIds) {var conn, _ref7, _ref8, storeIdResults, fields, storeIdsList;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:_context6.prev = 0;_context6.next = 3;return (
+getStoresThatNeedNotification() {return _getStoresThatNeedNotification.apply(this, arguments);}function _getStoresThatNeedNotification() {_getStoresThatNeedNotification = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {var conn, _ref7, _ref8, results, fields;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:_context6.prev = 0;_context6.next = 3;return (
 
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context6.sent;_context6.next = 6;return (
+              conn.query("SELECT * from stores where needs_notification=1"));case 6:_ref7 = _context6.sent;_ref8 = _slicedToArray(_ref7, 2);results = _ref8[0];fields = _ref8[1];return _context6.abrupt("return",
+            results);case 13:_context6.prev = 13;_context6.t0 = _context6["catch"](0);
+
+            _errorHandler["default"].handleError(_context6.t0, "sqlHelpers/getStoresThatNeedNotification");throw _context6.t0;case 17:case "end":return _context6.stop();}}}, _callee6, null, [[0, 13]]);}));return _getStoresThatNeedNotification.apply(this, arguments);}function
+
+
+
+
+setStoreNotificationFlags(_x7) {return _setStoreNotificationFlags.apply(this, arguments);}function _setStoreNotificationFlags() {_setStoreNotificationFlags = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(itemIds) {var conn, _ref9, _ref10, storeIdResults, fields, storeIdsList;return regeneratorRuntime.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:_context7.prev = 0;_context7.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context7.sent;_context7.next = 6;return (
 
 
               conn.query(
               "SELECT store_id FROM items WHERE item_id IN (?)",
-              [itemIds]));case 6:_ref7 = _context6.sent;_ref8 = _slicedToArray(_ref7, 2);storeIdResults = _ref8[0];fields = _ref8[1];
+              [itemIds]));case 6:_ref9 = _context7.sent;_ref10 = _slicedToArray(_ref9, 2);storeIdResults = _ref10[0];fields = _ref10[1];
             storeIdsList = storeIdResults.map(function (storeIdResult) {return storeIdResult.store_id;});
 
             // Set needs_notification to 1
-            _context6.next = 13;return conn.query(
+            _context7.next = 13;return conn.query(
             "UPDATE stores SET needs_notification=1 WHERE store_id IN (?)",
             [storeIdsList]);case 13:
-            console.log("Notification flag updated sucessfully for stores: ".concat(storeIdsList));_context6.next = 20;break;case 16:_context6.prev = 16;_context6.t0 = _context6["catch"](0);
+            console.log("Notification flag updated sucessfully for stores: ".concat(storeIdsList));_context7.next = 20;break;case 16:_context7.prev = 16;_context7.t0 = _context7["catch"](0);
 
-            _errorHandler["default"].handleError(_context6.t0, "sqlHelpers/setStoreNotificationFlags");throw _context6.t0;case 20:case "end":return _context6.stop();}}}, _callee6, null, [[0, 16]]);}));return _setStoreNotificationFlags.apply(this, arguments);}var _default =
+            _errorHandler["default"].handleError(_context7.t0, "sqlHelpers/setStoreNotificationFlags");throw _context7.t0;case 20:case "end":return _context7.stop();}}}, _callee7, null, [[0, 16]]);}));return _setStoreNotificationFlags.apply(this, arguments);}function
+
+
+
+
+resetStoreNotificationFlags() {return _resetStoreNotificationFlags.apply(this, arguments);}function _resetStoreNotificationFlags() {_resetStoreNotificationFlags = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8() {var conn;return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:_context8.prev = 0;_context8.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context8.sent;_context8.next = 6;return (
+              conn.query("UPDATE stores SET needs_notification=0"));case 6:_context8.next = 12;break;case 8:_context8.prev = 8;_context8.t0 = _context8["catch"](0);
+
+            _errorHandler["default"].handleError(_context8.t0, "sqlHelpers/resetStoreNotificationFlags");throw _context8.t0;case 12:case "end":return _context8.stop();}}}, _callee8, null, [[0, 8]]);}));return _resetStoreNotificationFlags.apply(this, arguments);}function
+
+
+
+
+
+getItemsForNotificationEmail(_x8) {return _getItemsForNotificationEmail.apply(this, arguments);}function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(store_id) {var conn, updatedItems, _ref11, _ref12, results, fields, item;return regeneratorRuntime.wrap(function _callee9$(_context9) {while (1) {switch (_context9.prev = _context9.next) {case 0:_context9.prev = 0;_context9.next = 3;return (
+
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context9.sent;
+            updatedItems = [];_context9.next = 7;return (
+              conn.query("SELECT * from items where store_id=? and in_notification=1",
+
+              [store_id]));case 7:_ref11 = _context9.sent;_ref12 = _slicedToArray(_ref11, 2);results = _ref12[0];fields = _ref12[1];
+
+            if (results.length === 0) {
+              console.log("sqlHelpers/getItemsForNotificationEmail: No items included in notification");
+            } else
+            {
+
+              results.forEach(function (obj) {
+                item = {
+                  itemId: obj.item_id,
+                  itemImage: obj.link,
+                  itemName: obj.name,
+                  itemPrice: obj.price_euros };
+
+                updatedItems.push(item);
+              });
+            }return _context9.abrupt("return",
+            updatedItems);case 15:_context9.prev = 15;_context9.t0 = _context9["catch"](0);
+
+            _errorHandler["default"].handleError(_context9.t0, "sqlHelpers/getItemsForNotificationEmail");throw _context9.t0;case 19:case "end":return _context9.stop();}}}, _callee9, null, [[0, 15]]);}));return _getItemsForNotificationEmail.apply(this, arguments);}function
+
+
+
+
+unsetItemsNotificationFlag(_x9) {return _unsetItemsNotificationFlag.apply(this, arguments);}function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:_context10.prev = 0;_context10.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context10.sent;_context10.next = 6;return (
+              conn.query("UPDATE items SET in_notification=0 where item_id IN (?)",
+
+              [item_ids]));case 6:_context10.next = 12;break;case 8:_context10.prev = 8;_context10.t0 = _context10["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context10.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context10.t0;case 12:case "end":return _context10.stop();}}}, _callee10, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}var _default =
+
 
 
 
@@ -163,4 +234,8 @@ setStoreNotificationFlags(_x7) {return _setStoreNotificationFlags.apply(this, ar
   getFBMessengerInfoFromItemId: getFBMessengerInfoFromItemId,
   insertDonationIntoDB: insertDonationIntoDB,
   getPayoutInfo: getPayoutInfo,
-  setStoreNotificationFlags: setStoreNotificationFlags };exports["default"] = _default;
+  getStoresThatNeedNotification: getStoresThatNeedNotification,
+  setStoreNotificationFlags: setStoreNotificationFlags,
+  resetStoreNotificationFlags: resetStoreNotificationFlags,
+  getItemsForNotificationEmail: getItemsForNotificationEmail,
+  unsetItemsNotificationFlag: unsetItemsNotificationFlag };exports["default"] = _default;

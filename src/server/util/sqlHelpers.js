@@ -135,6 +135,18 @@ async function getPayoutInfo(itemIds) {
     }
 }
 
+async function getStoresThatNeedNotification() {
+    // Return a list of store objects that need notifying
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query("SELECT * from stores where needs_notification=1");
+        return results;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getStoresThatNeedNotification");
+        throw err;
+    }
+}
+
 async function setStoreNotificationFlags(itemIds) {
     // Set store notification flag to 1 for all stores that interacdt with these items
     try {
@@ -157,11 +169,74 @@ async function setStoreNotificationFlags(itemIds) {
     }
 }
 
+async function resetStoreNotificationFlags() {
+    // Reset all stores' notification flags
+    try {
+        let conn = await config.dbInitConnectPromise();
+        await conn.query("UPDATE stores SET needs_notification=0");
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/resetStoreNotificationFlags");
+        throw err;
+    }
+}
+
+
+async function getItemsForNotificationEmail(store_id) {
+    // Get items to notify the given store about
+    // TODO: make this more efficient
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let updatedItems = [];
+        let [results, fields] = await conn.query(
+            `SELECT * from items where store_id=? and in_notification=1`,
+            [store_id]
+            );
+        if (results.length === 0) {
+            console.log("sqlHelpers/getItemsForNotificationEmail: No items included in notification");
+        }
+        else {
+            let item;
+            results.forEach(function (obj) {
+                item = {
+                    itemId: obj.item_id,
+                    itemImage: obj.link,
+                    itemName: obj.name,
+                    itemPrice: obj.price_euros,
+                }
+                updatedItems.push(item);
+            });
+        }
+        return updatedItems;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getItemsForNotificationEmail");
+        throw err;
+    }
+}
+
+async function unsetItemsNotificationFlag(item_ids) {
+    // Mark all items in item_ids as no longer needing notification
+    try {
+        let conn = await config.dbInitConnectPromise();
+        await conn.query(
+            `UPDATE items SET in_notification=0 where item_id IN (?)`,
+            [item_ids]
+            );
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/unsetItemsNotificationFlag");
+        throw err;
+    }
+    
+}
+
 export default {
     insertMessageIntoDB,
     markItemAsDonated,
     getFBMessengerInfoFromItemId,
     insertDonationIntoDB,
     getPayoutInfo,
-    setStoreNotificationFlags
+    getStoresThatNeedNotification,
+    setStoreNotificationFlags,
+    resetStoreNotificationFlags,
+    getItemsForNotificationEmail,
+    unsetItemsNotificationFlag
 }
