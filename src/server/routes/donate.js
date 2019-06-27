@@ -20,8 +20,4 @@ router.use("/testDBConnection", (req, res) => {
   var success = controller.testDBConnection(req, res);
 });
 
-router.use("/updateNotificationFlag", (req, res) => {
-  controller.updateNotificationFlag(req, res);
-});
-
 export default router;

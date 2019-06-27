@@ -102,6 +102,7 @@ new CronJob(process.env.CRON_INTERVAL, function () {
   sendStoreownerNotificationEmail();
 }, null, true, 'America/Los_Angeles');
 
+
 function getItemsForNotificationEmail(result) {
   return new Promise(function (resolve, reject) {
     var updatedItems = [];
@@ -205,27 +206,9 @@ function sendStoreownerNotificationEmail(req, res) {
       }
     });
   });
-}
-
-// Tester function to update the needs_notification flag of a particular store_id to true.
-// Pass in store_id as a query parameter.
-function updateNotificationFlag(req, res) {
-  var store_ids = req.body.store_ids;
-  // console.log("updating store_id: " + store_id);
-  conn.query("UPDATE stores SET needs_notification=1 WHERE store_id IN (".concat(
-  store_ids.join(), ")"),
-  function (err, results, fields) {
-    if (err) {
-      console.log(err);
-      res.status(400).send();
-    }
-    res.status(200).send("Notification Flag updated successfully.");
-  });
-
 }var _default =
 
 {
   itemPaid: itemPaid,
   sendStoreownerNotificationEmail: sendStoreownerNotificationEmail,
-  testDBConnection: testDBConnection,
-  updateNotificationFlag: updateNotificationFlag };exports["default"] = _default;
+  testDBConnection: testDBConnection };exports["default"] = _default;
