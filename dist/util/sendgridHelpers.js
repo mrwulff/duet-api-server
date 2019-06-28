@@ -23,7 +23,28 @@ function sendDonorThankYouEmail(donorInfo) {
   });
 }function
 
-sendStoreNotificationEmail(_x) {return _sendStoreNotificationEmail.apply(this, arguments);}function _sendStoreNotificationEmail() {_sendStoreNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(storeNotificationInfo) {var msg;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+sendTypeformErrorEmail(_x) {return _sendTypeformErrorEmail.apply(this, arguments);}function _sendTypeformErrorEmail() {_sendTypeformErrorEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(typeformErrorInfo) {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+            msg = {
+              to: "duet.giving@gmail.com",
+              from: "duet.giving@gmail.com",
+              templateId: "d-6ecc5d7df32c4528b8527c248a212552",
+              dynamic_template_data: {
+                formTitle: typeformErrorInfo.formTitle,
+                eventId: typeformErrorInfo.eventId,
+                error: typeformErrorInfo.err } };
+
+
+            sgMail.
+            send(msg).
+            then(function () {
+              console.log("Sendgrid error message delived successfully.");
+            })["catch"](
+            function (error) {
+              console.error(error.toString());
+            });case 2:case "end":return _context.stop();}}}, _callee);}));return _sendTypeformErrorEmail.apply(this, arguments);}function
+
+
+sendStoreNotificationEmail(_x2) {return _sendStoreNotificationEmail.apply(this, arguments);}function _sendStoreNotificationEmail() {_sendStoreNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(storeNotificationInfo) {var msg;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
             msg = {
               to: storeNotificationInfo.recipientList,
               from: "duet@giveduet.org",
@@ -42,9 +63,10 @@ sendStoreNotificationEmail(_x) {return _sendStoreNotificationEmail.apply(this, a
             function (error) {
               console.error("Error: " + error.toString());
               return;
-            });case 2:case "end":return _context.stop();}}}, _callee);}));return _sendStoreNotificationEmail.apply(this, arguments);}var _default =
+            });case 2:case "end":return _context2.stop();}}}, _callee2);}));return _sendStoreNotificationEmail.apply(this, arguments);}var _default =
 
 
 {
   sendDonorThankYouEmail: sendDonorThankYouEmail,
-  sendStoreNotificationEmail: sendStoreNotificationEmail };exports["default"] = _default;
+  sendStoreNotificationEmail: sendStoreNotificationEmail,
+  sendTypeformErrorEmail: sendTypeformErrorEmail };exports["default"] = _default;

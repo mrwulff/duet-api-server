@@ -4,9 +4,9 @@ var _typeform = _interopRequireDefault(require("./../controller/typeform"));func
 var router = _express["default"].Router();
 var app = (0, _express["default"])();
 
-router.post("/typeformV3", function (req, res) {
-  _typeform["default"].processTypeformV3(req, res);
-});
+// router.post("/typeformV3", (req, res) => {
+//   typeformController.processTypeformV3(req, res);
+// });
 
 router.post("/typeformV4", function (req, res) {
   _typeform["default"].processTypeformV4(req, res);

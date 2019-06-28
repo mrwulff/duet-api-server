@@ -23,6 +23,27 @@ function sendDonorThankYouEmail(donorInfo) {
         });
 }
 
+async function sendTypeformErrorEmail(typeformErrorInfo) {
+    msg = {
+        to: "duet.giving@gmail.com",
+        from: "duet.giving@gmail.com",
+        templateId: "d-6ecc5d7df32c4528b8527c248a212552",
+        dynamic_template_data: {
+            formTitle: typeformErrorInfo.formTitle,
+            eventId: typeformErrorInfo.eventId,
+            error: typeformErrorInfo.err
+        }
+    }
+    sgMail
+        .send(msg)
+        .then(() => {
+            console.log("Sendgrid error message delived successfully.");
+        })
+        .catch(error => {
+            console.error(error.toString());
+        });
+}
+
 async function sendStoreNotificationEmail(storeNotificationInfo) {
     const msg = {
         to: storeNotificationInfo.recipientList,
@@ -47,5 +68,6 @@ async function sendStoreNotificationEmail(storeNotificationInfo) {
 
 export default {
     sendDonorThankYouEmail,
-    sendStoreNotificationEmail
+    sendStoreNotificationEmail,
+    sendTypeformErrorEmail
 }
