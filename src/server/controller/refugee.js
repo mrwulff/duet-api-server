@@ -256,8 +256,8 @@ function processTypeformV4(req, res) {
     // Translate itemName to English by matching itemName in item_types table
     // And get categoryId while we're at it
     conn.query(
-      "SELECT name_english, category_id FROM item_types WHERE ??=?",
-      ["name_" + language, itemName],
+      "SELECT name_english, category_id FROM item_types WHERE ?? LIKE ?",
+      ["name_" + language, '%'+itemName+'%'],
       (err, rows) => {
         // Unknown error
         if (err) {
@@ -434,7 +434,7 @@ function processTypeformV3(req, res) {
   let answers = req.body.form_response.answers;
   if (answers.length > 0) {
     let id = answers[0].text;
-    let itemName = answers[1].text;
+    let itemName = answers[1].text.trim();
     let url = answers[2].file_url;
     let category = answers[3].choice.label;
     let price = answers[4].text;

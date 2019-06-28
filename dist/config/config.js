@@ -10,7 +10,8 @@ function dbInitConnect() {
       port: process.env.DATABASE_PORT,
       user: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASS,
-      database: process.env.DATABASE });
+      database: process.env.DATABASE,
+      charset: 'utf8mb4_unicode_ci' });
 
   }
   return conn;
