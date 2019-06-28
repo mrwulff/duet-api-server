@@ -303,8 +303,8 @@ getItemNameTranslation(_x17, _x18) {return _getItemNameTranslation.apply(this, a
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context16.sent;_context16.next = 6;return (
               conn.query(
-              "SELECT name_english, category_id FROM item_types WHERE ??=?",
-              ["name_" + language, itemName]));case 6:_ref17 = _context16.sent;_ref18 = _slicedToArray(_ref17, 2);matchedItemNames = _ref18[0];fields = _ref18[1];return _context16.abrupt("return",
+              "SELECT name_english, category_id FROM item_types WHERE ?? LIKE ?",
+              ["name_" + language, "%" + itemName + "%"]));case 6:_ref17 = _context16.sent;_ref18 = _slicedToArray(_ref17, 2);matchedItemNames = _ref18[0];fields = _ref18[1];return _context16.abrupt("return",
 
             matchedItemNames[0]);case 13:_context16.prev = 13;_context16.t0 = _context16["catch"](0);
 

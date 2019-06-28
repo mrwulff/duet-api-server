@@ -44,14 +44,22 @@ sendTypeformErrorEmail(_x) {return _sendTypeformErrorEmail.apply(this, arguments
             });case 2:case "end":return _context.stop();}}}, _callee);}));return _sendTypeformErrorEmail.apply(this, arguments);}function
 
 
-sendStoreNotificationEmail(_x2) {return _sendStoreNotificationEmail.apply(this, arguments);}function _sendStoreNotificationEmail() {_sendStoreNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(storeNotificationInfo) {var msg;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+sendStoreNotificationEmail(_x2) {return _sendStoreNotificationEmail.apply(this, arguments);}function _sendStoreNotificationEmail() {_sendStoreNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(storeNotificationInfo) {var subject, msg;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+
+            if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'sandbox') {
+              subject = "[SANDBOX] Duet: The following items need your attention!";
+            } else {
+              subject = "Duet: The following items need your attention!";
+            }
+
             msg = {
               to: storeNotificationInfo.recipientList,
               from: "duet@giveduet.org",
               templateId: "d-435a092f0be54b07b5135799ac7dfb01",
               dynamic_template_data: {
                 storeName: storeNotificationInfo.name,
-                items: storeNotificationInfo.updatedItems } };
+                items: storeNotificationInfo.updatedItems,
+                subject: subject } };
 
 
 
@@ -63,7 +71,7 @@ sendStoreNotificationEmail(_x2) {return _sendStoreNotificationEmail.apply(this, 
             function (error) {
               console.error("Error: " + error.toString());
               return;
-            });case 2:case "end":return _context2.stop();}}}, _callee2);}));return _sendStoreNotificationEmail.apply(this, arguments);}var _default =
+            });case 3:case "end":return _context2.stop();}}}, _callee2);}));return _sendStoreNotificationEmail.apply(this, arguments);}var _default =
 
 
 {

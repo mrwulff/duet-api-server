@@ -303,8 +303,8 @@ async function getItemNameTranslation(language, itemName) {
     try {
         let conn = await config.dbInitConnectPromise();
         let [matchedItemNames, fields] = await conn.query(
-            "SELECT name_english, category_id FROM item_types WHERE ??=?",
-            ["name_" + language, itemName]
+            "SELECT name_english, category_id FROM item_types WHERE ?? LIKE ?",
+            ["name_" + language, "%"+itemName+"%"]
             );
         return matchedItemNames[0];
     } catch (err) {

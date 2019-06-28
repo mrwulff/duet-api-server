@@ -45,6 +45,13 @@ async function sendTypeformErrorEmail(typeformErrorInfo) {
 }
 
 async function sendStoreNotificationEmail(storeNotificationInfo) {
+    let subject;
+    if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'sandbox') {
+        subject = "[SANDBOX] Duet: The following items need your attention!";
+    } else {
+        subject = "Duet: The following items need your attention!";
+    }
+    
     const msg = {
         to: storeNotificationInfo.recipientList,
         from: "duet@giveduet.org",
@@ -52,6 +59,7 @@ async function sendStoreNotificationEmail(storeNotificationInfo) {
         dynamic_template_data: {
             storeName: storeNotificationInfo.name,
             items: storeNotificationInfo.updatedItems,
+            subject: subject
         }
     };
 
