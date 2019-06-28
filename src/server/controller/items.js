@@ -1,4 +1,4 @@
-import config from "./../config/config.js";
+import config from "./../util/config.js";
 import refugee from "./refugee.js";
 
 const conn = config.dbInitConnect();

@@ -189,11 +189,10 @@ getStoreIdFromName(_x12) {return _getStoreIdFromName.apply(this, arguments);}fun
               conn.query("SELECT store_id FROM stores WHERE name=?", [storeName]));case 6:_ref9 = _context9.sent;_ref10 = _slicedToArray(_ref9, 2);results = _ref10[0];fields = _ref10[1];return _context9.abrupt("return",
             results[0].store_id);case 13:_context9.prev = 13;_context9.t0 = _context9["catch"](0);
 
-            _errorHandler["default"].handleError(_context9.t0, "sqlHelpers/getStoreIdFromName");throw _context9.t0;case 17:case "end":return _context9.stop();}}}, _callee9, null, [[0, 13]]);}));return _getStoreIdFromName.apply(this, arguments);}
+            _errorHandler["default"].handleError(_context9.t0, "sqlHelpers/getStoreIdFromName");throw _context9.t0;case 17:case "end":return _context9.stop();}}}, _callee9, null, [[0, 13]]);}));return _getStoreIdFromName.apply(this, arguments);}function
 
 
 
-"SELECT store_id FROM stores WHERE name=?";function
 
 getStoresThatNeedNotification() {return _getStoresThatNeedNotification.apply(this, arguments);}function _getStoresThatNeedNotification() {_getStoresThatNeedNotification = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10() {var conn, _ref11, _ref12, results, fields;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:_context10.prev = 0;_context10.next = 3;return (
 

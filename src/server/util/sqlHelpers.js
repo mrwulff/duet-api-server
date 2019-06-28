@@ -193,7 +193,6 @@ async function getStoreIdFromName(storeName) {
         throw err;
     }
 }
-"SELECT store_id FROM stores WHERE name=?"
 
 async function getStoresThatNeedNotification() {
     // Return a list of store objects that need notifying

@@ -1,6 +1,6 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _bcryptjs = _interopRequireDefault(require("bcryptjs"));
 var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
-var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
+var _config = _interopRequireDefault(require("./../util/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 
 // store this in environment variable later
 var secret = "secretkey";

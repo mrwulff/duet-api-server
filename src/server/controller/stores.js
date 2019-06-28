@@ -1,4 +1,4 @@
-import config from "./../config/config.js";
+import config from "./../util/config.js";
 
 const conn = config.dbInitConnect();
 

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import config from "./../config/config.js";
+import config from "./../util/config.js";
 
 // store this in environment variable later
 const secret = "secretkey";
