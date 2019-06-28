@@ -104,6 +104,54 @@ async function markItemAsDonated(itemId, donationId) {
     }
 }
 
+async function insertItemFromTypeform(itemInfo) {
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query(
+            "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link,in_notification) " +
+                "VALUES (?,?,?,?,?,?,?,?)",
+            [itemInfo.itemNameEnglish,
+                itemInfo.size,
+                itemInfo.price,
+                itemInfo.beneficiaryId,
+                itemInfo.categoryId,
+                itemInfo.storeId,
+                itemInfo.photoUrl,
+                itemInfo.in_notification]
+        );
+        return results.insertId;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/insertItemFromTypeform");
+        throw err;
+    }
+}
+
+async function updateItemPickupCode(itemId, pickupCode) {
+    try {
+        let conn = await config.dbInitConnectPromise();
+        await conn.query(
+            "UPDATE items SET pickup_code=? WHERE item_id=?",
+            [pickupCode, itemId]
+        );
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/updateItemPickupCode");
+        throw err;
+    }
+}
+
+async function updateItemPhotoLink(itemId, photoUrl) {
+    try {
+        let conn = await config.dbInitConnectPromise();
+        await conn.query(
+            "UPDATE items SET link=? WHERE item_id=?",
+            [photoUrl, itemId]
+            );
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/updateItemPhotoLink");
+        throw err;
+    }
+}
+
 async function getPayoutInfo(itemIds) {
     // Get stores' Payout info for list of items
     // Returns a list containing payout info for each store that we have to send a payout to
@@ -135,6 +183,18 @@ async function getPayoutInfo(itemIds) {
     }
 }
 
+async function getStoreIdFromName(storeName) {
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query("SELECT store_id FROM stores WHERE name=?", [storeName]);
+        return results[0].store_id;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getStoreIdFromName");
+        throw err;
+    }
+}
+"SELECT store_id FROM stores WHERE name=?"
+
 async function getStoresThatNeedNotification() {
     // Return a list of store objects that need notifying
     try {
@@ -148,7 +208,7 @@ async function getStoresThatNeedNotification() {
 }
 
 async function setStoreNotificationFlags(itemIds) {
-    // Set store notification flag to 1 for all stores that interacdt with these items
+    // Set store notification flag to 1 for all stores that interact with these items
     try {
         let conn = await config.dbInitConnectPromise();
 
@@ -165,6 +225,18 @@ async function setStoreNotificationFlags(itemIds) {
         console.log(`Notification flag updated sucessfully for stores: ${storeIdsList}`)
     } catch (err) {
         errorHandler.handleError(err, "sqlHelpers/setStoreNotificationFlags");
+        throw err;
+    }
+}
+
+async function setSingleStoreNotificationFlag(storeId) {
+    try {
+        let conn = await config.dbInitConnectPromise();
+        await conn.query("UPDATE stores SET needs_notification=true where store_id=?",
+            [storeId]
+            );
+    } catch (err) {
+        errorHandler.handleError(err);
         throw err;
     }
 }
@@ -225,6 +297,21 @@ async function unsetItemsNotificationFlag(item_ids) {
         errorHandler.handleError(err, "sqlHelpers/unsetItemsNotificationFlag");
         throw err;
     }
+}
+
+async function getItemNameTranslation(language, itemName) {
+    // Get name_english, category_id from itemName in given language
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [matchedItemNames, fields] = await conn.query(
+            "SELECT name_english, category_id FROM item_types WHERE ??=?",
+            ["name_" + language, itemName]
+            );
+        return matchedItemNames[0];
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getItemNameTranslation");
+        throw err;
+    }
     
 }
 
@@ -236,7 +323,13 @@ export default {
     getPayoutInfo,
     getStoresThatNeedNotification,
     setStoreNotificationFlags,
+    setSingleStoreNotificationFlag,
     resetStoreNotificationFlags,
     getItemsForNotificationEmail,
-    unsetItemsNotificationFlag
+    unsetItemsNotificationFlag,
+    getItemNameTranslation,
+    getStoreIdFromName,
+    insertItemFromTypeform,
+    updateItemPickupCode,
+    updateItemPhotoLink
 }
