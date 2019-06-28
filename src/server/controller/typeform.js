@@ -1,6 +1,8 @@
 // Imports
 require("dotenv").config();
 import config from '../util/config.js';
+import itemHelpers from '../util/itemHelpers.js';
+import s3Helpers from '../util/s3Helpers.js';
 const conn = config.dbInitConnect();
 const sgMail = config.sendgridInit();
 const s3 = config.s3Init();
@@ -8,16 +10,13 @@ const request = require('request');
 const path = require('path');
 const mime = require('mime-types');
 
-function generatePickupCode(itemId) {
-    let code = "DUET-";
-    let pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    // append 2 random letters to code
-    for (let i = 0; i < 2; i++) {
-        code += pool.charAt(Math.floor(Math.random() * pool.length));
-    }
-    // append item id
-    code += itemId;
-    return code;
+function testUploadItemImageToS3(req, res) {
+  try {
+    s3Helpers.uploadItemImageToS3(req.body.itemId, req.body.imageUrl);
+    res.status(200).send();
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
 }
 
 function processTypeformV4(req, res) {
@@ -151,62 +150,29 @@ function processTypeformV4(req, res) {
                                                 } else {
                                                     let itemId = rows[0]["LAST_INSERT_ID()"];
                                                     // get code for item
-                                                    let code = generatePickupCode(itemId);
+                                                    let code = itemHelpers.generatePickupCode(itemId);
                                                     // update item pick up code
                                                     conn.execute(
                                                         "UPDATE items SET pickup_code=? WHERE item_id=?",
                                                         [code, itemId],
-                                                        function (err) {
+                                                        async function (err) {
                                                             if (err) {
                                                                 console.log(err);
                                                                 res.status(500).send({ error: err });
                                                             } else {
-                                                                // Re-Host image to S3, update image URL in DB
-                                                                var options = {
-                                                                    uri: photoUrl,
-                                                                    encoding: null
-                                                                };
-                                                                let extension = path.extname(photoUrl);
-                                                                let contentType = mime.contentType(extension);
-                                                                request(options, function (error, response, body) {
-                                                                    if (error || response.statusCode !== 200) {
-                                                                        console.log("failed to get Typeform image: " + photoUrl);
-                                                                        console.log(error);
-                                                                        res.status(500).send({ error: err });
-                                                                    } else {
-                                                                        s3.upload({
-                                                                            Body: body,
-                                                                            Key: 'item-photos/item-' + itemId + extension,
-                                                                            Bucket: process.env.AWS_S3_BUCKET_NAME,
-                                                                            ACL: "public-read",
-                                                                            ContentType: contentType
-                                                                        }, function (error, data) {
-                                                                            if (error) {
-                                                                                console.log("error uploading image to s3: " + itemId);
-                                                                                console.log("photoUrl: " + photoUrl);
-                                                                                console.log(error);
-                                                                                res.status(500).send({ error: err });
-                                                                            } else {
-                                                                                // Success
-                                                                                let s3PhotoUrl = data.Location;
-                                                                                console.log("success uploading image to s3. itemId: ", itemId);
-                                                                                console.log("URL: ", s3PhotoUrl);
-                                                                                // Update photo URL in DB
-                                                                                conn.execute(
-                                                                                    "UPDATE items SET link=? WHERE item_id=?",
-                                                                                    [s3PhotoUrl, itemId],
-                                                                                    function (err) {
-                                                                                        if (err) {
-                                                                                            console.log(err);
-                                                                                            res.status(500).send({ error: err });
-                                                                                        } else {
-                                                                                            res.status(200).send();
-                                                                                        }
-                                                                                    });
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                });
+                                                                // Rehost image in S3
+                                                                let s3PhotoUrl = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
+                                                                conn.execute(
+                                                                    "UPDATE items SET link=? WHERE item_id=?",
+                                                                    [s3PhotoUrl, itemId],
+                                                                    function (err) {
+                                                                        if (err) {
+                                                                            console.log(err);
+                                                                            res.status(500).send({ error: err });
+                                                                        } else {
+                                                                            res.status(200).send();
+                                                                        }
+                                                                    });
                                                             }
                                                         }
                                                     );
@@ -310,7 +276,7 @@ function processTypeformV3(req, res) {
                                                 } else {
                                                     let itemId = rows[0]["LAST_INSERT_ID()"];
                                                     // get code for item
-                                                    let code = generatePickupCode(itemId);
+                                                    let code = itemHelpers.generatePickupCode(itemId);
                                                     // update item pick up code
                                                     conn.execute(
                                                         "UPDATE items SET pickup_code=? WHERE item_id=?",
@@ -352,4 +318,8 @@ function processTypeformV3(req, res) {
     }
 }
 
-export default { processTypeformV3, processTypeformV4 };
+export default { 
+    processTypeformV3,
+    processTypeformV4,
+    testUploadItemImageToS3
+ };

@@ -1,6 +1,8 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
 
-var _config = _interopRequireDefault(require("../util/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
+var _config = _interopRequireDefault(require("../util/config.js"));
+var _itemHelpers = _interopRequireDefault(require("../util/itemHelpers.js"));
+var _s3Helpers = _interopRequireDefault(require("../util/s3Helpers.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // Imports
 require("dotenv").config();var conn = _config["default"].dbInitConnect();
 var sgMail = _config["default"].sendgridInit();
 var s3 = _config["default"].s3Init();
@@ -8,16 +10,13 @@ var request = require('request');
 var path = require('path');
 var mime = require('mime-types');
 
-function generatePickupCode(itemId) {
-  var code = "DUET-";
-  var pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  // append 2 random letters to code
-  for (var i = 0; i < 2; i++) {
-    code += pool.charAt(Math.floor(Math.random() * pool.length));
+function testUploadItemImageToS3(req, res) {
+  try {
+    _s3Helpers["default"].uploadItemImageToS3(req.body.itemId, req.body.imageUrl);
+    res.status(200).send();
+  } catch (e) {
+    res.status(500).send({ error: e });
   }
-  // append item id
-  code += itemId;
-  return code;
 }
 
 function processTypeformV4(req, res) {
@@ -151,47 +150,18 @@ function processTypeformV4(req, res) {
                           } else {
                             var itemId = rows[0]["LAST_INSERT_ID()"];
                             // get code for item
-                            var code = generatePickupCode(itemId);
+                            var code = _itemHelpers["default"].generatePickupCode(itemId);
                             // update item pick up code
                             conn.execute(
                             "UPDATE items SET pickup_code=? WHERE item_id=?",
-                            [code, itemId],
-                            function (err) {
-                              if (err) {
-                                console.log(err);
-                                res.status(500).send({ error: err });
-                              } else {
-                                // Re-Host image to S3, update image URL in DB
-                                var options = {
-                                  uri: photoUrl,
-                                  encoding: null };
+                            [code, itemId], /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+                              function _callee(err) {var s3PhotoUrl;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:if (!
+                                        err) {_context.next = 5;break;}
+                                        console.log(err);
+                                        res.status(500).send({ error: err });_context.next = 9;break;case 5:_context.next = 7;return (
 
-                                var extension = path.extname(photoUrl);
-                                var contentType = mime.contentType(extension);
-                                request(options, function (error, response, body) {
-                                  if (error || response.statusCode !== 200) {
-                                    console.log("failed to get Typeform image: " + photoUrl);
-                                    console.log(error);
-                                    res.status(500).send({ error: err });
-                                  } else {
-                                    s3.upload({
-                                      Body: body,
-                                      Key: 'item-photos/item-' + itemId + extension,
-                                      Bucket: process.env.AWS_S3_BUCKET_NAME,
-                                      ACL: "public-read",
-                                      ContentType: contentType },
-                                    function (error, data) {
-                                      if (error) {
-                                        console.log("error uploading image to s3: " + itemId);
-                                        console.log("photoUrl: " + photoUrl);
-                                        console.log(error);
-                                        res.status(500).send({ error: err });
-                                      } else {
-                                        // Success
-                                        var s3PhotoUrl = data.Location;
-                                        console.log("success uploading image to s3. itemId: ", itemId);
-                                        console.log("URL: ", s3PhotoUrl);
-                                        // Update photo URL in DB
+
+                                          _s3Helpers["default"].uploadItemImageToS3(itemId, photoUrl));case 7:s3PhotoUrl = _context.sent;
                                         conn.execute(
                                         "UPDATE items SET link=? WHERE item_id=?",
                                         [s3PhotoUrl, itemId],
@@ -202,13 +172,9 @@ function processTypeformV4(req, res) {
                                           } else {
                                             res.status(200).send();
                                           }
-                                        });
-                                      }
-                                    });
-                                  }
-                                });
-                              }
-                            });
+                                        });case 9:case "end":return _context.stop();}}}, _callee);}));return function (_x) {return _ref.apply(this, arguments);};}());
+
+
 
                           }
                         });
@@ -310,7 +276,7 @@ function processTypeformV3(req, res) {
                   } else {
                     var itemId = rows[0]["LAST_INSERT_ID()"];
                     // get code for item
-                    var code = generatePickupCode(itemId);
+                    var code = _itemHelpers["default"].generatePickupCode(itemId);
                     // update item pick up code
                     conn.execute(
                     "UPDATE items SET pickup_code=? WHERE item_id=?",
@@ -352,4 +318,7 @@ function processTypeformV3(req, res) {
   }
 }var _default =
 
-{ processTypeformV3: processTypeformV3, processTypeformV4: processTypeformV4 };exports["default"] = _default;
+{
+  processTypeformV3: processTypeformV3,
+  processTypeformV4: processTypeformV4,
+  testUploadItemImageToS3: testUploadItemImageToS3 };exports["default"] = _default;

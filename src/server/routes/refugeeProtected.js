@@ -1,5 +1,4 @@
 import express from "express";
-// import controller from "./../controller/refugee";
 import typeformController from "./../controller/typeform";
 
 const router = express.Router();
