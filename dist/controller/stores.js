@@ -1,6 +1,6 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 
-var conn = _config.default.dbInitConnect();
+var conn = _config["default"].dbInitConnect();
 
 function login(req, res) {
   var email = req.body.email;
@@ -29,4 +29,4 @@ function login(req, res) {
   }
 }var _default =
 
-{ login: login };exports.default = _default;
+{ login: login };exports["default"] = _default;

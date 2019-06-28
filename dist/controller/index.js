@@ -1,6 +1,6 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _bcryptjs = _interopRequireDefault(require("bcryptjs"));
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _bcryptjs = _interopRequireDefault(require("bcryptjs"));
 var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
-var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+var _config = _interopRequireDefault(require("./../config/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 
 // store this in environment variable later
 var secret = "secretkey";
@@ -10,7 +10,7 @@ function login(req, res) {
   // check if username and password match
   var username = req.body.username;
   var password = req.body.password;
-  var conn = _config.default.dbInitConnect();
+  var conn = _config["default"].dbInitConnect();
   // check username in db and get stored password
   conn.execute(
   "SELECT refugee_id,fname,lname,password FROM refugees WHERE username=?",
@@ -22,10 +22,10 @@ function login(req, res) {
     } else if (rows.length > 0) {
       var storedPassword = rows[0]["password"];
       // hash password to check with stored password
-      _bcryptjs.default.compare(password, storedPassword, function (err, result) {
+      _bcryptjs["default"].compare(password, storedPassword, function (err, result) {
         if (result) {
           // generate and return token
-          var token = _jsonwebtoken.default.sign({}, secret, {
+          var token = _jsonwebtoken["default"].sign({}, secret, {
             expiresIn: 50000 });
 
           res.status(200).send({
@@ -48,7 +48,7 @@ function login(req, res) {
 
 function createUser(req, res) {
   var body = req.body;
-  var conn = _config.default.dbInitConnect();
+  var conn = _config["default"].dbInitConnect();
   conn.execute(
   "INSERT INTO addresses (street_name) VALUES (?)",
   [body.address],
@@ -65,7 +65,7 @@ function createUser(req, res) {
         } else {
           var addressId = rows[0]["LAST_INSERT_ID()"];
           // hash password
-          _bcryptjs.default.hash(body.password, 10, function (err, hash) {
+          _bcryptjs["default"].hash(body.password, 10, function (err, hash) {
             if (err) {
               console.log(err);
               res.status(500).send({ error: err });
@@ -95,7 +95,7 @@ function createUser(req, res) {
                       console.log(err);
                       res.status(500).send({ error: err });
                     } else {
-                      var token = _jsonwebtoken.default.sign({}, secret, {
+                      var token = _jsonwebtoken["default"].sign({}, secret, {
                         expiresIn: 50000 });
 
                       res.status(201).send({
@@ -120,4 +120,4 @@ function createUser(req, res) {
 
 }var _default =
 
-{ login: login, createUser: createUser };exports.default = _default;
+{ login: login, createUser: createUser };exports["default"] = _default;

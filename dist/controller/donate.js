@@ -1,6 +1,6 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
 var _assert = require("assert");
-var _nodeSchedule = _interopRequireDefault(require("node-schedule"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
+var _nodeSchedule = _interopRequireDefault(require("node-schedule"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
 var CronJob = require('cron').CronJob;
 
 
@@ -10,7 +10,7 @@ require("dotenv").config();
 var SET_STORE_NOTIFICATION_FLAG = true;
 
 // connect to DB
-var conn = _config.default.dbInitConnect();
+var conn = _config["default"].dbInitConnect();
 
 var sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -160,8 +160,8 @@ function itemPaid(req, res) {
             send(msg).
             then(function () {
               console.log("Donation confirmation sent ".concat(body.email, " to successfully."));
-            }).
-            catch(function (error) {
+            })["catch"](
+            function (error) {
               console.error(error.toString());
             });
           }
@@ -233,8 +233,8 @@ function sendConfirmationEmail(req, res) {
   then(function () {
     console.log("Message delived successfully.");
     res.status(200).send("Message delivered.");
-  }).
-  catch(function (error) {
+  })["catch"](
+  function (error) {
     console.error(error.toString());
     res.send("Failed to deliver message.");
   });
@@ -340,8 +340,8 @@ function sendStoreownerNotificationEmail(req, res) {
                 sendMultiple(msg).
                 then(function () {
                   console.log("Message delivered to ".concat(result.name, " at ").concat(result.email, " successfully."));
-                }).
-                catch(function (error) {
+                })["catch"](
+                function (error) {
                   console.error("Error: " + error.toString());
                   return;
                 });
@@ -353,7 +353,7 @@ function sendStoreownerNotificationEmail(req, res) {
                   }
                 });_context.next = 18;break;case 14:_context.prev = 14;_context.t0 = _context["catch"](0);
 
-                console.log("Error getting new updated items: " + _context.t0);return _context.abrupt("return");case 18:case "end":return _context.stop();}}}, _callee, this, [[0, 14]]);}));return function (_x) {return _ref.apply(this, arguments);};}());
+                console.log("Error getting new updated items: " + _context.t0);return _context.abrupt("return");case 18:case "end":return _context.stop();}}}, _callee, null, [[0, 14]]);}));return function (_x) {return _ref.apply(this, arguments);};}());
 
 
 
@@ -393,4 +393,4 @@ function updateNotificationFlag(req, res) {
   sendConfirmationEmail: sendConfirmationEmail,
   sendStoreownerNotificationEmail: sendStoreownerNotificationEmail,
   testDBConnection: testDBConnection,
-  updateNotificationFlag: updateNotificationFlag };exports.default = _default;
+  updateNotificationFlag: updateNotificationFlag };exports["default"] = _default;

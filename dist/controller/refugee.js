@@ -1,5 +1,5 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
-var _cluster = require("cluster");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
+var _cluster = require("cluster");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 
 require("dotenv").config();
 
@@ -18,7 +18,7 @@ var s3 = new AWS.S3({
 
 require("dotenv").config();
 
-var conn = _config.default.dbInitConnect();
+var conn = _config["default"].dbInitConnect();
 var FBMessenger = require('fb-messenger');
 var messenger = new FBMessenger({ token: process.env.FB_ACCESS_TOKEN });
 
@@ -230,7 +230,7 @@ function processTypeformV4(req, res) {
   if (answers.length >= 8) {
     var beneficiaryId = answers[0].text;
     var phoneNum = answers[1].phone_number;
-    var photoUrl = answers[2].file_url;
+    var photoUrl = encodeURI(answers[2].file_url);
     var itemName = answers[4].choice.label;
     // replace "," with "."; remove non-numeric characters
     var price = answers[5].text.replace(/,/g, '.').replace(/[^\d.]/g, '');
@@ -320,8 +320,8 @@ function processTypeformV4(req, res) {
                         send(msg).
                         then(function () {
                           console.log("Sendgrid error message delived successfully.");
-                        }).
-                        catch(function (error) {
+                        })["catch"](
+                        function (error) {
                           console.error(error.toString());
                         });
 
@@ -375,7 +375,7 @@ function processTypeformV4(req, res) {
                                         res.status(500).send({ error: err });
                                       } else {
                                         // Success
-                                        var s3PhotoUrl = data.Location;
+                                        var s3PhotoUrl = encodeURI(data.Location);
                                         console.log("success uploading image to s3. itemId: ", itemId);
                                         console.log("URL: ", s3PhotoUrl);
                                         // Update photo URL in DB
@@ -691,4 +691,4 @@ function getNeeds(req, res) {
 { processTypeformV3: processTypeformV3, processTypeformV4: processTypeformV4,
   testUploadItemImageToS3: testUploadItemImageToS3,
   fbAuth: fbAuth, sendTestPickupNotification: sendTestPickupNotification, sendPickupNotification: sendPickupNotification, processFBMessage: processFBMessage,
-  getNeeds: getNeeds };exports.default = _default;
+  getNeeds: getNeeds };exports["default"] = _default;

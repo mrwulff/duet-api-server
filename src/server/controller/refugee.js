@@ -230,7 +230,7 @@ function processTypeformV4(req, res) {
   if (answers.length >= 8) {
     let beneficiaryId = answers[0].text;
     let phoneNum = answers[1].phone_number;
-    let photoUrl = answers[2].file_url;
+    let photoUrl = encodeURI(answers[2].file_url);
     let itemName = answers[4].choice.label;
     // replace "," with "."; remove non-numeric characters
     let price = answers[5].text.replace(/,/g, '.').replace(/[^\d.]/g, '');
@@ -375,7 +375,7 @@ function processTypeformV4(req, res) {
                                         res.status(500).send({ error: err });
                                       } else {
                                         // Success
-                                        let s3PhotoUrl = data.Location;
+                                        let s3PhotoUrl = encodeURI(data.Location);
                                         console.log("success uploading image to s3. itemId: ", itemId);
                                         console.log("URL: ", s3PhotoUrl);
                                         // Update photo URL in DB
