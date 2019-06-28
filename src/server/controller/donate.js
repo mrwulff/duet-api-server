@@ -326,6 +326,10 @@ function sendStoreownerNotificationEmail(req, res) {
           recipientList = ['duet.giving@gmail.com', result.email];
         }
 
+        let subject = "Duet: The following items need your attention!";
+        if (process.env.DATABASE === 'duet_sandbox') {
+          subject = "[SANDBOX] Duet: The following items need your attention!"
+        }
         const msg = {
           to: recipientList,
           from: "duet@giveduet.org",
@@ -333,6 +337,7 @@ function sendStoreownerNotificationEmail(req, res) {
           dynamic_template_data: {
             storeName: result.name,
             items: updatedItems,
+            subject: subject
           }
         };
 

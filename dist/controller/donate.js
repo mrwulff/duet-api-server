@@ -311,7 +311,7 @@ function sendStoreownerNotificationEmail(req, res) {
     }
 
     // Loop through each of the stores that require a notification
-    results.forEach( /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(result) {var updatedItems, recipientList, msg, updateItemNotificationQuery;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.prev = 0;_context.next = 3;return (
+    results.forEach( /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(result) {var updatedItems, recipientList, subject, msg, updateItemNotificationQuery;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.prev = 0;_context.next = 3;return (
 
                   getItemsForNotificationEmail(result));case 3:updatedItems = _context.sent;if (!(
                 updatedItems.length === 0)) {_context.next = 7;break;}
@@ -326,13 +326,18 @@ function sendStoreownerNotificationEmail(req, res) {
                   recipientList = ['duet.giving@gmail.com', result.email];
                 }
 
+                subject = "Duet: The following items need your attention!";
+                if (process.env.DATABASE === 'duet_sandbox') {
+                  subject = "[SANDBOX] Duet: The following items need your attention!";
+                }
                 msg = {
                   to: recipientList,
                   from: "duet@giveduet.org",
                   templateId: "d-435a092f0be54b07b5135799ac7dfb01",
                   dynamic_template_data: {
                     storeName: result.name,
-                    items: updatedItems } };
+                    items: updatedItems,
+                    subject: subject } };
 
 
 
@@ -351,9 +356,9 @@ function sendStoreownerNotificationEmail(req, res) {
                   if (err) {
                     console.log("error: " + err);
                   }
-                });_context.next = 18;break;case 14:_context.prev = 14;_context.t0 = _context["catch"](0);
+                });_context.next = 20;break;case 16:_context.prev = 16;_context.t0 = _context["catch"](0);
 
-                console.log("Error getting new updated items: " + _context.t0);return _context.abrupt("return");case 18:case "end":return _context.stop();}}}, _callee, null, [[0, 14]]);}));return function (_x) {return _ref.apply(this, arguments);};}());
+                console.log("Error getting new updated items: " + _context.t0);return _context.abrupt("return");case 20:case "end":return _context.stop();}}}, _callee, null, [[0, 16]]);}));return function (_x) {return _ref.apply(this, arguments);};}());
 
 
 
