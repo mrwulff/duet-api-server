@@ -233,7 +233,7 @@ function processTypeformV4(req, res) {
     var photoUrl = encodeURI(answers[2].file_url);
     var itemName = answers[4].choice.label;
     // replace "," with "."; remove non-numeric characters
-    var price = answers[5].text.replace(/,/g, '.').replace(/[^\d.]/g, '');
+    var price = answers[5].text.replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, '');
     var size = null;
     var store = null;
     if (answers.length == 8) {
