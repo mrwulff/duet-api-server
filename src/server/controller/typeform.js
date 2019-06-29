@@ -44,7 +44,7 @@ async function processTypeformV4(req, res) {
             let photoUrl = answers[2].file_url;
             let itemName = answers[4].choice.label;
             // replace "," with "."; remove non-numeric characters
-            let price = answers[5].text.replace(/,/g, '.').replace(/[^\d.]/g, '');
+            let price = answers[5].text.replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, '');
             let size = null;
             let store = null;
             if (answers.length == 8) {
