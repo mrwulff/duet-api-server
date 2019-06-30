@@ -310,7 +310,65 @@ async function getItemNameTranslation(language, itemName) {
         errorHandler.handleError(err, "sqlHelpers/getItemNameTranslation");
         throw err;
     }
-    
+}
+
+async function getBeneficiaryInfo(beneficiaryId) {
+    // Get beneficiary info for 1 beneficiary
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query(
+            "SELECT beneficiary_id, first_name, last_name, story, " +
+            "origin_city, origin_country, current_city, current_country, family_image_url " +
+            "FROM beneficiaries WHERE beneficiary_id = ?",
+            [beneficiaryId]
+        );
+        return results[0];
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getBeneficiaryInfo");
+        throw err;
+    }
+}
+
+async function getBeneficiaryNeeds(beneficiaryId) {
+    // Get item needs for 1 beneficiary
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query(
+            "SELECT item_id, link, items.name, pickup_code, price_euros, " +
+            "status, store_id, icon_url, " +
+            "stores.name as store_name, stores.google_maps as store_maps_link, " +
+            "donations.timestamp as donation_timestamp " +
+            "FROM items " +
+            "INNER JOIN categories USING(category_id) " +
+            "INNER JOIN stores USING(store_id) " +
+            "LEFT JOIN donations USING(donation_id)" +
+            "WHERE beneficiary_id = ?",
+            [beneficiaryId]
+        );
+        return results;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getBeneficiaryInfo");
+        throw err;
+    }
+}
+
+async function getAllBeneficiaryInfoAndNeeds() {
+    // Get beneficiary info and needs for all beneficiaries
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query(
+            "SELECT beneficiary_id, first_name, last_name, story, " +
+            "origin_city, origin_country, current_city, current_country, family_image_url, " +
+            "item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " +
+            "stores.name AS store_name, donations.timestamp AS donation_timestamp " +
+            "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
+            "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id"
+        );
+        return results;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");
+        throw err;
+    }
 }
 
 export default {
@@ -329,5 +387,8 @@ export default {
     getStoreIdFromName,
     insertItemFromTypeform,
     updateItemPickupCode,
-    updateItemPhotoLink
+    updateItemPhotoLink,
+    getBeneficiaryInfo,
+    getBeneficiaryNeeds,
+    getAllBeneficiaryInfoAndNeeds
 }

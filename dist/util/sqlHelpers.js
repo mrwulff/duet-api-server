@@ -307,8 +307,66 @@ getItemNameTranslation(_x17, _x18) {return _getItemNameTranslation.apply(this, a
 
             matchedItemNames[0]);case 13:_context16.prev = 13;_context16.t0 = _context16["catch"](0);
 
-            _errorHandler["default"].handleError(_context16.t0, "sqlHelpers/getItemNameTranslation");throw _context16.t0;case 17:case "end":return _context16.stop();}}}, _callee16, null, [[0, 13]]);}));return _getItemNameTranslation.apply(this, arguments);}var _default =
+            _errorHandler["default"].handleError(_context16.t0, "sqlHelpers/getItemNameTranslation");throw _context16.t0;case 17:case "end":return _context16.stop();}}}, _callee16, null, [[0, 13]]);}));return _getItemNameTranslation.apply(this, arguments);}function
 
+
+
+
+getBeneficiaryInfo(_x19) {return _getBeneficiaryInfo.apply(this, arguments);}function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17(beneficiaryId) {var conn, _ref19, _ref20, results, fields;return regeneratorRuntime.wrap(function _callee17$(_context17) {while (1) {switch (_context17.prev = _context17.next) {case 0:_context17.prev = 0;_context17.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context17.sent;_context17.next = 6;return (
+              conn.query(
+              "SELECT beneficiary_id, first_name, last_name, story, " +
+              "origin_city, origin_country, current_city, current_country, family_image_url " +
+              "FROM beneficiaries WHERE beneficiary_id = ?",
+              [beneficiaryId]));case 6:_ref19 = _context17.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];return _context17.abrupt("return",
+
+            results[0]);case 13:_context17.prev = 13;_context17.t0 = _context17["catch"](0);
+
+            _errorHandler["default"].handleError(_context17.t0, "sqlHelpers/getBeneficiaryInfo");throw _context17.t0;case 17:case "end":return _context17.stop();}}}, _callee17, null, [[0, 13]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function
+
+
+
+
+getBeneficiaryNeeds(_x20) {return _getBeneficiaryNeeds.apply(this, arguments);}function _getBeneficiaryNeeds() {_getBeneficiaryNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18(beneficiaryId) {var conn, _ref21, _ref22, results, fields;return regeneratorRuntime.wrap(function _callee18$(_context18) {while (1) {switch (_context18.prev = _context18.next) {case 0:_context18.prev = 0;_context18.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context18.sent;_context18.next = 6;return (
+              conn.query(
+              "SELECT item_id, link, items.name, pickup_code, price_euros, " +
+              "status, store_id, icon_url, " +
+              "stores.name as store_name, stores.google_maps as store_maps_link, " +
+              "donations.timestamp as donation_timestamp " +
+              "FROM items " +
+              "INNER JOIN categories USING(category_id) " +
+              "INNER JOIN stores USING(store_id) " +
+              "LEFT JOIN donations USING(donation_id)" +
+              "WHERE beneficiary_id = ?",
+              [beneficiaryId]));case 6:_ref21 = _context18.sent;_ref22 = _slicedToArray(_ref21, 2);results = _ref22[0];fields = _ref22[1];return _context18.abrupt("return",
+
+            results);case 13:_context18.prev = 13;_context18.t0 = _context18["catch"](0);
+
+            _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getBeneficiaryInfo");throw _context18.t0;case 17:case "end":return _context18.stop();}}}, _callee18, null, [[0, 13]]);}));return _getBeneficiaryNeeds.apply(this, arguments);}function
+
+
+
+
+getAllBeneficiaryInfoAndNeeds() {return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}function _getAllBeneficiaryInfoAndNeeds() {_getAllBeneficiaryInfoAndNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee19() {var conn, _ref23, _ref24, results, fields;return regeneratorRuntime.wrap(function _callee19$(_context19) {while (1) {switch (_context19.prev = _context19.next) {case 0:_context19.prev = 0;_context19.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context19.sent;_context19.next = 6;return (
+              conn.query(
+              "SELECT beneficiary_id, first_name, last_name, story, " +
+              "origin_city, origin_country, current_city, current_country, family_image_url, " +
+              "item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " +
+              "stores.name AS store_name, donations.timestamp AS donation_timestamp " +
+              "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
+              "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id"));case 6:_ref23 = _context19.sent;_ref24 = _slicedToArray(_ref23, 2);results = _ref24[0];fields = _ref24[1];return _context19.abrupt("return",
+
+            results);case 13:_context19.prev = 13;_context19.t0 = _context19["catch"](0);
+
+            _errorHandler["default"].handleError(_context19.t0, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");throw _context19.t0;case 17:case "end":return _context19.stop();}}}, _callee19, null, [[0, 13]]);}));return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}var _default =
 
 
 
@@ -329,4 +387,7 @@ getItemNameTranslation(_x17, _x18) {return _getItemNameTranslation.apply(this, a
   getStoreIdFromName: getStoreIdFromName,
   insertItemFromTypeform: insertItemFromTypeform,
   updateItemPickupCode: updateItemPickupCode,
-  updateItemPhotoLink: updateItemPhotoLink };exports["default"] = _default;
+  updateItemPhotoLink: updateItemPhotoLink,
+  getBeneficiaryInfo: getBeneficiaryInfo,
+  getBeneficiaryNeeds: getBeneficiaryNeeds,
+  getAllBeneficiaryInfoAndNeeds: getAllBeneficiaryInfoAndNeeds };exports["default"] = _default;
