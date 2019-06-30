@@ -1,14 +1,10 @@
 require("dotenv").config();
-import config from "../util/config.js";
 import { strict } from "assert";
-import nodeSchedule from "node-schedule";
 import sqlHelpers from "../util/sqlHelpers.js";
 import paypalHelpers from "../util/paypalHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 var CronJob = require('cron').CronJob;
-
-const conn = config.dbInitConnect(); // SQL
 
 async function itemPaid(req, res) {
   console.log('in item paid route');

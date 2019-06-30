@@ -3,6 +3,7 @@ var _config = _interopRequireDefault(require("../util/config.js"));
 var _cluster = require("cluster");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };} // Imports
 var conn = _config["default"].dbInitConnect();
 
+// TODO: modularize this
 function getNeeds(req, res) {
   var query =
   "SELECT beneficiary_id, first_name, last_name, story, " +

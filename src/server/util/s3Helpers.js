@@ -6,7 +6,6 @@ const rp = require('request-promise');
 const path = require('path');
 const mime = require('mime-types');
 
-// TODO: use this in typeform.js
 async function uploadItemImageToS3(itemId, imageUrl) {
     try {
         var options = {

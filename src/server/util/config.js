@@ -16,7 +16,7 @@ function dbInitConnect() {
   return conn;
 }
 
-// SQL, Promise version (TODO: transition to this)
+// SQL, Promise version
 let connPromise;
 async function dbInitConnectPromise() {
   if (!connPromise) {

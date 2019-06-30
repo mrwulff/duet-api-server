@@ -2,6 +2,7 @@ import config from "./../util/config.js";
 
 const conn = config.dbInitConnect();
 
+// TODO: modularize this
 function login(req, res) {
   let email = req.body.email;
 

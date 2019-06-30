@@ -2,6 +2,7 @@
 
 var conn = _config["default"].dbInitConnect();
 
+// TODO: modularize this
 function login(req, res) {
   var email = req.body.email;
 

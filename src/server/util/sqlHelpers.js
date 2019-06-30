@@ -254,7 +254,6 @@ async function resetStoreNotificationFlags() {
 
 async function getItemsForNotificationEmail(store_id) {
     // Get items to notify the given store about
-    // TODO: make this more efficient
     try {
         let conn = await config.dbInitConnectPromise();
         let updatedItems = [];

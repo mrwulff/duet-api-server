@@ -255,7 +255,6 @@ resetStoreNotificationFlags() {return _resetStoreNotificationFlags.apply(this, a
 getItemsForNotificationEmail(_x15) {return _getItemsForNotificationEmail.apply(this, arguments);}function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(store_id) {var conn, updatedItems, _ref15, _ref16, results, fields, item;return regeneratorRuntime.wrap(function _callee14$(_context14) {while (1) {switch (_context14.prev = _context14.next) {case 0:_context14.prev = 0;_context14.next = 3;return (
 
 
-
               _config["default"].dbInitConnectPromise());case 3:conn = _context14.sent;
             updatedItems = [];_context14.next = 7;return (
               conn.query("SELECT * from items where store_id=? and in_notification=1",

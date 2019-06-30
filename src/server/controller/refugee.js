@@ -3,6 +3,7 @@ import config from "../util/config.js";
 import { getMaxListeners } from "cluster";
 const conn = config.dbInitConnect();
 
+// TODO: modularize this
 function getNeeds(req, res) {
   let query =
     "SELECT beneficiary_id, first_name, last_name, story, " +

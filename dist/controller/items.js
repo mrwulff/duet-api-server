@@ -4,6 +4,7 @@ var _fbHelpers = _interopRequireDefault(require("../util/fbHelpers.js"));functio
 var conn = _config["default"].dbInitConnect();
 var sgMail = _config["default"].sendgridInit();
 
+// TODO: modularize this
 function getItems(req, res) {
   var query =
   "SELECT item_id, link, items.name, pickup_code, price_euros, " +
@@ -54,6 +55,7 @@ function getItems(req, res) {
   });
 }
 
+// TODO: modularize this
 function updateItemStatus(req, res) {
   if (Array.isArray(req.body.items)) {
     if (req.body.items.length > 0) {
@@ -148,6 +150,7 @@ function updateItemStatus(req, res) {
   }
 }
 
+// TODO: modularize this
 function verifyItems(req, res) {
   if (req.body.itemIds.length > 0) {
     var query = "UPDATE items SET status='VERIFIED' WHERE 1=1 AND (";
@@ -168,6 +171,7 @@ function verifyItems(req, res) {
   }
 }
 
+// TODO: modularize this
 function readyForPickup(req, res) {
   if (req.body.itemIds.length > 0) {
     var query = "UPDATE items SET status='READY_FOR_PICKUP' WHERE 1=1 AND (";
@@ -182,7 +186,6 @@ function readyForPickup(req, res) {
           err: err });
 
       } else {
-        // req.body.itemIds.forEach(id => sendPickupNotification(id)); - TODO: enable this
         res.status(200).json({
           msg: "Item status updated to READY_FOR_PICKUP" });
 
@@ -191,6 +194,7 @@ function readyForPickup(req, res) {
   }
 }
 
+// TODO: modularize this
 function pickupConfirmation(req, res) {
   if (req.body.itemIds.length > 0) {
     var query = "UPDATE items SET status='PICKED_UP' WHERE 1=1 AND (";

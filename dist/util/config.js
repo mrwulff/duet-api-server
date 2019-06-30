@@ -16,7 +16,7 @@ function dbInitConnect() {
   return conn;
 }
 
-// SQL, Promise version (TODO: transition to this)
+// SQL, Promise version
 var connPromise;function
 dbInitConnectPromise() {return _dbInitConnectPromise.apply(this, arguments);}
 
