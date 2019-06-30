@@ -1,5 +1,5 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../util/config.js"));
-var _refugee = _interopRequireDefault(require("./refugee.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
+var _fbHelpers = _interopRequireDefault(require("../util/fbHelpers.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 
 var conn = _config["default"].dbInitConnect();
 var sgMail = _config["default"].sendgridInit();
@@ -88,7 +88,7 @@ function updateItemStatus(req, res) {
         // Facebook messenger pickup notification
         if (newStatus === 'READY_FOR_PICKUP') {
           req.body.items.forEach(function (item) {
-            _refugee["default"].sendPickupNotification(item.itemId);
+            _fbHelpers["default"].sendPickupNotification(item.itemId);
           });
         }
 

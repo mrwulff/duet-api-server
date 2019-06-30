@@ -1,9 +1,8 @@
 // Imports
 require("dotenv").config();
-import config from '../util/config.js';
 import sqlHelpers from '../util/sqlHelpers.js';
 import errorHandler from '../util/errorHandler.js'
-const messenger = config.fbMessengerInit(); // FB Messenger
+import fbHelpers from '../util/fbHelpers.js'
 
 function fbAuth(req, res) {
     // Adds support for GET requests to our webhook
@@ -32,8 +31,6 @@ function fbAuth(req, res) {
         }
     }
 };
-
-
 
 function processFBMessage(req, res) {
     // Handles FB message events
@@ -79,31 +76,10 @@ function processFBMessage(req, res) {
 }
 
 
-async function sendPickupNotification(itemId) {
-    // Send pickup notification for itemId
-    try {
-        let fbMessengerInfo = await sqlHelpers.getFBMessengerInfoFromItemId(itemId);
-        let message = "Hi " + fbMessengerInfo.first_name + ", this is an automated message from Duet.\n" +
-            "Your " + fbMessengerInfo.item_name + " is now available for pickup from " + fbMessengerInfo.store_name + "!\n" +
-            "Please use pick-up code: " + fbMessengerInfo.pickup_code;
-        messenger.sendTextMessage({
-            id: fbMessengerInfo.fb_psid,
-            text: message,
-            messaging_type: "MESSAGE_TAG",
-            tag: "SHIPPING_UPDATE"
-        });
-        console.log('Sent pickup notification to ' + fbMessengerInfo.first_name + " " + fbMessengerInfo.last_name +
-            " for " + fbMessengerInfo.item_name + " with itemId: " + itemId);
-    } catch (err) {
-        errorHandler.handleError(err, "fbMessenger/sendPickupNotification");
-    }
-}
-
-// TODO: delete this after testing
 function sendTestPickupNotification(req, res) {
     let itemId = req.body.itemId;
     try {
-        sendPickupNotification(itemId);
+        fbHelpers.sendPickupNotification(itemId);
         res.status(200).send();
     } catch (e) {
         errorHandler.handleError(e, "fbMessenger/sendTestPickupNotification");
@@ -114,6 +90,5 @@ function sendTestPickupNotification(req, res) {
 export default { 
     fbAuth, 
     sendTestPickupNotification, 
-    sendPickupNotification, 
     processFBMessage 
 };

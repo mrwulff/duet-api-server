@@ -1,5 +1,5 @@
 import config from "./../util/config.js";
-import refugee from "./refugee.js";
+import fbHelpers from '../util/fbHelpers.js'
 
 const conn = config.dbInitConnect();
 const sgMail = config.sendgridInit();
@@ -88,7 +88,7 @@ function updateItemStatus(req, res) {
         // Facebook messenger pickup notification
         if (newStatus === 'READY_FOR_PICKUP') {
           req.body.items.forEach(item => {
-            refugee.sendPickupNotification(item.itemId);
+            fbHelpers.sendPickupNotification(item.itemId);
           });
         }
   
