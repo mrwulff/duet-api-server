@@ -320,11 +320,14 @@ getBeneficiaryInfo(_x19) {return _getBeneficiaryInfo.apply(this, arguments);}fun
               "SELECT beneficiary_id, first_name, last_name, story, " +
               "origin_city, origin_country, current_city, current_country, family_image_url " +
               "FROM beneficiaries WHERE beneficiary_id = ?",
-              [beneficiaryId]));case 6:_ref19 = _context17.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];return _context17.abrupt("return",
+              [beneficiaryId]));case 6:_ref19 = _context17.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];if (!(
 
-            results[0]);case 13:_context17.prev = 13;_context17.t0 = _context17["catch"](0);
+            results.length === 0)) {_context17.next = 12;break;}return _context17.abrupt("return",
+            null);case 12:return _context17.abrupt("return",
 
-            _errorHandler["default"].handleError(_context17.t0, "sqlHelpers/getBeneficiaryInfo");throw _context17.t0;case 17:case "end":return _context17.stop();}}}, _callee17, null, [[0, 13]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function
+            results[0]);case 15:_context17.prev = 15;_context17.t0 = _context17["catch"](0);
+
+            _errorHandler["default"].handleError(_context17.t0, "sqlHelpers/getBeneficiaryInfo");throw _context17.t0;case 19:case "end":return _context17.stop();}}}, _callee17, null, [[0, 15]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function
 
 
 

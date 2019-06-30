@@ -322,6 +322,9 @@ async function getBeneficiaryInfo(beneficiaryId) {
             "FROM beneficiaries WHERE beneficiary_id = ?",
             [beneficiaryId]
         );
+        if (results.length === 0) {
+            return null;
+        }
         return results[0];
     } catch (err) {
         errorHandler.handleError(err, "sqlHelpers/getBeneficiaryInfo");
