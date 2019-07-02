@@ -157,7 +157,8 @@ getPayoutInfo(_x11) {return _getPayoutInfo.apply(this, arguments);}function _get
 
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context8.sent;_context8.next = 6;return (
-              conn.query("SELECT stores.paypal AS paypal, " +
+              conn.query(
+              "SELECT stores.paypal AS paypal, " +
               "payouts.payment_amount AS payment_amount, " +
               "payouts.item_ids AS item_ids " +
               "FROM stores AS stores " +
@@ -369,7 +370,94 @@ getAllBeneficiaryInfoAndNeeds() {return _getAllBeneficiaryInfoAndNeeds.apply(thi
 
             results);case 13:_context19.prev = 13;_context19.t0 = _context19["catch"](0);
 
-            _errorHandler["default"].handleError(_context19.t0, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");throw _context19.t0;case 17:case "end":return _context19.stop();}}}, _callee19, null, [[0, 13]]);}));return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}var _default =
+            _errorHandler["default"].handleError(_context19.t0, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");throw _context19.t0;case 17:case "end":return _context19.stop();}}}, _callee19, null, [[0, 13]]);}));return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}
+
+
+
+
+var itemsQuery =
+"SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
+"status, store_id, icon_url, " +
+"stores.name as store_name, stores.google_maps as store_maps_link, " +
+"beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
+"donations.timestamp as donation_timestamp " +
+"FROM items " +
+"INNER JOIN categories USING(category_id) " +
+"INNER JOIN stores USING(store_id) " +
+"INNER JOIN beneficiaries USING(beneficiary_id) " +
+"LEFT JOIN donations USING(donation_id)";function
+
+getItem(_x21) {return _getItem.apply(this, arguments);}function _getItem() {_getItem = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee20(itemId) {var conn, _ref25, _ref26, results, fields;return regeneratorRuntime.wrap(function _callee20$(_context20) {while (1) {switch (_context20.prev = _context20.next) {case 0:_context20.prev = 0;_context20.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context20.sent;_context20.next = 6;return (
+              conn.query(
+              itemsQuery + " WHERE item_id=?",
+              [itemId]));case 6:_ref25 = _context20.sent;_ref26 = _slicedToArray(_ref25, 2);results = _ref26[0];fields = _ref26[1];if (!(
+
+            results.length === 0)) {_context20.next = 14;break;}return _context20.abrupt("return",
+            null);case 14:return _context20.abrupt("return",
+
+
+            results[0]);case 15:_context20.next = 21;break;case 17:_context20.prev = 17;_context20.t0 = _context20["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context20.t0, "sqlHelpers/getItem");throw _context20.t0;case 21:case "end":return _context20.stop();}}}, _callee20, null, [[0, 17]]);}));return _getItem.apply(this, arguments);}function
+
+
+
+
+getItemsForStore(_x22) {return _getItemsForStore.apply(this, arguments);}function _getItemsForStore() {_getItemsForStore = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee21(storeId) {var conn, _ref27, _ref28, results, fields;return regeneratorRuntime.wrap(function _callee21$(_context21) {while (1) {switch (_context21.prev = _context21.next) {case 0:_context21.prev = 0;_context21.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context21.sent;_context21.next = 6;return (
+              conn.query(
+              itemsQuery + " WHERE store_id=?",
+              [storeId]));case 6:_ref27 = _context21.sent;_ref28 = _slicedToArray(_ref27, 2);results = _ref28[0];fields = _ref28[1];return _context21.abrupt("return",
+
+            results);case 13:_context21.prev = 13;_context21.t0 = _context21["catch"](0);
+
+            _errorHandler["default"].handleError(_context21.t0, "sqlHelpers/getItemsForStore");throw _context21.t0;case 17:case "end":return _context21.stop();}}}, _callee21, null, [[0, 13]]);}));return _getItemsForStore.apply(this, arguments);}function
+
+
+
+
+getAllItems() {return _getAllItems.apply(this, arguments);}function _getAllItems() {_getAllItems = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee22() {var conn, _ref29, _ref30, results, fields;return regeneratorRuntime.wrap(function _callee22$(_context22) {while (1) {switch (_context22.prev = _context22.next) {case 0:_context22.prev = 0;_context22.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context22.sent;_context22.next = 6;return (
+              conn.query(
+              itemsQuery));case 6:_ref29 = _context22.sent;_ref30 = _slicedToArray(_ref29, 2);results = _ref30[0];fields = _ref30[1];if (!(
+
+            results.length === 0)) {_context22.next = 14;break;}return _context22.abrupt("return",
+            null);case 14:return _context22.abrupt("return",
+
+
+            results);case 15:_context22.next = 21;break;case 17:_context22.prev = 17;_context22.t0 = _context22["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context22.t0, "sqlHelpers/getAllItems");throw _context22.t0;case 21:case "end":return _context22.stop();}}}, _callee22, null, [[0, 17]]);}));return _getAllItems.apply(this, arguments);}function
+
+
+
+
+updateItemStatus(_x23, _x24) {return _updateItemStatus.apply(this, arguments);}function _updateItemStatus() {_updateItemStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(newStatus, itemId) {var conn;return regeneratorRuntime.wrap(function _callee23$(_context23) {while (1) {switch (_context23.prev = _context23.next) {case 0:_context23.prev = 0;_context23.next = 3;return (
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context23.sent;if (!(
+            newStatus === "PAID")) {_context23.next = 9;break;}_context23.next = 7;return (
+              conn.query("UPDATE items SET status=?, in_notification=1 WHERE item_id = ?",
+
+              [newStatus, itemId]));case 7:_context23.next = 11;break;case 9:_context23.next = 11;return (
+
+
+              conn.query("UPDATE items SET status=? WHERE item_id = ?",
+
+              [newStatus, itemId]));case 11:
+
+
+            console.log("Successfully updated item status to " + newStatus + " for item " + itemId);_context23.next = 18;break;case 14:_context23.prev = 14;_context23.t0 = _context23["catch"](0);
+
+            _errorHandler["default"].handleError(_context23.t0, "sqlHelpers/updateItemStatus");throw _context23.t0;case 18:case "end":return _context23.stop();}}}, _callee23, null, [[0, 14]]);}));return _updateItemStatus.apply(this, arguments);}var _default =
 
 
 
@@ -393,4 +481,8 @@ getAllBeneficiaryInfoAndNeeds() {return _getAllBeneficiaryInfoAndNeeds.apply(thi
   updateItemPhotoLink: updateItemPhotoLink,
   getBeneficiaryInfo: getBeneficiaryInfo,
   getBeneficiaryNeeds: getBeneficiaryNeeds,
-  getAllBeneficiaryInfoAndNeeds: getAllBeneficiaryInfoAndNeeds };exports["default"] = _default;
+  getAllBeneficiaryInfoAndNeeds: getAllBeneficiaryInfoAndNeeds,
+  getItem: getItem,
+  getItemsForStore: getItemsForStore,
+  getAllItems: getAllItems,
+  updateItemStatus: updateItemStatus };exports["default"] = _default;

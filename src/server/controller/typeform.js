@@ -17,104 +17,104 @@ function testUploadItemImageToS3(req, res) {
 }
 
 async function processTypeformV4(req, res) {
-    try {
-        console.log("Processing TypeForm (V4)");
-        let answers = req.body.form_response.answers;
-        let formTitle = req.body.form_response.definition.title;
-        let formQuestions = req.body.form_response.definition.fields;
-        let eventId = req.body.form_response.eventId;
+  try {
+    console.log("Processing TypeForm (V4)");
+    let answers = req.body.form_response.answers;
+    let formTitle = req.body.form_response.definition.title;
+    let formQuestions = req.body.form_response.definition.fields;
+    let eventId = req.body.form_response.eventId;
 
-        // Check which language was used
-        let language = null;
-        if (formTitle.includes("English")) {
-            language = "english";
-        } else if (formTitle.includes("Arabic")) {
-            language = "arabic";
-        } else if (formTitle.includes("Farsi")) {
-            language = "farsi";
-        } else {
-            console.log("Error! Unknown Typeform language.");
-            res.status(501).send();
-        }
-
-        // Get responses
-        if (answers.length >= 8) {
-            let beneficiaryId = answers[0].text;
-            let phoneNum = answers[1].phone_number;
-            let photoUrl = answers[2].file_url;
-            let itemName = answers[4].choice.label;
-            // replace "," with "."; remove non-numeric characters
-            let price = answers[5].text.replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, '');
-            let size = null;
-            let store = null;
-            if (answers.length == 8) {
-                store = answers[6].choice.label;
-            }
-            else if (answers.length == 9) {
-                size = answers[6].text;
-                store = answers[7].choice.label;
-            }
-            else {
-                res.status(400).json({
-                    msg: ("Invalid number of answers :" + answers.length)
-                });
-            }
-
-            // Translate itemName to English by matching itemName in item_types table
-            // And get categoryId while we're at it
-            let itemTranslationResult = await sqlHelpers.getItemNameTranslation(language, itemName);
-            if (!itemTranslationResult) {
-                console.log("Invalid item name! Table: name_" + language + "; itemName: " + itemName);
-                res.status(500).send();
-            }
-            let itemNameEnglish = itemTranslationResult.name_english;
-            let categoryId = itemTranslationResult.category_id;
-            let storeId = await sqlHelpers.getStoreIdFromName(store);
-
-            // insert item
-            let itemId;
-            try {
-                itemId = await sqlHelpers.insertItemFromTypeform({
-                    itemNameEnglish: itemNameEnglish,
-                    size: size,
-                    price: price,
-                    beneficiaryId, beneficiaryId,
-                    categoryId: categoryId,
-                    storeId: storeId,
-                    photoUrl: photoUrl,
-                    in_notification: 1
-                });
-            } catch (err) {
-                // Sendgrid Error message (email)
-                sendgridHelpers.sendTypeformErrorEmail({
-                    formTitle: formTitle,
-                    eventId: eventId,
-                    err: err
-                });
-                res.status(500).send();
-            }
-
-            // get code for item
-            let code = itemHelpers.generatePickupCode(itemId);
-            await sqlHelpers.updateItemPickupCode(itemId, code);
-
-            // Rehost image in S3
-            let s3PhotoUrl = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
-            await sqlHelpers.updateItemPhotoLink(itemId, s3PhotoUrl);
-
-            // set notification status for store_id to be true...
-            await sqlHelpers.setSingleStoreNotificationFlag(storeId);
-
-            res.status(200).send();
-        }
-        else {
-            console.log("Error! Invalid number of answers.");
-            res.status(502).send();
-        }
-    } catch (err) {
-        errorHandler.handleError(err, "typeform/processTypeformV4");
-        res.status(500).send();
+    // Check which language was used
+    let language = null;
+    if (formTitle.includes("English")) {
+      language = "english";
+    } else if (formTitle.includes("Arabic")) {
+      language = "arabic";
+    } else if (formTitle.includes("Farsi")) {
+      language = "farsi";
+    } else {
+      console.log("Error! Unknown Typeform language.");
+      res.status(501).send();
     }
+
+    // Get responses
+    if (answers.length >= 8) {
+      let beneficiaryId = answers[0].text;
+      let phoneNum = answers[1].phone_number;
+      let photoUrl = answers[2].file_url;
+      let itemName = answers[4].choice.label;
+      // replace "," with "."; remove non-numeric characters
+      let price = answers[5].text.replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, '');
+      let size = null;
+      let store = null;
+      if (answers.length == 8) {
+        store = answers[6].choice.label;
+      }
+      else if (answers.length == 9) {
+        size = answers[6].text;
+        store = answers[7].choice.label;
+      }
+      else {
+        res.status(400).json({
+          msg: ("Invalid number of answers :" + answers.length)
+        });
+      }
+
+      // Translate itemName to English by matching itemName in item_types table
+      // And get categoryId while we're at it
+      let itemTranslationResult = await sqlHelpers.getItemNameTranslation(language, itemName);
+      if (!itemTranslationResult) {
+        console.log("Invalid item name! Table: name_" + language + "; itemName: " + itemName);
+        res.status(500).send();
+      }
+      let itemNameEnglish = itemTranslationResult.name_english;
+      let categoryId = itemTranslationResult.category_id;
+      let storeId = await sqlHelpers.getStoreIdFromName(store);
+
+      // insert item
+      let itemId;
+      try {
+        itemId = await sqlHelpers.insertItemFromTypeform({
+          itemNameEnglish: itemNameEnglish,
+          size: size,
+          price: price,
+          beneficiaryId, beneficiaryId,
+          categoryId: categoryId,
+          storeId: storeId,
+          photoUrl: photoUrl,
+          in_notification: 1
+        });
+      } catch (err) {
+        // Sendgrid Error message (email)
+        sendgridHelpers.sendTypeformErrorEmail({
+          formTitle: formTitle,
+          eventId: eventId,
+          err: err
+        });
+        res.status(500).send();
+      }
+
+      // get code for item
+      let code = itemHelpers.generatePickupCode(itemId);
+      await sqlHelpers.updateItemPickupCode(itemId, code);
+
+      // Rehost image in S3
+      let s3PhotoUrl = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
+      await sqlHelpers.updateItemPhotoLink(itemId, s3PhotoUrl);
+
+      // set notification status for store_id to be true...
+      await sqlHelpers.setSingleStoreNotificationFlag(storeId);
+
+      res.status(200).send();
+    }
+    else {
+      console.log("Error! Invalid number of answers.");
+      res.status(502).send();
+    }
+  } catch (err) {
+    errorHandler.handleError(err, "typeform/processTypeformV4");
+    res.status(500).send();
+  }
 }
 
 // function processTypeformV3(req, res) {
@@ -228,7 +228,7 @@ async function processTypeformV4(req, res) {
 //     }
 // }
 
-export default { 
-    processTypeformV4,
-    testUploadItemImageToS3
- };
+export default {
+  processTypeformV4,
+  testUploadItemImageToS3
+};

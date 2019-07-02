@@ -1,4 +1,5 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("../util/config.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("../util/config.js"));
+var _errorHandler = _interopRequireDefault(require("../util/errorHandler.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
 var sgMail = _config["default"].sendgridInit(); // Sendgrid
 
 function sendDonorThankYouEmail(donorInfo) {
@@ -19,62 +20,92 @@ function sendDonorThankYouEmail(donorInfo) {
     console.log("Donation confirmation sent ".concat(donorInfo.email, " to successfully."));
   })["catch"](
   function (error) {
-    console.error(error.toString());
+    _errorHandler["default"].handleError(error, "sendgridHelpers/sendDonorThankYouEmail");
   });
-}function
+}
 
-sendTypeformErrorEmail(_x) {return _sendTypeformErrorEmail.apply(this, arguments);}function _sendTypeformErrorEmail() {_sendTypeformErrorEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(typeformErrorInfo) {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-            msg = {
-              to: "duet.giving@gmail.com",
-              from: "duet.giving@gmail.com",
-              templateId: "d-6ecc5d7df32c4528b8527c248a212552",
-              dynamic_template_data: {
-                formTitle: typeformErrorInfo.formTitle,
-                eventId: typeformErrorInfo.eventId,
-                error: typeformErrorInfo.err } };
-
-
-            sgMail.
-            send(msg).
-            then(function () {
-              console.log("Sendgrid error message delived successfully.");
-            })["catch"](
-            function (error) {
-              console.error(error.toString());
-            });case 2:case "end":return _context.stop();}}}, _callee);}));return _sendTypeformErrorEmail.apply(this, arguments);}function
+function sendTypeformErrorEmail(typeformErrorInfo) {
+  // Send error email if Typeform response can't get added to DB
+  msg = {
+    to: "duet.giving@gmail.com",
+    from: "duet.giving@gmail.com",
+    templateId: "d-6ecc5d7df32c4528b8527c248a212552",
+    dynamic_template_data: {
+      formTitle: typeformErrorInfo.formTitle,
+      eventId: typeformErrorInfo.eventId,
+      error: typeformErrorInfo.err } };
 
 
-sendStoreNotificationEmail(_x2) {return _sendStoreNotificationEmail.apply(this, arguments);}function _sendStoreNotificationEmail() {_sendStoreNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(storeNotificationInfo) {var subject, msg;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+  sgMail.
+  send(msg).
+  then(function () {
+    console.log("Sendgrid error message delived successfully.");
+  })["catch"](
+  function (error) {
+    _errorHandler["default"].handleError(error, "sendgridHelpers/sendTypeformErrorEmail");
+  });
+}
 
-            if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'sandbox') {
-              subject = "[SANDBOX] Duet: The following items need your attention!";
-            } else {
-              subject = "Duet: The following items need your attention!";
-            }
+function sendStoreNotificationEmail(storeNotificationInfo) {
+  // Send store notification email
+  var subject;
+  if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'sandbox') {
+    subject = "[SANDBOX] Duet: The following items need your attention!";
+  } else {
+    subject = "Duet: The following items need your attention!";
+  }
 
-            msg = {
-              to: storeNotificationInfo.recipientList,
-              from: "duet@giveduet.org",
-              templateId: "d-435a092f0be54b07b5135799ac7dfb01",
-              dynamic_template_data: {
-                storeName: storeNotificationInfo.name,
-                items: storeNotificationInfo.updatedItems,
-                subject: subject } };
+  var msg = {
+    to: storeNotificationInfo.recipientList,
+    from: "duet@giveduet.org",
+    templateId: "d-435a092f0be54b07b5135799ac7dfb01",
+    dynamic_template_data: {
+      storeName: storeNotificationInfo.name,
+      items: storeNotificationInfo.updatedItems,
+      subject: subject } };
 
 
 
-            sgMail.
-            sendMultiple(msg).
-            then(function () {
-              console.log("Message delivered to ".concat(storeNotificationInfo.name, " at ").concat(storeNotificationInfo.email, " successfully."));
-            })["catch"](
-            function (error) {
-              console.error("Error: " + error.toString());
-              return;
-            });case 3:case "end":return _context2.stop();}}}, _callee2);}));return _sendStoreNotificationEmail.apply(this, arguments);}var _default =
+  sgMail.
+  sendMultiple(msg).
+  then(function () {
+    console.log("Message delivered to ".concat(storeNotificationInfo.name, " at ").concat(storeNotificationInfo.email, " successfully."));
+  })["catch"](
+  function (error) {
+    _errorHandler["default"].handleError(error, "sendgridHelpers/sendStoreNotificationEmail");
+  });
+}
 
+function sendPickupUpdateEmail(newStatus, itemResult) {
+  // Send item status update email: either READY_FOR_PICKUP, or PICKED_UP
+  var emailTemplateId = newStatus === 'READY_FOR_PICKUP' ? 'd-15967181f418425fa3510cb674b7f580' : 'd-2e5e32e85d614b338e7e27d3eacccac3';
+  var msg = {
+    to: "duet.giving@gmail.com",
+    from: "duet.giving@gmail.com",
+    templateId: emailTemplateId,
+    dynamic_template_data: {
+      itemName: itemResult.name,
+      itemSize: itemResult.size,
+      itemLink: itemResult.link,
+      pickupCode: itemResult.pickup_code,
+      refugeeName: "".concat(itemResult.beneficiary_first, " ").concat(itemResult.beneficiary_last),
+      refugeeId: itemResult.beneficiary_id,
+      storeName: itemResult.store_name } };
+
+
+
+  sgMail.
+  send(msg).
+  then(function () {
+    console.log("Item pickup or ready to be picked up message delivered to Duet successfully.");
+  })["catch"](
+  function (error) {
+    _errorHandler["default"].handleError(error, "sendgridHelpers/sendPickupUpdateEmail");
+  });
+}var _default =
 
 {
   sendDonorThankYouEmail: sendDonorThankYouEmail,
   sendStoreNotificationEmail: sendStoreNotificationEmail,
-  sendTypeformErrorEmail: sendTypeformErrorEmail };exports["default"] = _default;
+  sendTypeformErrorEmail: sendTypeformErrorEmail,
+  sendPickupUpdateEmail: sendPickupUpdateEmail };exports["default"] = _default;

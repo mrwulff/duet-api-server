@@ -157,7 +157,8 @@ async function getPayoutInfo(itemIds) {
     // Returns a list containing payout info for each store that we have to send a payout to
     try {
         let conn = await config.dbInitConnectPromise();
-        let [rows, fields] = await conn.query("SELECT stores.paypal AS paypal, " +
+        let [rows, fields] = await conn.query(
+            "SELECT stores.paypal AS paypal, " +
             "payouts.payment_amount AS payment_amount, " +
             "payouts.item_ids AS item_ids " +
             "FROM stores AS stores " +
@@ -374,6 +375,93 @@ async function getAllBeneficiaryInfoAndNeeds() {
     }
 }
 
+let itemsQuery = 
+    "SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
+    "status, store_id, icon_url, " +
+    "stores.name as store_name, stores.google_maps as store_maps_link, " +
+    "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
+    "donations.timestamp as donation_timestamp " +
+    "FROM items " +
+    "INNER JOIN categories USING(category_id) " +
+    "INNER JOIN stores USING(store_id) " +
+    "INNER JOIN beneficiaries USING(beneficiary_id) " +
+    "LEFT JOIN donations USING(donation_id)";
+
+async function getItem(itemId) {
+    // Get single item
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query(
+            itemsQuery + " WHERE item_id=?",
+            [itemId]
+        );
+        if (results.length === 0) {
+            return null;
+        }
+        else {
+            return results[0];
+        }
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getItem");
+        throw err;
+    }
+}
+
+async function getItemsForStore(storeId) {
+    // Get all items associated with this store
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query(
+            itemsQuery + " WHERE store_id=?",
+            [storeId]
+        );
+        return results;
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getItemsForStore");
+        throw err;
+    }
+}
+
+async function getAllItems() {
+    // Get all items associated with this store
+    try {
+        let conn = await config.dbInitConnectPromise();
+        let [results, fields] = await conn.query(
+            itemsQuery
+        );
+        if (results.length === 0) {
+            return null;
+        }
+        else {
+            return results;
+        }
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/getAllItems");
+        throw err;
+    }
+}
+
+async function updateItemStatus(newStatus, itemId) {
+    try {
+        let conn = await config.dbInitConnectPromise();
+        if (newStatus === "PAID") {
+            await conn.query(
+                `UPDATE items SET status=?, in_notification=1 WHERE item_id = ?`,
+                [newStatus, itemId]
+            );
+        } else {
+            await conn.query(
+                `UPDATE items SET status=? WHERE item_id = ?`,
+                [newStatus, itemId]
+            );
+        }
+        console.log("Successfully updated item status to " + newStatus + " for item " + itemId);
+    } catch (err) {
+        errorHandler.handleError(err, "sqlHelpers/updateItemStatus");
+        throw err;
+    }
+}
+
 export default {
     insertMessageIntoDB,
     markItemAsDonated,
@@ -393,5 +481,9 @@ export default {
     updateItemPhotoLink,
     getBeneficiaryInfo,
     getBeneficiaryNeeds,
-    getAllBeneficiaryInfoAndNeeds
+    getAllBeneficiaryInfoAndNeeds,
+    getItem,
+    getItemsForStore,
+    getAllItems,
+    updateItemStatus
 }
