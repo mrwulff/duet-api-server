@@ -7,7 +7,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 function getItems(req, res) {
   var query =
-  "SELECT item_id, link, items.name, pickup_code, price_euros, " +
+  "SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
   "status, store_id, icon_url, " +
   "stores.name as store_name, stores.google_maps as store_maps_link, " +
   "donations.timestamp as donation_timestamp " +
@@ -39,6 +39,7 @@ function getItems(req, res) {
           itemId: obj.item_id,
           image: obj.link,
           name: obj.name,
+          size: obj.size,
           price: obj.price_euros,
           storeId: obj.store_id,
           storeName: obj.store_name,
