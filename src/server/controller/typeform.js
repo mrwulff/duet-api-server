@@ -7,14 +7,14 @@ import sqlHelpers from '../util/sqlHelpers.js';
 import sendgridHelpers from '../util/sendgridHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 
-function testUploadItemImageToS3(req, res) {
-  try {
-    s3Helpers.uploadItemImageToS3(req.body.itemId, req.body.imageUrl);
-    res.status(200).send();
-  } catch (e) {
-    res.status(500).send({ error: e });
-  }
-}
+// function testUploadItemImageToS3(req, res) {
+//   try {
+//     s3Helpers.uploadItemImageToS3(req.body.itemId, req.body.imageUrl);
+//     res.status(200).send();
+//   } catch (e) {
+//     res.status(500).send({ error: e });
+//   }
+// }
 
 async function processTypeformV4(req, res) {
   try {
@@ -230,5 +230,5 @@ async function processTypeformV4(req, res) {
 
 export default {
   processTypeformV4,
-  testUploadItemImageToS3
+  // testUploadItemImageToS3
 };

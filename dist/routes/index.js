@@ -9,12 +9,12 @@ router.get("/status", function (req, res) {
 
 });
 
-router.post("/login", function (req, res) {
-  _index["default"].login(req, res);
-});
+// router.post("/login", (req, res) => {
+//   controller.login(req, res);
+// });
 
-router.post("/signup", function (req, res) {
-  _index["default"].createUser(req, res);
-});var _default =
-
+// router.post("/signup", (req, res) => {
+//   controller.createUser(req, res);
+// });
+var _default =
 router;exports["default"] = _default;

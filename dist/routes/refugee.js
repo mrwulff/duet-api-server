@@ -22,9 +22,9 @@ router.post("/fbTestPickupNotification", function (req, res) {
   _fbMessenger["default"].sendTestPickupNotification(req, res);
 });
 
-router.post("/testUploadItemImageToS3", function (req, res) {
-  _typeform["default"].testUploadItemImageToS3(req, res);
-});
+// router.post("/testUploadItemImageToS3", (req, res) => {
+//   typeformController.testUploadItemImageToS3(req, res);
+// });
 
 // router.get("/family", (req, res) => {
 //   controller.getFamilyInfo(req, res);
