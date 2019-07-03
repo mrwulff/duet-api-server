@@ -1,6 +1,29 @@
+require("dotenv").config();
 import config from "../util/config.js";
 import errorHandler from "../util/errorHandler.js";
 const sgMail = config.sendgridInit(); // Sendgrid
+
+function sendErrorEmail(err, functionName) {
+  // Send error email to duet.giving@gmail.com
+  const msg = {
+    to: "duet.giving@gmail.com",
+    from: "duet.giving@gmail.com",
+    templateId: "",
+    dynamic_template_data: {
+      environment: (process.env.DATABASE === "duet_db") ? "PROD" : "SANDBOX",
+      functionName: functionName,
+      error: err
+    }
+  }
+  sgMail
+    .send(msg)
+    .then(() => {
+      console.log(`Error message sent to duet.giving@gmail.com`);
+    })
+    .catch(error => {
+      console.log("Error when sending error email (lol): " + error);
+    });
+}
 
 function sendDonorThankYouEmail(donorInfo) {
   // Send donor thank-you email
@@ -105,8 +128,9 @@ function sendPickupUpdateEmail(newStatus, itemResult) {
 }
 
 export default {
+  sendErrorEmail,
+  sendTypeformErrorEmail,
   sendDonorThankYouEmail,
   sendStoreNotificationEmail,
-  sendTypeformErrorEmail,
   sendPickupUpdateEmail
 }

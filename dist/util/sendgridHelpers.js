@@ -1,6 +1,29 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("../util/config.js"));
-var _errorHandler = _interopRequireDefault(require("../util/errorHandler.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
+var _config = _interopRequireDefault(require("../util/config.js"));
+var _errorHandler = _interopRequireDefault(require("../util/errorHandler.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}require("dotenv").config();
 var sgMail = _config["default"].sendgridInit(); // Sendgrid
+
+function sendErrorEmail(err, functionName) {
+  // Send error email to duet.giving@gmail.com
+  var msg = {
+    to: "duet.giving@gmail.com",
+    from: "duet.giving@gmail.com",
+    templateId: "",
+    dynamic_template_data: {
+      environment: process.env.DATABASE === "duet_db" ? "PROD" : "SANDBOX",
+      functionName: functionName,
+      error: err } };
+
+
+  sgMail.
+  send(msg).
+  then(function () {
+    console.log("Error message sent to duet.giving@gmail.com");
+  })["catch"](
+  function (error) {
+    console.log("Error when sending error email (lol): " + error);
+  });
+}
 
 function sendDonorThankYouEmail(donorInfo) {
   // Send donor thank-you email
@@ -105,7 +128,8 @@ function sendPickupUpdateEmail(newStatus, itemResult) {
 }var _default =
 
 {
+  sendErrorEmail: sendErrorEmail,
+  sendTypeformErrorEmail: sendTypeformErrorEmail,
   sendDonorThankYouEmail: sendDonorThankYouEmail,
   sendStoreNotificationEmail: sendStoreNotificationEmail,
-  sendTypeformErrorEmail: sendTypeformErrorEmail,
   sendPickupUpdateEmail: sendPickupUpdateEmail };exports["default"] = _default;
