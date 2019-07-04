@@ -77,8 +77,13 @@ function itemPaid(req, res) {
         } else {
           body.itemIds.forEach(function(id) {
             // add entry into donations table
-            conn.execute(
-              "UPDATE items SET status='PAID', in_notification=1, donation_id=(SELECT LAST_INSERT_ID()) WHERE item_id=?",
+            conn.query(
+              "UPDATE items " +
+              "INNER JOIN stores USING(store_id) " +
+              "SET status='PAID', " +
+              "donation_id=(SELECT LAST_INSERT_ID()), " +
+              "in_notification=CASE payment_method WHEN 'paypal' THEN 1 ELSE in_notification END " +
+              "WHERE item_id=?",
               [id],
               function(err) {
                 if (err) {
@@ -132,9 +137,12 @@ function itemPaid(req, res) {
                   store_ids.push(result.store_id);
                 });
 
-                // update the needs_notification flag for each of these stores to be true -- need to confirm payment received before we can move them to be ready for pickup...
+                // update the needs_notification flag for each of these stores to be true
+                // need to confirm payment received before we can move them to be ready for pickup...
+                // only do this for stores with payment_method='paypal'
                 conn.query(
-                  `UPDATE stores SET needs_notification=1 WHERE store_id IN (${store_ids.join()})`,
+                  `UPDATE stores SET needs_notification=1 WHERE store_id IN (${store_ids.join()})` +
+                  ` AND payment_method='paypal'`,
                   function(err, results, fields) {
                     if (err) {
                       console.log(err);
