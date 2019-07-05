@@ -99,7 +99,12 @@ async function markItemAsDonated(itemId, donationId) {
   try {
     let conn = await config.dbInitConnectPromise();
     await conn.query(
-      "UPDATE items SET status='PAID', in_notification=1, donation_id=? WHERE item_id=?",
+      "UPDATE items " +
+      "INNER JOIN stores USING(store_id) " +
+      "SET status='PAID', " +
+      "donation_id=?, " +
+      "in_notification=CASE payment_method WHEN 'paypal' THEN 1 ELSE in_notification END " +
+      "WHERE item_id=?",
       [donationId, itemId]
     );
   } catch (err) {
@@ -261,7 +266,8 @@ async function setStoreNotificationFlags(itemIds) {
 
     // Set needs_notification to 1
     await conn.query(
-      "UPDATE stores SET needs_notification=1 WHERE store_id IN (?)",
+      "UPDATE stores SET needs_notification=1 WHERE store_id IN (?) " +
+      "AND payment_method='paypal'",
       [storeIdsList]);
     console.log(`Notification flag updated sucessfully for stores: ${storeIdsList}`)
   } catch (err) {
