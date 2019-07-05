@@ -8,7 +8,7 @@ function sendErrorEmail(err, functionName) {
   const msg = {
     to: "duet.giving@gmail.com",
     from: "duet.giving@gmail.com",
-    templateId: "",
+    templateId: "d-baf6edabb26741189b2835f0f3c7258e",
     dynamic_template_data: {
       environment: (process.env.DATABASE === "duet_db") ? "PROD" : "SANDBOX",
       functionName: functionName,

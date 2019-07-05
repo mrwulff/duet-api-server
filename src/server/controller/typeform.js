@@ -41,7 +41,7 @@ async function processTypeformV4(req, res) {
     if (answers.length >= 8) {
       let beneficiaryId = answers[0].text;
       let phoneNum = answers[1].phone_number;
-      let photoUrl = answers[2].file_url;
+      let photoUrl = encodeURI(answers[2].file_url);
       let itemName = answers[4].choice.label;
       // replace "," with "."; remove non-numeric characters
       let price = answers[5].text.replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, '');
