@@ -1,4 +1,4 @@
-import db from "./../config/config.js";
+import config from "./../util/config.js";
 import request from "request";
 
 function updateCurrencyRates(req, res) {
