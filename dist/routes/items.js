@@ -7,20 +7,20 @@ router.get("/", function (req, res) {
   _items["default"].getItems(req, res);
 });
 
-router.post("/verify", function (req, res) {
-  _items["default"].verifyItems(req, res);
-});
-
 router.post("/updateItemStatus", function (req, res) {
   _items["default"].updateItemStatus(req, res);
 });
 
-router.post("/pickup/ready", function (req, res) {
-  _items["default"].readyForPickup(req, res);
-});
+// router.post("/verify", (req, res) => {
+//   controller.verifyItems(req, res);
+// });
 
-router.post("/pickup/confirmation", function (req, res) {
-  _items["default"].pickupConfirmation(req, res);
-});var _default =
+// router.post("/pickup/ready", (req, res) => {
+//   controller.readyForPickup(req, res);
+// });
 
+// router.post("/pickup/confirmation", (req, res) => {
+//   controller.pickupConfirmation(req, res);
+// });
+var _default =
 router;exports["default"] = _default;

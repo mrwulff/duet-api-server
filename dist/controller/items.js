@@ -1,218 +1,157 @@
-"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _config = _interopRequireDefault(require("./../config/config.js"));
-var _refugee = _interopRequireDefault(require("./refugee.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}
+"use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;var _fbHelpers = _interopRequireDefault(require("../util/fbHelpers.js"));
+var _itemHelpers = _interopRequireDefault(require("../util/itemHelpers.js"));
+var _sendgridHelpers = _interopRequireDefault(require("../util/sendgridHelpers.js"));
+var _errorHandler = _interopRequireDefault(require("../util/errorHandler.js"));
+var _sqlHelpers = _interopRequireDefault(require("../util/sqlHelpers.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function
 
-var conn = _config["default"].dbInitConnect();
-var sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-function getItems(req, res) {
-  var query =
-  "SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
-  "status, store_id, icon_url, " +
-  "stores.name as store_name, stores.google_maps as store_maps_link, " +
-  "donations.timestamp as donation_timestamp " +
-  "FROM items " +
-  "INNER JOIN categories USING(category_id) " +
-  "INNER JOIN stores USING(store_id) " +
-  "LEFT JOIN donations USING(donation_id)";
-  var parameters = [];
-  if (req.query.store_id) {
-    query += " WHERE store_id=?";
-    parameters.push(req.query.store_id);
-  } else if (req.query.item_id) {
-    query += " WHERE item_id=?";
-    parameters.push(req.query.item_id);
-  }
-  conn.execute(query, parameters, function (err, rows) {
-    if (err) {
-      console.log(err);
-      res.status(400).send();
-    } else if (rows.length == 0) {
-      res.send({
-        msg: "No Item Needs" });
-
-    } else {
-      var item;
-      var needs = [];
-      rows.forEach(function (obj) {
-        item = {
-          itemId: obj.item_id,
-          image: obj.link,
-          name: obj.name,
-          size: obj.size,
-          price: obj.price_euros,
-          storeId: obj.store_id,
-          storeName: obj.store_name,
-          storeMapsLink: obj.store_maps_link,
-          icon: obj.icon_url,
-          status: obj.status,
-          pickupCode: obj.pickup_code,
-          donationTimestamp: obj.donation_timestamp };
-
-        needs.push(item);
-      });
-      res.json(needs);
-    }
-  });
-}
-
-function updateItemStatus(req, res) {
-  if (Array.isArray(req.body.items)) {
-    if (req.body.items.length > 0) {
-      req.body.items.forEach(function (item) {
-        var newStatus = item.status;
-        switch (item.status) {
-          case 'LISTED':
-            newStatus = 'VERIFIED';
-            break;
-          case 'PAID':
-            newStatus = 'READY_FOR_PICKUP';
-            break;
-          case 'READY_FOR_PICKUP':
-            newStatus = 'PICKED_UP';
-            break;}
-
-
-        var query;
-        if (newStatus === 'PAID') {
-          query = "UPDATE items SET status='".concat(newStatus, "', in_notification=1 WHERE item_id in (").concat(req.body.items.map(function (item) {return item.itemId;}).join(), ")");
-        } else {
-          query = "UPDATE items SET status='".concat(newStatus, "' WHERE item_id in (").concat(req.body.items.map(function (item) {return item.itemId;}).join(), ")");
-        }
-
-        conn.query(query, function (err, rows) {
-          if (err) {
-            console.log(err);
-            return res.status(400).send();
-          }
-        });
-
-        // Facebook messenger pickup notification
-        if (newStatus === 'READY_FOR_PICKUP') {
-          req.body.items.forEach(function (item) {
-            _refugee["default"].sendPickupNotification(item.itemId);
-          });
-        }
-
-        // Sendgrid notification
-        if (newStatus === 'READY_FOR_PICKUP' || newStatus === 'PICKED_UP') {
-          var emailTemplateId = newStatus === 'READY_FOR_PICKUP' ? 'd-15967181f418425fa3510cb674b7f580' : 'd-2e5e32e85d614b338e7e27d3eacccac3';
-
-          req.body.items.forEach(function (item) {
-            // send an email for each item
-            var itemQuery = "SELECT item_id, size, link, items.name, pickup_code, price_euros, store_id, beneficiary_id, stores.name as store_name, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last FROM items\n            INNER JOIN stores USING(store_id) INNER JOIN beneficiaries USING(beneficiary_id) WHERE item_id=".concat(
-
-            item.itemId);
-
-            conn.execute(itemQuery, function (err, rows) {
-              if (err) {
-                console.log(err);
-                return;
-              } else if (rows.length === 0) {
-                console.log('no items ready for pickup or picked-up');
-              } else {
-                // send email to Duet if item is ready to pick-up:
-                var msg = {
-                  to: "duet.giving@gmail.com",
-                  from: "duet.giving@gmail.com",
-                  templateId: emailTemplateId,
-                  dynamic_template_data: {
-                    itemName: rows[0].name,
-                    itemSize: rows[0].size,
-                    itemLink: rows[0].link,
-                    pickupCode: rows[0].pickup_code,
-                    refugeeName: "".concat(rows[0].beneficiary_first, " ").concat(rows[0].beneficiary_last),
-                    refugeeId: rows[0].beneficiary_id,
-                    storeName: rows[0].store_name } };
+getItems(_x, _x2) {return _getItems.apply(this, arguments);}function _getItems() {_getItems = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {var item, rows, needs, _rows, _needs;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.prev = 0;if (!
 
 
 
-                sgMail.
-                send(msg).
-                then(function () {
-                  console.log("Item pickup or ready to be picked up message delivered to Duet successfully.");
-                })["catch"](
-                function (error) {
-                  console.error("Error: " + error.toString());
-                  return;
-                });
-              }
+            req.query.item_id) {_context.next = 8;break;}_context.next = 4;return (
+              _sqlHelpers["default"].getItem(req.query.item_id));case 4:item = _context.sent;
+            res.json([item]);_context.next = 25;break;case 8:if (!
+
+
+            req.query.store_id) {_context.next = 18;break;}_context.next = 11;return (
+              _sqlHelpers["default"].getItemsForStore(req.query.store_id));case 11:rows = _context.sent;
+            if (rows.length === 0) {
+              res.send({ msg: "No Item Needs" });
+            }
+            needs = [];
+            rows.forEach(function (row) {
+              needs.push(_itemHelpers["default"].rowToItemObj(row));
             });
-          });
-        }
-      });
-      res.status(200).send();
-    }
-  } else {
-    res.status(400).json({
-      error: 'invalid request body' });
+            res.json(needs);_context.next = 25;break;case 18:_context.next = 20;return (
 
-  }
-}
 
-function verifyItems(req, res) {
-  if (req.body.itemIds.length > 0) {
-    var query = "UPDATE items SET status='VERIFIED' WHERE 1=1 AND (";
-    req.body.itemIds.forEach(function (id) {
-      query += "item_id=" + id + " OR ";
-    });
-    query += "1=0);";
-    conn.query(query, function (err, rows) {
-      if (err) {
-        console.log(err);
-        res.status(400).send();
-      } else {
-        res.status(200).json({
-          msg: "Item status updated to VERIFIED" });
 
-      }
-    });
-  }
-}
+              _sqlHelpers["default"].getAllItems());case 20:_rows = _context.sent;
+            if (_rows.length === 0) {
+              res.send({ msg: "No Item Needs" });
+            }
+            _needs = [];
+            _rows.forEach(function (row) {
+              _needs.push(_itemHelpers["default"].rowToItemObj(row));
+            });
+            res.json(_needs);case 25:_context.next = 31;break;case 27:_context.prev = 27;_context.t0 = _context["catch"](0);
 
-function readyForPickup(req, res) {
-  if (req.body.itemIds.length > 0) {
-    var query = "UPDATE items SET status='READY_FOR_PICKUP' WHERE 1=1 AND (";
-    req.body.itemIds.forEach(function (id) {
-      query += "item_id=" + id + " OR ";
-    });
-    query += "1=0);";
-    conn.query(query, function (err) {
-      if (err) {
-        console.log(err);
-        res.status(500).json({
-          err: err });
 
-      } else {
-        // req.body.itemIds.forEach(id => sendPickupNotification(id)); - TODO: enable this
-        res.status(200).json({
-          msg: "Item status updated to READY_FOR_PICKUP" });
 
-      }
-    });
-  }
-}
+            _errorHandler["default"].handleError(_context.t0, "items/getItems");
+            res.status(500).send();case 31:case "end":return _context.stop();}}}, _callee, null, [[0, 27]]);}));return _getItems.apply(this, arguments);}function
 
-function pickupConfirmation(req, res) {
-  if (req.body.itemIds.length > 0) {
-    var query = "UPDATE items SET status='PICKED_UP' WHERE 1=1 AND (";
-    req.body.itemIds.forEach(function (id) {
-      query += "item_id=" + id + " OR ";
-    });
-    query += "1=0);";
-    conn.query(query, function (err) {
-      if (err) {
-        console.log(err);
-        res.status(500).json({
-          err: err });
 
-      } else {
-        res.status(200).json({
-          msg: "Item status updated to PICKED_UP" });
 
-      }
-    });
-  }
-}var _default =
+updateItemStatus(_x3, _x4) {return _updateItemStatus.apply(this, arguments);}
 
-{ getItems: getItems, verifyItems: verifyItems, readyForPickup: readyForPickup, pickupConfirmation: pickupConfirmation, updateItemStatus: updateItemStatus };exports["default"] = _default;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// NOTE: DEPRECATED. Use updateItemStatus route
+// function verifyItems(req, res) {
+//   if (req.body.itemIds.length > 0) {
+//     let query = "UPDATE items SET status='VERIFIED' WHERE 1=1 AND (";
+//     req.body.itemIds.forEach(id => {
+//       query += "item_id=" + id + " OR ";
+//     });
+//     query += "1=0);";
+//     conn.query(query, (err, rows) => {
+//       if (err) {
+//         console.log(err);
+//         res.status(400).send();
+//       } else {
+//         res.status(200).json({
+//           msg: "Item status updated to VERIFIED"
+//         });
+//       }
+//     });
+//   }
+// }
+
+// NOTE: DEPRECATED. Use updateItemStatus route
+// function readyForPickup(req, res) {
+//   if (req.body.itemIds.length > 0) {
+//     let query = "UPDATE items SET status='READY_FOR_PICKUP' WHERE 1=1 AND (";
+//     req.body.itemIds.forEach(id => {
+//       query += "item_id=" + id + " OR ";
+//     });
+//     query += "1=0);";
+//     conn.query(query, err => {
+//       if (err) {
+//         console.log(err);
+//         res.status(500).json({
+//           err: err
+//         });
+//       } else {
+//         res.status(200).json({
+//           msg: "Item status updated to READY_FOR_PICKUP"
+//         });
+//       }
+//     });
+//   }
+// }
+
+// NOTE: DEPRECATED. Use updateItemStatus route
+// function pickupConfirmation(req, res) {
+//   if (req.body.itemIds.length > 0) {
+//     let query = "UPDATE items SET status='PICKED_UP' WHERE 1=1 AND (";
+//     req.body.itemIds.forEach(id => {
+//       query += "item_id=" + id + " OR ";
+//     });
+//     query += "1=0);";
+//     conn.query(query, err => {
+//       if (err) {
+//         console.log(err);
+//         res.status(500).json({
+//           err: err
+//         });
+//       } else {
+//         res.status(200).json({
+//           msg: "Item status updated to PICKED_UP"
+//         });
+//       }
+//     });
+//   }
+// }
+function _updateItemStatus() {_updateItemStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(req, res) {return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0: // Update status for list of items
+            // Important: make sure all items are being updated to the same status!
+            try {if (Array.isArray(req.body.items)) {if (req.body.items.length > 0) {req.body.items.forEach( /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(item) {var newStatus, itemResult;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0: // Update item status in DB
+                              newStatus = _itemHelpers["default"].getNextItemStatus(item.status);_context2.next = 3;return _sqlHelpers["default"].updateItemStatus(newStatus, item.itemId);case 3: // FB messenger pickup notification
+                              if (newStatus === 'READY_FOR_PICKUP') {_fbHelpers["default"].sendPickupNotification(item.itemId);} // Sendgrid pickup notification
+                              if (!(newStatus === 'READY_FOR_PICKUP' || newStatus === 'PICKED_UP')) {_context2.next = 9;break;}_context2.next = 7;return _sqlHelpers["default"].getItem(item.itemId);case 7:itemResult = _context2.sent;if (itemResult) {_sendgridHelpers["default"].sendPickupUpdateEmail(newStatus, itemResult);}case 9:case "end":return _context2.stop();}}}, _callee2);}));return function (_x5) {return _ref.apply(this, arguments);};}());}res.status(200).send();} else {res.status(400).json({ error: 'invalid request body' });}} catch (err) {_errorHandler["default"].handleError(err, "items/updateItemStatus");res.status(500).send();}case 1:case "end":return _context3.stop();}}}, _callee3);}));return _updateItemStatus.apply(this, arguments);}var _default = { getItems: getItems, updateItemStatus: updateItemStatus // verifyItems,
+  // readyForPickup,
+  // pickupConfirmation,
+};exports["default"] = _default;
