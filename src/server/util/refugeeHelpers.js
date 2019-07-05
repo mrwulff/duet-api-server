@@ -10,6 +10,7 @@ function rowToItemObj(row) {
         price: row.price_euros,
         storeId: row.store_id,
         storeName: row.store_name,
+        storeMapsLink: row.store_maps_link,
         icon: row.icon_url,
         status: row.status,
         pickupCode: row.pickup_code,
