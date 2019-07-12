@@ -33,10 +33,13 @@ async function getFBMessengerInfoFromItemId(itemId) {
       "SELECT " +
       "items.name AS item_name, items.pickup_code, " +
       "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " +
-      "stores.name AS store_name " +
+      "stores.name AS store_name, " +
+      "donations.donor_fname as donor_fname, donations.donor_lname as donor_lname, " +
+      "donations.donor_country as donor_country " +
       "FROM items " +
       "INNER JOIN beneficiaries ON items.beneficiary_id = beneficiaries.beneficiary_id " +
       "INNER JOIN stores ON items.store_id = stores.store_id " +
+      "LEFT JOIN donations ON items.donation_id = donations.donation_id " +
       "WHERE items.item_id=?",
       [itemId]
     );

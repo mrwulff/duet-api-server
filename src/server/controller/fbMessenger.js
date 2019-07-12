@@ -1,8 +1,8 @@
 // Imports
 require("dotenv").config();
 import sqlHelpers from '../util/sqlHelpers.js';
-import errorHandler from '../util/errorHandler.js'
-import fbHelpers from '../util/fbHelpers.js'
+import errorHandler from '../util/errorHandler.js';
+import fbHelpers from '../util/fbHelpers.js';
 
 function fbAuth(req, res) {
   // Adds support for GET requests to our webhook
