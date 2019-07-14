@@ -2,6 +2,7 @@ import sendgridHelpers from "./sendgridHelpers.js";
 
 // Standard error handler: console log, and send us an email
 function handleError(err, functionName = false) {
+  err = JSON.stringify(err);
   try {
     if (functionName) {
       console.log("Error in " + functionName + ": " + err);

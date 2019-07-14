@@ -2,6 +2,7 @@
 
 // Standard error handler: console log, and send us an email
 function handleError(err) {var functionName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  err = JSON.stringify(err);
   try {
     if (functionName) {
       console.log("Error in " + functionName + ": " + err);

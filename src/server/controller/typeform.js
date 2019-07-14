@@ -55,9 +55,11 @@ async function processTypeformV4(req, res) {
         store = answers[7].choice.label;
       }
       else {
-        res.status(400).json({
-          msg: ("Invalid number of answers :" + answers.length)
-        });
+        throw "Invalid number of answers: " + answers.length;
+      }
+
+      if (isNaN(price) || price <= 0) {
+        throw "Invalid price: " + answers[5].text;
       }
 
       // Translate itemName to English by matching itemName in item_types table
