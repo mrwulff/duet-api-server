@@ -72,7 +72,7 @@ function sendTypeformErrorEmail(typeformErrorInfo) {
 function sendStoreNotificationEmail(storeNotificationInfo) {
   // Send store notification email
   var subject;
-  if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'sandbox') {
+  if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'sandbox') {
     subject = "[SANDBOX] Duet: The following items need your attention!";
   } else {
     subject = "Duet: The following items need your attention!";
@@ -99,9 +99,9 @@ function sendStoreNotificationEmail(storeNotificationInfo) {
   });
 }
 
-function sendPickupUpdateEmail(newStatus, itemResult) {
-  // Send item status update email: either READY_FOR_PICKUP, or PICKED_UP
-  var emailTemplateId = newStatus === 'READY_FOR_PICKUP' ? 'd-15967181f418425fa3510cb674b7f580' : 'd-2e5e32e85d614b338e7e27d3eacccac3';
+function sendReadyForPickupEmail(itemResult) {
+  // Send item status update email: READY_FOR_PICKUP
+  var emailTemplateId = 'd-15967181f418425fa3510cb674b7f580';
   var msg = {
     to: "duet.giving@gmail.com",
     from: "duet.giving@gmail.com",
@@ -120,10 +120,47 @@ function sendPickupUpdateEmail(newStatus, itemResult) {
   sgMail.
   send(msg).
   then(function () {
-    console.log("Item pickup or ready to be picked up message delivered to Duet successfully.");
+    console.log("Item ready to be picked up message delivered to Duet successfully.");
   })["catch"](
   function (error) {
     _errorHandler["default"].handleError(error, "sendgridHelpers/sendPickupUpdateEmail");
+  });
+}
+
+function sendItemPickedUpEmail(itemResult) {
+  // Send item status update email: PICKED_UP
+  var emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3';
+  var recipientList;
+  var subject;
+  if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "sandbox") {
+    recipientList = ["duet.giving@gmail.com"];
+    subject = "[SANDBOX] You've made a difference";
+  } else if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" && itemResult.donor_email && itemResult.donor_first) {
+    recipientList = [itemResult.donor_email, "duet.giving@gmail.com"];
+    subject = "You've made a difference";
+  } else {
+    _errorHandler["default"].handleError("Unable to send itemPickedUpEmail! itemResult: " + JSON.stringify(itemResult), "sendgridHelpers/sendItemPickedUpEmail");
+  }
+  var msg = {
+    to: recipientList,
+    from: "duet@giveduet.org",
+    templateId: emailTemplateId,
+    dynamic_template_data: {
+      subject: subject,
+      item_name: itemResult.name,
+      item_link: itemResult.link,
+      donor_first: itemResult.donor_first,
+      beneficiary_last: itemResult.beneficiary_last } };
+
+
+
+  sgMail.
+  send(msg).
+  then(function () {
+    console.log("Item pickup message delivered successfully.");
+  })["catch"](
+  function (error) {
+    _errorHandler["default"].handleError(error, "sendgridHelpers/sendItemPickedUpEmail");
   });
 }var _default =
 
@@ -132,4 +169,5 @@ function sendPickupUpdateEmail(newStatus, itemResult) {
   sendTypeformErrorEmail: sendTypeformErrorEmail,
   sendDonorThankYouEmail: sendDonorThankYouEmail,
   sendStoreNotificationEmail: sendStoreNotificationEmail,
-  sendPickupUpdateEmail: sendPickupUpdateEmail };exports["default"] = _default;
+  sendReadyForPickupEmail: sendReadyForPickupEmail,
+  sendItemPickedUpEmail: sendItemPickedUpEmail };exports["default"] = _default;

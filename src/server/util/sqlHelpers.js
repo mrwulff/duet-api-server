@@ -416,7 +416,8 @@ let itemsQuery =
   "status, store_id, icon_url, " +
   "stores.name as store_name, stores.google_maps as store_maps_link, " +
   "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
-  "donations.timestamp as donation_timestamp " +
+  "donations.timestamp as donation_timestamp, donations.donor_email as donor_email, " +
+  "donations.donor_fname as donor_first, donations.donor_lname as donor_last " +
   "FROM items " +
   "INNER JOIN categories USING(category_id) " +
   "INNER JOIN stores USING(store_id) " +

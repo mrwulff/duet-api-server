@@ -100,9 +100,9 @@ async function sendStoreownerNotificationEmail(req, res) {
 
       // Get recipient list
       let recipientList = [];
-      if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'sandbox') {
+      if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'sandbox') {
         recipientList = ['duet.giving@gmail.com'];
-      } else if (process.env.STORE_NOTIFICATION_BEHAVIOR === 'live') {
+      } else if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'live') {
         recipientList = ['duet.giving@gmail.com', result.email];
       }
 

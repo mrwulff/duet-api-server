@@ -57,13 +57,17 @@ async function updateItemStatus(req, res) {
           // FB messenger pickup notification
           if (newStatus === 'READY_FOR_PICKUP') {
             fbHelpers.sendPickupNotification(item.itemId);
+            let itemResult = await sqlHelpers.getItem(item.itemId);
+            if (itemResult) {
+              sendgridHelpers.sendReadyForPickupEmail(itemResult);
+            }
           }
 
           // Sendgrid pickup notification
-          if (newStatus === 'READY_FOR_PICKUP' || newStatus === 'PICKED_UP') {
+          else if (newStatus === 'PICKED_UP') {
             let itemResult = await sqlHelpers.getItem(item.itemId);
             if (itemResult) {
-              sendgridHelpers.sendPickupUpdateEmail(newStatus, itemResult);
+              sendgridHelpers.sendItemPickedUpEmail(itemResult);
             }
           }
         });

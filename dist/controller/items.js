@@ -80,6 +80,10 @@ updateItemStatus(_x3, _x4) {return _updateItemStatus.apply(this, arguments);}
 
 
 
+
+
+
+
 // NOTE: DEPRECATED. Use updateItemStatus route
 // function verifyItems(req, res) {
 //   if (req.body.itemIds.length > 0) {
@@ -148,10 +152,9 @@ updateItemStatus(_x3, _x4) {return _updateItemStatus.apply(this, arguments);}
 // }
 function _updateItemStatus() {_updateItemStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(req, res) {return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0: // Update status for list of items
             // Important: make sure all items are being updated to the same status!
-            try {if (Array.isArray(req.body.items)) {if (req.body.items.length > 0) {req.body.items.forEach( /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(item) {var newStatus, itemResult;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0: // Update item status in DB
-                              newStatus = _itemHelpers["default"].getNextItemStatus(item.status);_context2.next = 3;return _sqlHelpers["default"].updateItemStatus(newStatus, item.itemId);case 3: // FB messenger pickup notification
-                              if (newStatus === 'READY_FOR_PICKUP') {_fbHelpers["default"].sendPickupNotification(item.itemId);} // Sendgrid pickup notification
-                              if (!(newStatus === 'READY_FOR_PICKUP' || newStatus === 'PICKED_UP')) {_context2.next = 9;break;}_context2.next = 7;return _sqlHelpers["default"].getItem(item.itemId);case 7:itemResult = _context2.sent;if (itemResult) {_sendgridHelpers["default"].sendPickupUpdateEmail(newStatus, itemResult);}case 9:case "end":return _context2.stop();}}}, _callee2);}));return function (_x5) {return _ref.apply(this, arguments);};}());}res.status(200).send();} else {res.status(400).json({ error: 'invalid request body' });}} catch (err) {_errorHandler["default"].handleError(err, "items/updateItemStatus");res.status(500).send();}case 1:case "end":return _context3.stop();}}}, _callee3);}));return _updateItemStatus.apply(this, arguments);}var _default = { getItems: getItems, updateItemStatus: updateItemStatus // verifyItems,
+            try {if (Array.isArray(req.body.items)) {if (req.body.items.length > 0) {req.body.items.forEach( /*#__PURE__*/function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(item) {var newStatus, itemResult, _itemResult;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0: // Update item status in DB
+                              newStatus = _itemHelpers["default"].getNextItemStatus(item.status);_context2.next = 3;return _sqlHelpers["default"].updateItemStatus(newStatus, item.itemId);case 3:if (!(newStatus === 'READY_FOR_PICKUP')) {_context2.next = 11;break;}_fbHelpers["default"].sendPickupNotification(item.itemId);_context2.next = 7;return _sqlHelpers["default"].getItem(item.itemId);case 7:itemResult = _context2.sent;if (itemResult) {_sendgridHelpers["default"].sendReadyForPickupEmail(itemResult);}_context2.next = 16;break;case 11:if (!(newStatus === 'PICKED_UP')) {_context2.next = 16;break;}_context2.next = 14;return _sqlHelpers["default"].getItem(item.itemId);case 14:_itemResult = _context2.sent;if (_itemResult) {_sendgridHelpers["default"].sendItemPickedUpEmail(_itemResult);}case 16:case "end":return _context2.stop();}}}, _callee2);}));return function (_x5) {return _ref.apply(this, arguments);};}());}res.status(200).send();} else {res.status(400).json({ error: 'invalid request body' });}} catch (err) {_errorHandler["default"].handleError(err, "items/updateItemStatus");res.status(500).send();}case 1:case "end":return _context3.stop();}}}, _callee3);}));return _updateItemStatus.apply(this, arguments);}var _default = { getItems: getItems, updateItemStatus: updateItemStatus
+  // verifyItems,
   // readyForPickup,
   // pickupConfirmation,
 };exports["default"] = _default;
