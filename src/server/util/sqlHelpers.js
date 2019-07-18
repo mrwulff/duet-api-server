@@ -354,7 +354,7 @@ async function getBeneficiaryInfo(beneficiaryId) {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
       "SELECT beneficiary_id, first_name, last_name, story, " +
-      "origin_city, origin_country, current_city, current_country, family_image_url " +
+      "origin_city, origin_country, current_city, current_country, family_image_url, visible " +
       "FROM beneficiaries WHERE beneficiary_id = ?",
       [beneficiaryId]
     );
@@ -397,7 +397,7 @@ async function getAllBeneficiaryInfoAndNeeds() {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
       "SELECT beneficiary_id, first_name, last_name, story, " +
-      "origin_city, origin_country, current_city, current_country, family_image_url, " +
+      "origin_city, origin_country, current_city, current_country, family_image_url, visible, " +
       "item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " +
       "stores.name AS store_name, donations.timestamp AS donation_timestamp " +
       "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +

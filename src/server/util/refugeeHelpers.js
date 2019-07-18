@@ -30,7 +30,8 @@ function rowToBeneficiaryObj(row) {
         originCountry: row.origin_country,
         currentCity: row.current_city,
         currentCountry: row.current_country,
-        familyImage: row.family_image_url
+        familyImage: row.family_image_url,
+        visible: row.visible
     };
     return beneficiaryObj;
 }
