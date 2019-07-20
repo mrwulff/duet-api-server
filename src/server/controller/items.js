@@ -54,13 +54,15 @@ async function updateItemStatus(req, res) {
           let newStatus = itemHelpers.getNextItemStatus(item.status);
           await sqlHelpers.updateItemStatus(newStatus, item.itemId);
 
+          // Send generic item status updated email
+          let itemResult = await sqlHelpers.getItem(item.itemId);
+          if (itemResult) {
+            sendgridHelpers.sendItemStatusUpdateEmail(itemResult);
+          }
+
           // FB messenger pickup notification
           if (newStatus === 'READY_FOR_PICKUP') {
             fbHelpers.sendPickupNotification(item.itemId);
-            let itemResult = await sqlHelpers.getItem(item.itemId);
-            if (itemResult) {
-              sendgridHelpers.sendReadyForPickupEmail(itemResult);
-            }
           }
 
           // Sendgrid pickup notification

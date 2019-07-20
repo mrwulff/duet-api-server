@@ -7,10 +7,8 @@ import errorHandler from "../util/errorHandler.js";
 var CronJob = require('cron').CronJob;
 
 async function itemPaid(req, res) {
-  console.log('in item paid route');
-  let store_ids = [];
   let donationInfo = req.body;
-  console.log(`Donation info: ${JSON.stringify(donationInfo)}`);
+  console.log(`itemPaid donation info: ${JSON.stringify(donationInfo)}`);
   if (donationInfo.itemIds) {
     try {
       // Create Donation entry
@@ -25,9 +23,16 @@ async function itemPaid(req, res) {
         donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
       }
 
-      // Mark items as donated
+      
       donationInfo.itemIds.forEach(async function (itemId) {
+        // Mark items as donated
         await sqlHelpers.markItemAsDonated(itemId, donationId);
+
+        // Send generic item status updated email
+        let itemResult = await sqlHelpers.getItem(itemId);
+        if (itemResult) {
+          sendgridHelpers.sendItemStatusUpdateEmail(itemResult);
+        }
       });
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
