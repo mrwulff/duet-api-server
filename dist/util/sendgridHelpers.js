@@ -33,7 +33,7 @@ sendDonorThankYouEmail(_x3) {return _sendDonorThankYouEmail.apply(this, argument
               templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
               dynamic_template_data: {
                 name: donorInfo.firstName,
-                subject: process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" ? "Duet Donation Confirmation" : "[SANDBOX] Duet Donation Confirmation" } };_context2.next = 4;return (
+                subject: process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" ? "Thank you from Duet" : "[SANDBOX] Thank you from Duet" } };_context2.next = 4;return (
 
 
 
