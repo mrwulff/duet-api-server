@@ -9,8 +9,8 @@ async function getNeeds(req, res) {
   if (req.query.beneficiary_id) {
     let beneficiaryObj = await refugeeHelpers.getSingleBeneficiaryInfoAndNeeds(req.query.beneficiary_id);
     if (!beneficiaryObj) {
-      res.json({
-        msg: "Beneficiary Has No Item Needs"
+      return res.json({
+        msg: "Beneficiary does not exist"
       });
     }
     res.json(beneficiaryObj);
@@ -19,8 +19,8 @@ async function getNeeds(req, res) {
   else {
     let allBeneficiaryObjs = await refugeeHelpers.getAllBeneficiariesInfoAndNeeds();
     if (!allBeneficiaryObjs) {
-      res.json({
-        msg: "No Item Needs"
+      return res.json({
+        msg: "No beneficiaries exist"
       });
     }
     res.json(allBeneficiaryObjs);

@@ -40,15 +40,14 @@ async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
     // Get beneficiary info
     let row = await sqlHelpers.getBeneficiaryInfo(beneficiaryId);
     if (!row) {
-        return null;
+      return null;
     }
     // Convert beneficiary object fields
     let beneficiaryObj = rowToBeneficiaryObj(row);
     // Get beneficiary needs in SQL format
     let beneficiaryNeeds = await sqlHelpers.getBeneficiaryNeeds(beneficiaryId);
     if (beneficiaryNeeds.length === 0) {
-        console.log("Beneficiary has no item needs!");
-        return null;
+      console.log("Beneficiary has no item needs!");
     }
     let needs = [];
     // Convert to format that the front-end code expects
@@ -93,7 +92,6 @@ async function getAllBeneficiariesInfoAndNeeds() {
     });
     // Push last beneficiaryObj
     allBeneficiaryObjs.push(beneficiaryObj);
-    // Return result
     return allBeneficiaryObjs;
 }
 

@@ -6,24 +6,24 @@ var _cluster = require("cluster");function _interopRequireDefault(obj) {return o
 // Get needs for either 1 or all beneficiaries
 function getNeeds(_x, _x2) {return _getNeeds.apply(this, arguments);}function _getNeeds() {_getNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {var beneficiaryObj, allBeneficiaryObjs;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:if (!
 
-            req.query.beneficiary_id) {_context.next = 8;break;}_context.next = 3;return (
-              _refugeeHelpers["default"].getSingleBeneficiaryInfoAndNeeds(req.query.beneficiary_id));case 3:beneficiaryObj = _context.sent;
-            if (!beneficiaryObj) {
-              res.json({
-                msg: "Beneficiary Has No Item Needs" });
-
-            }
-            res.json(beneficiaryObj);_context.next = 13;break;case 8:_context.next = 10;return (
+            req.query.beneficiary_id) {_context.next = 9;break;}_context.next = 3;return (
+              _refugeeHelpers["default"].getSingleBeneficiaryInfoAndNeeds(req.query.beneficiary_id));case 3:beneficiaryObj = _context.sent;if (
+            beneficiaryObj) {_context.next = 6;break;}return _context.abrupt("return",
+            res.json({
+              msg: "Beneficiary does not exist" }));case 6:
 
 
+            res.json(beneficiaryObj);_context.next = 15;break;case 9:_context.next = 11;return (
 
-              _refugeeHelpers["default"].getAllBeneficiariesInfoAndNeeds());case 10:allBeneficiaryObjs = _context.sent;
-            if (!allBeneficiaryObjs) {
-              res.json({
-                msg: "No Item Needs" });
 
-            }
-            res.json(allBeneficiaryObjs);case 13:case "end":return _context.stop();}}}, _callee);}));return _getNeeds.apply(this, arguments);}var _default =
+
+              _refugeeHelpers["default"].getAllBeneficiariesInfoAndNeeds());case 11:allBeneficiaryObjs = _context.sent;if (
+            allBeneficiaryObjs) {_context.next = 14;break;}return _context.abrupt("return",
+            res.json({
+              msg: "No beneficiaries exist" }));case 14:
+
+
+            res.json(allBeneficiaryObjs);case 15:case "end":return _context.stop();}}}, _callee);}));return _getNeeds.apply(this, arguments);}var _default =
 
 
 

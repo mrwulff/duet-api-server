@@ -45,18 +45,18 @@ getSingleBeneficiaryInfoAndNeeds(_x) {return _getSingleBeneficiaryInfoAndNeeds.a
             // Convert beneficiary object fields
             beneficiaryObj = rowToBeneficiaryObj(row);
             // Get beneficiary needs in SQL format
-            _context.next = 8;return _sqlHelpers["default"].getBeneficiaryNeeds(beneficiaryId);case 8:beneficiaryNeeds = _context.sent;if (!(
-            beneficiaryNeeds.length === 0)) {_context.next = 12;break;}
-            console.log("Beneficiary has no item needs!");return _context.abrupt("return",
-            null);case 12:
-
+            _context.next = 8;return _sqlHelpers["default"].getBeneficiaryNeeds(beneficiaryId);case 8:beneficiaryNeeds = _context.sent;
+            // if (beneficiaryNeeds.length === 0) {
+            //   console.log("Beneficiary has no item needs!");
+            //   // return null;
+            // }
             needs = [];
             // Convert to format that the front-end code expects
             beneficiaryNeeds.forEach(function (row) {
               needs.push(rowToItemObj(row));
             });
             beneficiaryObj["needs"] = needs;return _context.abrupt("return",
-            beneficiaryObj);case 16:case "end":return _context.stop();}}}, _callee);}));return _getSingleBeneficiaryInfoAndNeeds.apply(this, arguments);}function
+            beneficiaryObj);case 13:case "end":return _context.stop();}}}, _callee);}));return _getSingleBeneficiaryInfoAndNeeds.apply(this, arguments);}function
 
 
 
@@ -92,9 +92,8 @@ getAllBeneficiariesInfoAndNeeds() {return _getAllBeneficiariesInfoAndNeeds.apply
               currentBeneficiaryId = row.beneficiary_id;
             });
             // Push last beneficiaryObj
-            allBeneficiaryObjs.push(beneficiaryObj);
-            // Return result
-            return _context2.abrupt("return", allBeneficiaryObjs);case 11:case "end":return _context2.stop();}}}, _callee2);}));return _getAllBeneficiariesInfoAndNeeds.apply(this, arguments);}var _default =
+            allBeneficiaryObjs.push(beneficiaryObj);return _context2.abrupt("return",
+            allBeneficiaryObjs);case 11:case "end":return _context2.stop();}}}, _callee2);}));return _getAllBeneficiariesInfoAndNeeds.apply(this, arguments);}var _default =
 
 
 {
