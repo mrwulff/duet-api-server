@@ -122,13 +122,14 @@ insertItemFromTypeform(_x6) {return _insertItemFromTypeform.apply(this, argument
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context5.sent;_context5.next = 6;return (
               conn.query(
-              "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link,in_notification) " +
-              "VALUES (?,?,?,?,?,?,?,?)",
+              "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,store_id,link,in_notification) " +
+              "VALUES (?,?,?,?,?,?,?,?,?)",
               [itemInfo.itemNameEnglish,
               itemInfo.size,
               itemInfo.price,
               itemInfo.beneficiaryId,
               itemInfo.categoryId,
+              itemInfo.comment,
               itemInfo.storeId,
               itemInfo.photoUrl,
               itemInfo.in_notification]));case 6:_ref5 = _context5.sent;_ref6 = _slicedToArray(_ref5, 2);results = _ref6[0];fields = _ref6[1];return _context5.abrupt("return",

@@ -122,13 +122,14 @@ async function insertItemFromTypeform(itemInfo) {
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
-      "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,store_id,link,in_notification) " +
-      "VALUES (?,?,?,?,?,?,?,?)",
+      "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,store_id,link,in_notification) " +
+      "VALUES (?,?,?,?,?,?,?,?,?)",
       [itemInfo.itemNameEnglish,
       itemInfo.size,
       itemInfo.price,
       itemInfo.beneficiaryId,
       itemInfo.categoryId,
+      itemInfo.comment,
       itemInfo.storeId,
       itemInfo.photoUrl,
       itemInfo.in_notification]

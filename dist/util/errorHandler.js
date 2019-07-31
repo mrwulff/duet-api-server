@@ -3,8 +3,12 @@ require("dotenv").config();
 
 // Standard error handler: console log, and send us an email
 function handleError(err) {var functionName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  err = _typeof(err) === 'object' ? JSON.stringify(err) : err.toString();
   try {
+    if (typeof err === 'string') {
+      err = err;
+    } else if (_typeof(err) === 'object') {
+      err = JSON.stringify(err);
+    }
     if (functionName) {
       console.log("Error in " + functionName + ": " + err);
       if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
@@ -12,7 +16,7 @@ function handleError(err) {var functionName = arguments.length > 1 && arguments[
       }
     } else
     {
-      console.log(err);
+      console.log("Error in unknown function: " + err);
       if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
         _sendgridHelpers["default"].sendErrorEmail(err, "unknownFunction");
       }
