@@ -76,7 +76,7 @@ async function itemPaid(req, res) {
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
-new CronJob(process.env.CRON_INTERVAL, function() {
+new CronJob(process.env.CRON_INTERVAL_STORE_NOTIFICATIONS, function() {
   console.log('running cron job checking if stores need to be notified...');
   sendStoreownerNotificationEmail();
 }, null, true, 'America/Los_Angeles');

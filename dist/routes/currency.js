@@ -5,6 +5,10 @@ var router = _express["default"].Router();
 
 router.get("/update", function (req, res) {
   _currency["default"].updateCurrencyRates(req, res);
+});
+
+router.get("/", function (req, res) {
+  _currency["default"].getCurrencyRates(req, res);
 });var _default =
 
 router;exports["default"] = _default;

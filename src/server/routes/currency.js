@@ -7,4 +7,8 @@ router.get("/update", (req, res) => {
   controller.updateCurrencyRates(req, res);
 });
 
+router.get("/", (req, res) => {
+  controller.getCurrencyRates(req, res);
+});
+
 export default router;

@@ -12,7 +12,6 @@ import currencyRoutes from "./routes/currency";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import bodyParser from "body-parser";
-import currency from "./controller/currency";
 
 require('dotenv').config()
 
@@ -33,7 +32,7 @@ app.use("/api/stores", storeRoutes);
 app.use("/api/refugee", refugeeProtectedRoutes);
 app.use("/api/donate", donateRoutes);
 app.use("/api/items", itemsRoutes);
-app.use("/api/currency/update", currencyRoutes);
+app.use("/api/currency", currencyRoutes);
 app.listen(PORT, () => {
   console.log(`Please navigate to port ${PORT}`);
 });

@@ -11,8 +11,7 @@ var _stores = _interopRequireDefault(require("./routes/stores"));
 var _currency = _interopRequireDefault(require("./routes/currency"));
 var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
 var _cors = _interopRequireDefault(require("cors"));
-var _bodyParser = _interopRequireDefault(require("body-parser"));
-var _currency2 = _interopRequireDefault(require("./controller/currency"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}global._babelPolyfill = false;require("babel-polyfill");
+var _bodyParser = _interopRequireDefault(require("body-parser"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}global._babelPolyfill = false;require("babel-polyfill");
 
 require('dotenv').config();
 
@@ -33,7 +32,7 @@ app.use("/api/stores", _stores["default"]);
 app.use("/api/refugee", _refugeeProtected["default"]);
 app.use("/api/donate", _donate["default"]);
 app.use("/api/items", _items["default"]);
-app.use("/api/currency/update", _currency["default"]);
+app.use("/api/currency", _currency["default"]);
 app.listen(PORT, function () {
   console.log("Please navigate to port ".concat(PORT));
 });

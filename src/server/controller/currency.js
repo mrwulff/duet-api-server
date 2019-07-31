@@ -1,23 +1,37 @@
-import config from "./../util/config.js";
-import request from "request";
+import currencyHelpers from "../util/currencyHelpers.js";
+import errorHandler from "../util/errorHandler.js";
+var CronJob = require('cron').CronJob;
+require('dotenv').config();
 
-function updateCurrencyRates(req, res) {
-  request(
-    "https://openexchangerates.org/api/latest.json?app_id=7f0785f2b1bc4741b374c04b20d229a6",
-    (error, response, body) => {
-      if (error) {
-        console.log(error);
-        res.status(500).send();
-      } else {
-        let rates = JSON.parse(response.body).rates;
-        for (let code in rates) {
-          if (rates.hasOwnProperty(code)) {
-            console.log(code + " -> " + rates[code]);
-          }
-        }
-      }
-    }
-  );
+// Update currency rates
+async function updateCurrencyRates(req, res) {
+  try {
+    await currencyHelpers.updateCurrencyRates();
+    return res.status(200).send();
+  } catch (err) {
+    errorHandler.handleError(err, "currency/updateCurrencyRates");
+    return res.status(500).send();
+  }
 }
 
-export default { updateCurrencyRates };
+// CRON job to supdate currency rates
+new CronJob(process.env.CRON_INTERVAL_CURRENCY, function () {
+  console.log('running cron job to update currency rates...');
+  currencyHelpers.updateCurrencyRates();
+}, null, true, 'America/Los_Angeles');
+
+// Get currency rates in openexchangerates format
+async function getCurrencyRates(req, res) {
+  try {
+    let currencyRates = await currencyHelpers.getCurrencyRates();
+    return res.json(currencyRates);
+  } catch (err) {
+    errorHandler.handleError(err, "currency/getCurrencyRates");
+    return res.status(500).send();
+  }
+}
+
+export default {
+  updateCurrencyRates,
+  getCurrencyRates
+}
