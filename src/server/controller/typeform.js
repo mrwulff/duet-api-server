@@ -35,29 +35,33 @@ async function processTypeformV4(req, res) {
     } else if (formTitle.includes("Farsi")) {
       language = "farsi";
     } else {
-      throw Error("Unknown Typeform language");
+      console.log("Invalid language");
+      throw new Error("Unknown Typeform language");
     }
 
     // Get responses
     let beneficiaryId = typeformHelpers.getAnswerFromQuestionReference("beneficiary-code", answers, 'text');
     let phoneNum = typeformHelpers.getAnswerFromQuestionReference("phone-num", answers, 'phone_number');
-    let photoUrl = encodeURI(typeformHelpers.getAnswerFromQuestionReference("item-photo", answers, 'file'));
+    let origPhotoUrl = typeformHelpers.getAnswerFromQuestionReference("item-photo", answers, 'file');
+    let photoUrl = encodeURI(origPhotoUrl);
     let itemName = typeformHelpers.getAnswerFromQuestionReference("item-name", answers, 'choice');
-    // replace "," with "."; remove non-numeric characters
-    let price = typeformHelpers.getAnswerFromQuestionReference("item-price", answers, 'text').replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, '');
+    let origPrice = typeformHelpers.getAnswerFromQuestionReference("item-price", answers, 'text');
+    let price = origPrice.replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, ''); // replace "," with "."; remove non-numeric characters
     let size = typeformHelpers.getAnswerFromQuestionReference("item-size", answers, 'text'); // might be null
     let comment = typeformHelpers.getAnswerFromQuestionReference("comment", answers, 'text'); // might be null
     let store = typeformHelpers.getAnswerFromQuestionReference("store-name", answers, 'choice');
 
     if (isNaN(price) || price <= 0) {
-      throw Error("Invalid price: " + typeformHelpers.getAnswerFromQuestionReference("item-price", answers, 'text'));
+      console.log("Invalid price: " + origPrice);
+      throw new Error("Invalid price: " + origPrice);
     }
 
     // Translate itemName to English by matching itemName in item_types table
     // And get categoryId while we're at it
     let itemTranslationResult = await sqlHelpers.getItemNameTranslation(language, itemName);
     if (!itemTranslationResult) {
-      throw Error("Invalid item name! Table: name_" + language + "; itemName: " + itemName);
+      console.log("Invalid item name");
+      throw new Error("Invalid item name! Table: name_" + language + "; itemName: " + itemName);
     }
     let itemNameEnglish = itemTranslationResult.name_english;
     let categoryId = itemTranslationResult.category_id;

@@ -7,6 +7,7 @@ function getAnswerFromQuestionReference(questionReference, answers, type) {
     let answer = answers.find(answer => answer.field.ref.startsWith(questionReference));
     if (!answer) {
       // not found
+      console.log("questionReference not found: " + questionReference);
       return null;
     }
     if (type === 'choice') {
@@ -20,6 +21,7 @@ function getAnswerFromQuestionReference(questionReference, answers, type) {
     }
   } catch (err) {
     errorHandler.handleError(err, "typeformHelpers/getAnswerFromQuestionReference");
+    throw err;
   }
 }
 
