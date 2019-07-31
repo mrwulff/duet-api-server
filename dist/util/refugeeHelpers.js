@@ -46,17 +46,16 @@ getSingleBeneficiaryInfoAndNeeds(_x) {return _getSingleBeneficiaryInfoAndNeeds.a
             beneficiaryObj = rowToBeneficiaryObj(row);
             // Get beneficiary needs in SQL format
             _context.next = 8;return _sqlHelpers["default"].getBeneficiaryNeeds(beneficiaryId);case 8:beneficiaryNeeds = _context.sent;
-            // if (beneficiaryNeeds.length === 0) {
-            //   console.log("Beneficiary has no item needs!");
-            //   // return null;
-            // }
+            if (beneficiaryNeeds.length === 0) {
+              console.log("Beneficiary has no item needs!");
+            }
             needs = [];
             // Convert to format that the front-end code expects
             beneficiaryNeeds.forEach(function (row) {
               needs.push(rowToItemObj(row));
             });
             beneficiaryObj["needs"] = needs;return _context.abrupt("return",
-            beneficiaryObj);case 13:case "end":return _context.stop();}}}, _callee);}));return _getSingleBeneficiaryInfoAndNeeds.apply(this, arguments);}function
+            beneficiaryObj);case 14:case "end":return _context.stop();}}}, _callee);}));return _getSingleBeneficiaryInfoAndNeeds.apply(this, arguments);}function
 
 
 

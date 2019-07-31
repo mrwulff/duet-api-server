@@ -1,4 +1,5 @@
 import sendgridHelpers from "./sendgridHelpers.js";
+require("dotenv").config();
 
 // Standard error handler: console log, and send us an email
 function handleError(err, functionName = false) {
@@ -6,11 +7,15 @@ function handleError(err, functionName = false) {
   try {
     if (functionName) {
       console.log("Error in " + functionName + ": " + err);
-      sendgridHelpers.sendErrorEmail(err, functionName);
+      if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
+        sendgridHelpers.sendErrorEmail(err, functionName);
+      }
     }
     else {
       console.log(err);
-      sendgridHelpers.sendErrorEmail(err, "unknownFunction");
+      if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
+        sendgridHelpers.sendErrorEmail(err, "unknownFunction");
+      }
     }
   } catch (err) {
     console.log("Error in errorHandler/handleError (lol): " + err);

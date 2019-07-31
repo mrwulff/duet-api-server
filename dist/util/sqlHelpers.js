@@ -356,15 +356,14 @@ function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGe
               "SELECT beneficiary_id, first_name, last_name, story, " +
               "origin_city, origin_country, current_city, current_country, family_image_url, visible " +
               "FROM beneficiaries WHERE beneficiary_id = ?",
-              [beneficiaryId]));case 6:_ref21 = _context18.sent;_ref22 = _slicedToArray(_ref21, 2);results = _ref22[0];fields = _ref22[1];
+              [beneficiaryId]));case 6:_ref21 = _context18.sent;_ref22 = _slicedToArray(_ref21, 2);results = _ref22[0];fields = _ref22[1];if (!(
 
-            console.log(results);if (!(
-            results.length === 0)) {_context18.next = 13;break;}return _context18.abrupt("return",
-            null);case 13:return _context18.abrupt("return",
+            results.length === 0)) {_context18.next = 12;break;}return _context18.abrupt("return",
+            null);case 12:return _context18.abrupt("return",
 
-            results[0]);case 16:_context18.prev = 16;_context18.t0 = _context18["catch"](0);
+            results[0]);case 15:_context18.prev = 15;_context18.t0 = _context18["catch"](0);
 
-            _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getBeneficiaryInfo");throw _context18.t0;case 20:case "end":return _context18.stop();}}}, _callee18, null, [[0, 16]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function
+            _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getBeneficiaryInfo");throw _context18.t0;case 19:case "end":return _context18.stop();}}}, _callee18, null, [[0, 15]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function
 
 
 
