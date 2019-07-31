@@ -1,4 +1,5 @@
 // Imports
+require("dotenv").config();
 import config from './config.js';
 const s3 = config.s3Init();
 import errorHandler from './errorHandler.js';
@@ -18,7 +19,7 @@ async function uploadItemImageToS3(itemId, imageUrl) {
         let body = await rp(options);
         let data = await s3.upload({
             Body: body,
-            Key: 'item-photos/item-' + itemId + extension,
+            Key: process.env.AWS_S3_IMAGE_FOLDER + '/item-' + itemId + extension,
             Bucket: process.env.AWS_S3_BUCKET_NAME,
             ACL: "public-read",
             ContentType: contentType
