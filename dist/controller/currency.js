@@ -14,7 +14,7 @@ function updateCurrencyRates(_x, _x2) {return _updateCurrencyRates.apply(this, a
 
 
 
-// CRON job to supdate currency rates
+// CRON job to update currency rates
 function _updateCurrencyRates() {_updateCurrencyRates = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.prev = 0;_context.next = 3;return _currencyHelpers["default"].updateCurrencyRates();case 3:return _context.abrupt("return", res.status(200).send());case 6:_context.prev = 6;_context.t0 = _context["catch"](0);_errorHandler["default"].handleError(_context.t0, "currency/updateCurrencyRates");return _context.abrupt("return", res.status(500).send());case 10:case "end":return _context.stop();}}}, _callee, null, [[0, 6]]);}));return _updateCurrencyRates.apply(this, arguments);}new CronJob(process.env.CRON_INTERVAL_CURRENCY, function () {
   console.log('running cron job to update currency rates...');
   _currencyHelpers["default"].updateCurrencyRates();

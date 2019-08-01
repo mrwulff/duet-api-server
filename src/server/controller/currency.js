@@ -14,7 +14,7 @@ async function updateCurrencyRates(req, res) {
   }
 }
 
-// CRON job to supdate currency rates
+// CRON job to update currency rates
 new CronJob(process.env.CRON_INTERVAL_CURRENCY, function () {
   console.log('running cron job to update currency rates...');
   currencyHelpers.updateCurrencyRates();

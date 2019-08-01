@@ -122,14 +122,15 @@ async function insertItemFromTypeform(itemInfo) {
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
-      "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,store_id,link,in_notification) " +
-      "VALUES (?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,status,store_id,link,in_notification) " +
+      "VALUES (?,?,?,?,?,?,?,?,?,?)",
       [itemInfo.itemNameEnglish,
       itemInfo.size,
       itemInfo.price,
       itemInfo.beneficiaryId,
       itemInfo.categoryId,
       itemInfo.comment,
+      itemInfo.status,
       itemInfo.storeId,
       itemInfo.photoUrl,
       itemInfo.in_notification]
@@ -283,22 +284,36 @@ async function setStoreNotificationFlags(itemIds) {
 async function setSingleStoreNotificationFlag(storeId) {
   try {
     let conn = await config.dbInitConnectPromise();
-    await conn.query("UPDATE stores SET needs_notification=true where store_id=?",
+    await conn.query("UPDATE stores SET needs_notification=1 where store_id=?",
       [storeId]
     );
+    console.log("Set store notification flag for store " + storeId);
   } catch (err) {
-    errorHandler.handleError(err);
+    errorHandler.handleError(err, "sqlHelpers/setSingleStoreNotificationFlag");
     throw err;
   }
 }
 
-async function resetStoreNotificationFlags() {
+async function unsetSingleStoreNotificationFlag(storeId) {
+  try {
+    let conn = await config.dbInitConnectPromise();
+    await conn.query("UPDATE stores SET needs_notification=0 where store_id=?",
+      [storeId]
+    );
+    console.log("Unset store notification flag for store " + storeId);
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/unsetSingleStoreNotificationFlag");
+    throw err;
+  }
+}
+
+async function resetAllStoreNotificationFlags() {
   // Reset all stores' notification flags
   try {
     let conn = await config.dbInitConnectPromise();
     await conn.query("UPDATE stores SET needs_notification=0");
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/resetStoreNotificationFlags");
+    errorHandler.handleError(err, "sqlHelpers/resetAllStoreNotificationFlags");
     throw err;
   }
 }
@@ -330,20 +345,6 @@ async function getItemsForNotificationEmail(store_id) {
     return updatedItems;
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getItemsForNotificationEmail");
-    throw err;
-  }
-}
-
-async function unsetItemsNotificationFlag(item_ids) {
-  // Mark all items in item_ids as no longer needing notification
-  try {
-    let conn = await config.dbInitConnectPromise();
-    await conn.query(
-      `UPDATE items SET in_notification=0 where item_id IN (?)`,
-      [item_ids]
-    );
-  } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/unsetItemsNotificationFlag");
     throw err;
   }
 }
@@ -479,6 +480,26 @@ async function getAllItems() {
   }
 }
 
+async function getItemsWithStatus(status) {
+  // Get all items associated with this store
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [results, fields] = await conn.query(
+      itemsQuery + " WHERE status=?",
+      [status]
+    );
+    if (results.length === 0) {
+      return [];
+    }
+    else {
+      return results;
+    }
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getItemsWithStatus");
+    throw err;
+  }
+}
+
 async function updateItemStatus(newStatus, itemId) {
   try {
     let conn = await config.dbInitConnectPromise();
@@ -499,6 +520,37 @@ async function updateItemStatus(newStatus, itemId) {
     throw err;
   }
 }
+
+
+async function setItemNotificationFlag(item_id) {
+  // Mark single item as needing a notification
+  try {
+    let conn = await config.dbInitConnectPromise();
+    await conn.query(
+      `UPDATE items SET in_notification=1 where item_id = ?`,
+      [item_id]
+    );
+    console.log("Set notification flag for item " + item_id);
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/setItemNotificationFlag");
+    throw err;
+  }
+}
+
+async function unsetItemsNotificationFlag(item_ids) {
+  // Mark all items in item_ids as no longer needing notification (after sending batch email)
+  try {
+    let conn = await config.dbInitConnectPromise();
+    await conn.query(
+      `UPDATE items SET in_notification=0 where item_id IN (?)`,
+      [item_ids]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/unsetItemsNotificationFlag");
+    throw err;
+  }
+}
+
 
 export default {
   // FACEBOOK MESSENGER
@@ -524,7 +576,8 @@ export default {
   getStoresThatNeedNotification,
   setStoreNotificationFlags,
   setSingleStoreNotificationFlag,
-  resetStoreNotificationFlags,
+  unsetSingleStoreNotificationFlag,
+  resetAllStoreNotificationFlags,
   getItemsForNotificationEmail,
   unsetItemsNotificationFlag,
 
@@ -537,5 +590,8 @@ export default {
   getItem,
   getItemsForStore,
   getAllItems,
-  updateItemStatus
+  getItemsWithStatus,
+  updateItemStatus,
+  setItemNotificationFlag,
+  unsetItemsNotificationFlag
 }

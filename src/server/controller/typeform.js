@@ -1,6 +1,5 @@
 // Imports
 require("dotenv").config();
-import config from '../util/config.js';
 import itemHelpers from '../util/itemHelpers.js';
 import s3Helpers from '../util/s3Helpers.js';
 import sqlHelpers from '../util/sqlHelpers.js';
@@ -53,7 +52,8 @@ async function processTypeformV4(req, res) {
 
     if (isNaN(price) || price <= 0) {
       console.log("Invalid price: " + origPrice);
-      throw new Error("Invalid price: " + origPrice);
+      console.log("Setting price to 0...");
+      price = 0;
     }
 
     // Translate itemName to English by matching itemName in item_types table
@@ -77,9 +77,10 @@ async function processTypeformV4(req, res) {
         beneficiaryId, beneficiaryId,
         categoryId: categoryId,
         comment: comment,
+        status: 'REQUESTED',
         storeId: storeId,
         photoUrl: photoUrl,
-        in_notification: 1
+        in_notification: 0
       });
     } catch (err) {
       // Sendgrid Error message (email)
@@ -87,7 +88,7 @@ async function processTypeformV4(req, res) {
       sendgridHelpers.sendTypeformErrorEmail({
         formTitle: formTitle,
         eventId: eventId,
-        err: err
+        err: err.toString()
       });
       return res.status(500).send();
     }
@@ -99,9 +100,6 @@ async function processTypeformV4(req, res) {
     // Rehost image in S3
     let s3PhotoUrl = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
     await sqlHelpers.updateItemPhotoLink(itemId, s3PhotoUrl);
-
-    // set notification status for store_id to be true...
-    await sqlHelpers.setSingleStoreNotificationFlag(storeId);
 
     console.log("Successfully processed Typeform response");
     return res.status(200).send();

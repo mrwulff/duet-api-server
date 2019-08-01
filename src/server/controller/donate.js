@@ -4,7 +4,6 @@ import sqlHelpers from "../util/sqlHelpers.js";
 import paypalHelpers from "../util/paypalHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
-var CronJob = require('cron').CronJob;
 
 async function itemPaid(req, res) {
   let donationInfo = req.body;
@@ -74,64 +73,6 @@ async function itemPaid(req, res) {
   }
 }
 
-// CRON job to send notification email to storeowner every day at 8:00 AM if there are
-// novel items to that (1) need price approval or (2) need to be picked up.
-new CronJob(process.env.CRON_INTERVAL_STORE_NOTIFICATIONS, function() {
-  console.log('running cron job checking if stores need to be notified...');
-  sendStoreownerNotificationEmail();
-}, null, true, 'America/Los_Angeles');
-
-
-
-async function sendStoreownerNotificationEmail(req, res) {
-  try {
-    // Get stores that need notifying
-    let results = await sqlHelpers.getStoresThatNeedNotification();
-
-    if (results.length < 1) {
-      // no stores need notification
-      console.log('No stores need notification currently');
-      return;
-    }
-
-    // Loop through each of the stores that require a notification
-    results.forEach(async function (result) {
-      // Get items for store
-      const updatedItems = await sqlHelpers.getItemsForNotificationEmail(result.store_id);
-      if (updatedItems.length === 0) {
-        console.log('No new updates to items');
-        return;
-      }
-
-      // Get recipient list
-      let recipientList = [];
-      if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'sandbox') {
-        recipientList = ['duet.giving@gmail.com'];
-      } else if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'live') {
-        recipientList = ['duet.giving@gmail.com', result.email];
-      }
-
-      // Send email
-      sendgridHelpers.sendStoreNotificationEmail({
-        recipientList: recipientList,
-        name: result.name,
-        email: result.email,
-        updatedItems: updatedItems
-      });
-
-      // Reset items' notification flags
-      sqlHelpers.unsetItemsNotificationFlag(updatedItems.map(item => item.itemId));
-    });
-
-    // set needs_notification to false for everyone...
-    sqlHelpers.resetStoreNotificationFlags();
-  } catch (err) {
-    errorHandler.handleError(err, "donate/sendStoreownerNotificationEmail");
-    res.status(500).send();
-  }
-}
-
 export default {
-  itemPaid,
-  sendStoreownerNotificationEmail
+  itemPaid
 };

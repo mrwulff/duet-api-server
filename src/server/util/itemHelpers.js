@@ -1,3 +1,6 @@
+import sqlHelpers from '../util/sqlHelpers.js';
+import errorHandler from '../util/errorHandler.js';
+
 function generatePickupCode(itemId) {
   let code = "DUET-";
   let pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -33,6 +36,9 @@ function getNextItemStatus(oldStatus) {
   // Move to next item status
   let newStatus = oldStatus;
   switch (oldStatus) {
+    case 'REQUESTED':
+      newStatus = 'LISTED';
+      break;
     case 'LISTED':
       newStatus = 'VERIFIED';
       break;
@@ -49,8 +55,24 @@ function getNextItemStatus(oldStatus) {
   return newStatus;
 }
 
+async function listRequestedItemsAndSetNotificiationFlags() {
+  try {
+    let requestedItems = await sqlHelpers.getItemsWithStatus('REQUESTED');
+    await Promise.all(requestedItems.map(async item => {
+      await sqlHelpers.setItemNotificationFlag(item.item_id);
+      await sqlHelpers.setSingleStoreNotificationFlag(item.store_id);
+      await sqlHelpers.updateItemStatus('LISTED', item.item_id);
+      console.log("Successfully listed and set notification flags for item " + item.item_id);
+    }));
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/listRequestedItems");
+    throw err;
+  }
+}
+
 export default {
   generatePickupCode,
   rowToItemObj,
-  getNextItemStatus
+  getNextItemStatus,
+  listRequestedItemsAndSetNotificiationFlags
 }

@@ -1,7 +1,7 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
 
 var _config = _interopRequireDefault(require("../util/config.js"));
-var _errorHandler = _interopRequireDefault(require("./errorHandler.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance");}function _iterableToArrayLimit(arr, i) {var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // Imports
+var _errorHandler = _interopRequireDefault(require("./errorHandler.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance");}function _iterableToArrayLimit(arr, i) {var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // Imports
 require("dotenv").config();
 // -------------------- FACEBOOK MESSENGER -------------------- //
 
@@ -122,14 +122,15 @@ insertItemFromTypeform(_x6) {return _insertItemFromTypeform.apply(this, argument
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context5.sent;_context5.next = 6;return (
               conn.query(
-              "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,store_id,link,in_notification) " +
-              "VALUES (?,?,?,?,?,?,?,?,?)",
+              "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,status,store_id,link,in_notification) " +
+              "VALUES (?,?,?,?,?,?,?,?,?,?)",
               [itemInfo.itemNameEnglish,
               itemInfo.size,
               itemInfo.price,
               itemInfo.beneficiaryId,
               itemInfo.categoryId,
               itemInfo.comment,
+              itemInfo.status,
               itemInfo.storeId,
               itemInfo.photoUrl,
               itemInfo.in_notification]));case 6:_ref5 = _context5.sent;_ref6 = _slicedToArray(_ref5, 2);results = _ref6[0];fields = _ref6[1];return _context5.abrupt("return",
@@ -283,58 +284,58 @@ setStoreNotificationFlags(_x16) {return _setStoreNotificationFlags.apply(this, a
 setSingleStoreNotificationFlag(_x17) {return _setSingleStoreNotificationFlag.apply(this, arguments);}function _setSingleStoreNotificationFlag() {_setSingleStoreNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(storeId) {var conn;return regeneratorRuntime.wrap(function _callee14$(_context14) {while (1) {switch (_context14.prev = _context14.next) {case 0:_context14.prev = 0;_context14.next = 3;return (
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context14.sent;_context14.next = 6;return (
-              conn.query("UPDATE stores SET needs_notification=true where store_id=?",
-              [storeId]));case 6:_context14.next = 12;break;case 8:_context14.prev = 8;_context14.t0 = _context14["catch"](0);
+              conn.query("UPDATE stores SET needs_notification=1 where store_id=?",
+              [storeId]));case 6:
+
+            console.log("Set store notification flag for store " + storeId);_context14.next = 13;break;case 9:_context14.prev = 9;_context14.t0 = _context14["catch"](0);
+
+            _errorHandler["default"].handleError(_context14.t0, "sqlHelpers/setSingleStoreNotificationFlag");throw _context14.t0;case 13:case "end":return _context14.stop();}}}, _callee14, null, [[0, 9]]);}));return _setSingleStoreNotificationFlag.apply(this, arguments);}function
 
 
-            _errorHandler["default"].handleError(_context14.t0);throw _context14.t0;case 12:case "end":return _context14.stop();}}}, _callee14, null, [[0, 8]]);}));return _setSingleStoreNotificationFlag.apply(this, arguments);}function
 
 
-
-
-resetStoreNotificationFlags() {return _resetStoreNotificationFlags.apply(this, arguments);}function _resetStoreNotificationFlags() {_resetStoreNotificationFlags = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15() {var conn;return regeneratorRuntime.wrap(function _callee15$(_context15) {while (1) {switch (_context15.prev = _context15.next) {case 0:_context15.prev = 0;_context15.next = 3;return (
-
+unsetSingleStoreNotificationFlag(_x18) {return _unsetSingleStoreNotificationFlag.apply(this, arguments);}function _unsetSingleStoreNotificationFlag() {_unsetSingleStoreNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15(storeId) {var conn;return regeneratorRuntime.wrap(function _callee15$(_context15) {while (1) {switch (_context15.prev = _context15.next) {case 0:_context15.prev = 0;_context15.next = 3;return (
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context15.sent;_context15.next = 6;return (
-              conn.query("UPDATE stores SET needs_notification=0"));case 6:_context15.next = 12;break;case 8:_context15.prev = 8;_context15.t0 = _context15["catch"](0);
+              conn.query("UPDATE stores SET needs_notification=0 where store_id=?",
+              [storeId]));case 6:
 
-            _errorHandler["default"].handleError(_context15.t0, "sqlHelpers/resetStoreNotificationFlags");throw _context15.t0;case 12:case "end":return _context15.stop();}}}, _callee15, null, [[0, 8]]);}));return _resetStoreNotificationFlags.apply(this, arguments);}function
+            console.log("Unset store notification flag for store " + storeId);_context15.next = 13;break;case 9:_context15.prev = 9;_context15.t0 = _context15["catch"](0);
 
-
-
-
-getItemsForNotificationEmail(_x18) {return _getItemsForNotificationEmail.apply(this, arguments);}function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee16(store_id) {var conn, updatedItems, _ref19, _ref20, results, fields, item;return regeneratorRuntime.wrap(function _callee16$(_context16) {while (1) {switch (_context16.prev = _context16.next) {case 0:_context16.prev = 0;_context16.next = 3;return (
-
-
-              _config["default"].dbInitConnectPromise());case 3:conn = _context16.sent;
-            updatedItems = [];_context16.next = 7;return (
-              conn.query("SELECT * from items where store_id=? and in_notification=1",
-
-              [store_id]));case 7:_ref19 = _context16.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];
-
-            if (results.length === 0) {
-              console.log("sqlHelpers/getItemsForNotificationEmail: No items included in notification");
-            } else
-            {
-
-              results.forEach(function (obj) {
-                item = {
-                  itemId: obj.item_id,
-                  itemImage: obj.link,
-                  itemName: obj.name,
-                  itemPrice: obj.price_euros };
-
-                updatedItems.push(item);
-              });
-            }return _context16.abrupt("return",
-            updatedItems);case 15:_context16.prev = 15;_context16.t0 = _context16["catch"](0);
-
-            _errorHandler["default"].handleError(_context16.t0, "sqlHelpers/getItemsForNotificationEmail");throw _context16.t0;case 19:case "end":return _context16.stop();}}}, _callee16, null, [[0, 15]]);}));return _getItemsForNotificationEmail.apply(this, arguments);}function
+            _errorHandler["default"].handleError(_context15.t0, "sqlHelpers/unsetSingleStoreNotificationFlag");throw _context15.t0;case 13:case "end":return _context15.stop();}}}, _callee15, null, [[0, 9]]);}));return _unsetSingleStoreNotificationFlag.apply(this, arguments);}function
 
 
 
 
-unsetItemsNotificationFlag(_x19) {return _unsetItemsNotificationFlag.apply(this, arguments);}
+resetAllStoreNotificationFlags() {return _resetAllStoreNotificationFlags.apply(this, arguments);}function _resetAllStoreNotificationFlags() {_resetAllStoreNotificationFlags = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee16() {var conn;return regeneratorRuntime.wrap(function _callee16$(_context16) {while (1) {switch (_context16.prev = _context16.next) {case 0:_context16.prev = 0;_context16.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context16.sent;_context16.next = 6;return (
+              conn.query("UPDATE stores SET needs_notification=0"));case 6:_context16.next = 12;break;case 8:_context16.prev = 8;_context16.t0 = _context16["catch"](0);
+
+            _errorHandler["default"].handleError(_context16.t0, "sqlHelpers/resetAllStoreNotificationFlags");throw _context16.t0;case 12:case "end":return _context16.stop();}}}, _callee16, null, [[0, 8]]);}));return _resetAllStoreNotificationFlags.apply(this, arguments);}function
+
+
+
+
+getItemsForNotificationEmail(_x19) {return _getItemsForNotificationEmail.apply(this, arguments);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -349,7 +350,7 @@ unsetItemsNotificationFlag(_x19) {return _unsetItemsNotificationFlag.apply(this,
 
 
 // -------------------- BENEFICIARIES -------------------- //
-function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee17$(_context17) {while (1) {switch (_context17.prev = _context17.next) {case 0:_context17.prev = 0;_context17.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context17.sent;_context17.next = 6;return conn.query("UPDATE items SET in_notification=0 where item_id IN (?)", [item_ids]);case 6:_context17.next = 12;break;case 8:_context17.prev = 8;_context17.t0 = _context17["catch"](0);_errorHandler["default"].handleError(_context17.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context17.t0;case 12:case "end":return _context17.stop();}}}, _callee17, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}function getBeneficiaryInfo(_x20) {return _getBeneficiaryInfo.apply(this, arguments);}function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18(beneficiaryId) {var conn, _ref21, _ref22, results, fields;return regeneratorRuntime.wrap(function _callee18$(_context18) {while (1) {switch (_context18.prev = _context18.next) {case 0:_context18.prev = 0;_context18.next = 3;return (
+function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17(store_id) {var conn, updatedItems, _ref19, _ref20, results, fields, item;return regeneratorRuntime.wrap(function _callee17$(_context17) {while (1) {switch (_context17.prev = _context17.next) {case 0:_context17.prev = 0;_context17.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context17.sent;updatedItems = [];_context17.next = 7;return conn.query("SELECT * from items where store_id=? and in_notification=1", [store_id]);case 7:_ref19 = _context17.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];if (results.length === 0) {console.log("sqlHelpers/getItemsForNotificationEmail: No items included in notification");} else {results.forEach(function (obj) {item = { itemId: obj.item_id, itemImage: obj.link, itemName: obj.name, itemPrice: obj.price_euros };updatedItems.push(item);});}return _context17.abrupt("return", updatedItems);case 15:_context17.prev = 15;_context17.t0 = _context17["catch"](0);_errorHandler["default"].handleError(_context17.t0, "sqlHelpers/getItemsForNotificationEmail");throw _context17.t0;case 19:case "end":return _context17.stop();}}}, _callee17, null, [[0, 15]]);}));return _getItemsForNotificationEmail.apply(this, arguments);}function getBeneficiaryInfo(_x20) {return _getBeneficiaryInfo.apply(this, arguments);}function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18(beneficiaryId) {var conn, _ref21, _ref22, results, fields;return regeneratorRuntime.wrap(function _callee18$(_context18) {while (1) {switch (_context18.prev = _context18.next) {case 0:_context18.prev = 0;_context18.next = 3;return (
 
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context18.sent;_context18.next = 6;return (
@@ -479,13 +480,33 @@ getAllItems() {return _getAllItems.apply(this, arguments);}function _getAllItems
 
 
 
-updateItemStatus(_x24, _x25) {return _updateItemStatus.apply(this, arguments);}function _updateItemStatus() {_updateItemStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(newStatus, itemId) {var conn;return regeneratorRuntime.wrap(function _callee24$(_context24) {while (1) {switch (_context24.prev = _context24.next) {case 0:_context24.prev = 0;_context24.next = 3;return (
+getItemsWithStatus(_x24) {return _getItemsWithStatus.apply(this, arguments);}function _getItemsWithStatus() {_getItemsWithStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(status) {var conn, _ref33, _ref34, results, fields;return regeneratorRuntime.wrap(function _callee24$(_context24) {while (1) {switch (_context24.prev = _context24.next) {case 0:_context24.prev = 0;_context24.next = 3;return (
 
-              _config["default"].dbInitConnectPromise());case 3:conn = _context24.sent;if (!(
-            newStatus === "PAID")) {_context24.next = 9;break;}_context24.next = 7;return (
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context24.sent;_context24.next = 6;return (
+              conn.query(
+              itemsQuery + " WHERE status=?",
+              [status]));case 6:_ref33 = _context24.sent;_ref34 = _slicedToArray(_ref33, 2);results = _ref34[0];fields = _ref34[1];if (!(
+
+            results.length === 0)) {_context24.next = 14;break;}return _context24.abrupt("return",
+            []);case 14:return _context24.abrupt("return",
+
+
+            results);case 15:_context24.next = 21;break;case 17:_context24.prev = 17;_context24.t0 = _context24["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context24.t0, "sqlHelpers/getItemsWithStatus");throw _context24.t0;case 21:case "end":return _context24.stop();}}}, _callee24, null, [[0, 17]]);}));return _getItemsWithStatus.apply(this, arguments);}function
+
+
+
+
+updateItemStatus(_x25, _x26) {return _updateItemStatus.apply(this, arguments);}function _updateItemStatus() {_updateItemStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(newStatus, itemId) {var conn;return regeneratorRuntime.wrap(function _callee25$(_context25) {while (1) {switch (_context25.prev = _context25.next) {case 0:_context25.prev = 0;_context25.next = 3;return (
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context25.sent;if (!(
+            newStatus === "PAID")) {_context25.next = 9;break;}_context25.next = 7;return (
               conn.query("UPDATE items SET status=?, in_notification=1 WHERE item_id = ?",
 
-              [newStatus, itemId]));case 7:_context24.next = 11;break;case 9:_context24.next = 11;return (
+              [newStatus, itemId]));case 7:_context25.next = 11;break;case 9:_context25.next = 11;return (
 
 
               conn.query("UPDATE items SET status=? WHERE item_id = ?",
@@ -493,14 +514,45 @@ updateItemStatus(_x24, _x25) {return _updateItemStatus.apply(this, arguments);}f
               [newStatus, itemId]));case 11:
 
 
-            console.log("Successfully updated item status to " + newStatus + " for item " + itemId);_context24.next = 18;break;case 14:_context24.prev = 14;_context24.t0 = _context24["catch"](0);
+            console.log("Successfully updated item status to " + newStatus + " for item " + itemId);_context25.next = 18;break;case 14:_context25.prev = 14;_context25.t0 = _context25["catch"](0);
 
-            _errorHandler["default"].handleError(_context24.t0, "sqlHelpers/updateItemStatus");throw _context24.t0;case 18:case "end":return _context24.stop();}}}, _callee24, null, [[0, 14]]);}));return _updateItemStatus.apply(this, arguments);}var _default =
-
-
+            _errorHandler["default"].handleError(_context25.t0, "sqlHelpers/updateItemStatus");throw _context25.t0;case 18:case "end":return _context25.stop();}}}, _callee25, null, [[0, 14]]);}));return _updateItemStatus.apply(this, arguments);}function
 
 
-{
+
+
+
+setItemNotificationFlag(_x27) {return _setItemNotificationFlag.apply(this, arguments);}function _setItemNotificationFlag() {_setItemNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(item_id) {var conn;return regeneratorRuntime.wrap(function _callee26$(_context26) {while (1) {switch (_context26.prev = _context26.next) {case 0:_context26.prev = 0;_context26.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context26.sent;_context26.next = 6;return (
+              conn.query("UPDATE items SET in_notification=1 where item_id = ?",
+
+              [item_id]));case 6:
+
+            console.log("Set notification flag for item " + item_id);_context26.next = 13;break;case 9:_context26.prev = 9;_context26.t0 = _context26["catch"](0);
+
+            _errorHandler["default"].handleError(_context26.t0, "sqlHelpers/setItemNotificationFlag");throw _context26.t0;case 13:case "end":return _context26.stop();}}}, _callee26, null, [[0, 9]]);}));return _setItemNotificationFlag.apply(this, arguments);}function
+
+
+
+
+unsetItemsNotificationFlag(_x28) {return _unsetItemsNotificationFlag.apply(this, arguments);}function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee27$(_context27) {while (1) {switch (_context27.prev = _context27.next) {case 0:_context27.prev = 0;_context27.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context27.sent;_context27.next = 6;return (
+              conn.query("UPDATE items SET in_notification=0 where item_id IN (?)",
+
+              [item_ids]));case 6:_context27.next = 12;break;case 8:_context27.prev = 8;_context27.t0 = _context27["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context27.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context27.t0;case 12:case "end":return _context27.stop();}}}, _callee27, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}var _default = _defineProperty({
+
+
+
+
+
+
   // FACEBOOK MESSENGER
   insertMessageIntoDB: insertMessageIntoDB,
   getFBMessengerInfoFromItemId: getFBMessengerInfoFromItemId,
@@ -524,7 +576,8 @@ updateItemStatus(_x24, _x25) {return _updateItemStatus.apply(this, arguments);}f
   getStoresThatNeedNotification: getStoresThatNeedNotification,
   setStoreNotificationFlags: setStoreNotificationFlags,
   setSingleStoreNotificationFlag: setSingleStoreNotificationFlag,
-  resetStoreNotificationFlags: resetStoreNotificationFlags,
+  unsetSingleStoreNotificationFlag: unsetSingleStoreNotificationFlag,
+  resetAllStoreNotificationFlags: resetAllStoreNotificationFlags,
   getItemsForNotificationEmail: getItemsForNotificationEmail,
   unsetItemsNotificationFlag: unsetItemsNotificationFlag,
 
@@ -537,4 +590,7 @@ updateItemStatus(_x24, _x25) {return _updateItemStatus.apply(this, arguments);}f
   getItem: getItem,
   getItemsForStore: getItemsForStore,
   getAllItems: getAllItems,
-  updateItemStatus: updateItemStatus };exports["default"] = _default;
+  getItemsWithStatus: getItemsWithStatus,
+  updateItemStatus: updateItemStatus,
+  setItemNotificationFlag: setItemNotificationFlag }, "unsetItemsNotificationFlag",
+unsetItemsNotificationFlag);exports["default"] = _default;
