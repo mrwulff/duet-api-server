@@ -9,7 +9,8 @@ sendPickupNotification(_x) {return _sendPickupNotification.apply(this, arguments
 
 
               _sqlHelpers["default"].getFBMessengerInfoFromItemId(itemId));case 3:fbMessengerInfo = _context.sent;
-            message = "Hi " + fbMessengerInfo.first_name + ", this is an automated message from Duet!\n" +
+            message = fbMessengerInfo.first_name ? "Hi " + fbMessengerInfo.first_name : "Hi";
+            message += ", this is an automated message from Duet!\n" +
             "Your " + fbMessengerInfo.item_name + " is now available for pickup from " + fbMessengerInfo.store_name + ".\n" +
             "Please use pick-up code: " + fbMessengerInfo.pickup_code;
             if (fbMessengerInfo.donor_fname && fbMessengerInfo.donor_lname && fbMessengerInfo.donor_country) {
@@ -23,9 +24,9 @@ sendPickupNotification(_x) {return _sendPickupNotification.apply(this, arguments
               tag: "SHIPPING_UPDATE" });
 
             console.log('Sent pickup notification to ' + fbMessengerInfo.first_name + " " + fbMessengerInfo.last_name +
-            " for " + fbMessengerInfo.item_name + " with itemId: " + itemId);_context.next = 14;break;case 10:_context.prev = 10;_context.t0 = _context["catch"](0);
+            " for " + fbMessengerInfo.item_name + " with itemId: " + itemId);_context.next = 15;break;case 11:_context.prev = 11;_context.t0 = _context["catch"](0);
 
-            _errorHandler["default"].handleError(_context.t0, "fbHelpers/sendPickupNotification");throw _context.t0;case 14:case "end":return _context.stop();}}}, _callee, null, [[0, 10]]);}));return _sendPickupNotification.apply(this, arguments);}var _default =
+            _errorHandler["default"].handleError(_context.t0, "fbHelpers/sendPickupNotification");throw _context.t0;case 15:case "end":return _context.stop();}}}, _callee, null, [[0, 11]]);}));return _sendPickupNotification.apply(this, arguments);}var _default =
 
 
 

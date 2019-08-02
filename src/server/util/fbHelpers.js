@@ -9,7 +9,8 @@ async function sendPickupNotification(itemId) {
     // Send pickup notification for itemId
     try {
         let fbMessengerInfo = await sqlHelpers.getFBMessengerInfoFromItemId(itemId);
-        let message = "Hi " + fbMessengerInfo.first_name + ", this is an automated message from Duet!\n" +
+        let message = (fbMessengerInfo.first_name) ? "Hi " + fbMessengerInfo.first_name : "Hi";
+        message += ", this is an automated message from Duet!\n" +
             "Your " + fbMessengerInfo.item_name + " is now available for pickup from " + fbMessengerInfo.store_name + ".\n" +
             "Please use pick-up code: " + fbMessengerInfo.pickup_code;
         if (fbMessengerInfo.donor_fname && fbMessengerInfo.donor_lname && fbMessengerInfo.donor_country) {
