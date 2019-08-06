@@ -1,7 +1,7 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
 
 var _config = _interopRequireDefault(require("../util/config.js"));
-var _errorHandler = _interopRequireDefault(require("./errorHandler.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance");}function _iterableToArrayLimit(arr, i) {var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // Imports
+var _errorHandler = _interopRequireDefault(require("./errorHandler.js"));var _insertMessageIntoDB$;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance");}function _iterableToArrayLimit(arr, i) {var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // Imports
 require("dotenv").config();
 // -------------------- FACEBOOK MESSENGER -------------------- //
 
@@ -349,164 +349,101 @@ getItemsForNotificationEmail(_x19) {return _getItemsForNotificationEmail.apply(t
 
 
 
-// -------------------- BENEFICIARIES -------------------- //
-function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17(store_id) {var conn, updatedItems, _ref19, _ref20, results, fields, item;return regeneratorRuntime.wrap(function _callee17$(_context17) {while (1) {switch (_context17.prev = _context17.next) {case 0:_context17.prev = 0;_context17.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context17.sent;updatedItems = [];_context17.next = 7;return conn.query("SELECT * from items where store_id=? and in_notification=1", [store_id]);case 7:_ref19 = _context17.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];if (results.length === 0) {console.log("sqlHelpers/getItemsForNotificationEmail: No items included in notification");} else {results.forEach(function (obj) {item = { itemId: obj.item_id, itemImage: obj.link, itemName: obj.name, itemPrice: obj.price_euros };updatedItems.push(item);});}return _context17.abrupt("return", updatedItems);case 15:_context17.prev = 15;_context17.t0 = _context17["catch"](0);_errorHandler["default"].handleError(_context17.t0, "sqlHelpers/getItemsForNotificationEmail");throw _context17.t0;case 19:case "end":return _context17.stop();}}}, _callee17, null, [[0, 15]]);}));return _getItemsForNotificationEmail.apply(this, arguments);}function getBeneficiaryInfo(_x20) {return _getBeneficiaryInfo.apply(this, arguments);}function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18(beneficiaryId) {var conn, _ref21, _ref22, results, fields;return regeneratorRuntime.wrap(function _callee18$(_context18) {while (1) {switch (_context18.prev = _context18.next) {case 0:_context18.prev = 0;_context18.next = 3;return (
-
-
-              _config["default"].dbInitConnectPromise());case 3:conn = _context18.sent;_context18.next = 6;return (
-              conn.query(
-              "SELECT beneficiary_id, first_name, last_name, story, " +
-              "origin_city, origin_country, current_city, current_country, family_image_url, visible " +
-              "FROM beneficiaries WHERE beneficiary_id = ?",
-              [beneficiaryId]));case 6:_ref21 = _context18.sent;_ref22 = _slicedToArray(_ref21, 2);results = _ref22[0];fields = _ref22[1];if (!(
-
-            results.length === 0)) {_context18.next = 12;break;}return _context18.abrupt("return",
-            null);case 12:return _context18.abrupt("return",
-
-            results[0]);case 15:_context18.prev = 15;_context18.t0 = _context18["catch"](0);
-
-            _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getBeneficiaryInfo");throw _context18.t0;case 19:case "end":return _context18.stop();}}}, _callee18, null, [[0, 15]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function
-
-
-
-
-getBeneficiaryNeeds(_x21) {return _getBeneficiaryNeeds.apply(this, arguments);}function _getBeneficiaryNeeds() {_getBeneficiaryNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee19(beneficiaryId) {var conn, _ref23, _ref24, results, fields;return regeneratorRuntime.wrap(function _callee19$(_context19) {while (1) {switch (_context19.prev = _context19.next) {case 0:_context19.prev = 0;_context19.next = 3;return (
-
-
-              _config["default"].dbInitConnectPromise());case 3:conn = _context19.sent;_context19.next = 6;return (
-              conn.query(
-              "SELECT item_id, link, items.name, pickup_code, price_euros, " +
-              "status, store_id, icon_url, " +
-              "stores.name as store_name, stores.google_maps as store_maps_link, " +
-              "donations.timestamp as donation_timestamp " +
-              "FROM items " +
-              "INNER JOIN categories USING(category_id) " +
-              "INNER JOIN stores USING(store_id) " +
-              "LEFT JOIN donations USING(donation_id)" +
-              "WHERE beneficiary_id = ?",
-              [beneficiaryId]));case 6:_ref23 = _context19.sent;_ref24 = _slicedToArray(_ref23, 2);results = _ref24[0];fields = _ref24[1];return _context19.abrupt("return",
-
-            results);case 13:_context19.prev = 13;_context19.t0 = _context19["catch"](0);
-
-            _errorHandler["default"].handleError(_context19.t0, "sqlHelpers/getBeneficiaryInfo");throw _context19.t0;case 17:case "end":return _context19.stop();}}}, _callee19, null, [[0, 13]]);}));return _getBeneficiaryNeeds.apply(this, arguments);}function
-
-
-
-
-getAllBeneficiaryInfoAndNeeds() {return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // -------------------- ITEMS -------------------- //
-function _getAllBeneficiaryInfoAndNeeds() {_getAllBeneficiaryInfoAndNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee20() {var conn, _ref25, _ref26, results, fields;return regeneratorRuntime.wrap(function _callee20$(_context20) {while (1) {switch (_context20.prev = _context20.next) {case 0:_context20.prev = 0;_context20.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context20.sent;_context20.next = 6;return conn.query("SELECT beneficiary_id, first_name, last_name, story, " + "origin_city, origin_country, current_city, current_country, family_image_url, visible, " + "item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " + "stores.name AS store_name, donations.timestamp AS donation_timestamp " + "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " + "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id");case 6:_ref25 = _context20.sent;_ref26 = _slicedToArray(_ref25, 2);results = _ref26[0];fields = _ref26[1];return _context20.abrupt("return", results);case 13:_context20.prev = 13;_context20.t0 = _context20["catch"](0);_errorHandler["default"].handleError(_context20.t0, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");throw _context20.t0;case 17:case "end":return _context20.stop();}}}, _callee20, null, [[0, 13]]);}));return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}var itemsQuery =
+function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17(store_id) {var conn, updatedItems, _ref19, _ref20, results, fields, item;return regeneratorRuntime.wrap(function _callee17$(_context17) {while (1) {switch (_context17.prev = _context17.next) {case 0:_context17.prev = 0;_context17.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context17.sent;updatedItems = [];_context17.next = 7;return conn.query("SELECT * from items where store_id=? and in_notification=1", [store_id]);case 7:_ref19 = _context17.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];if (results.length === 0) {console.log("sqlHelpers/getItemsForNotificationEmail: No items included in notification");} else {results.forEach(function (obj) {item = { itemId: obj.item_id, itemImage: obj.link, itemName: obj.name, itemPrice: obj.price_euros };updatedItems.push(item);});}return _context17.abrupt("return", updatedItems);case 15:_context17.prev = 15;_context17.t0 = _context17["catch"](0);_errorHandler["default"].handleError(_context17.t0, "sqlHelpers/getItemsForNotificationEmail");throw _context17.t0;case 19:case "end":return _context17.stop();}}}, _callee17, null, [[0, 15]]);}));return _getItemsForNotificationEmail.apply(this, arguments);}var itemsQuery =
 "SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
 "status, store_id, icon_url, " +
 "stores.name as store_name, stores.google_maps as store_maps_link, " +
 "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
 "donations.timestamp as donation_timestamp, donations.donor_email as donor_email, " +
-"donations.donor_fname as donor_first, donations.donor_lname as donor_last " +
+"donations.donor_fname as donor_first, donations.donor_lname as donor_last, donations.donor_country as donor_country " +
 "FROM items " +
 "INNER JOIN categories USING(category_id) " +
 "INNER JOIN stores USING(store_id) " +
 "INNER JOIN beneficiaries USING(beneficiary_id) " +
 "LEFT JOIN donations USING(donation_id)";function
 
-getItem(_x22) {return _getItem.apply(this, arguments);}function _getItem() {_getItem = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee21(itemId) {var conn, _ref27, _ref28, results, fields;return regeneratorRuntime.wrap(function _callee21$(_context21) {while (1) {switch (_context21.prev = _context21.next) {case 0:_context21.prev = 0;_context21.next = 3;return (
+getItem(_x20) {return _getItem.apply(this, arguments);}function _getItem() {_getItem = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18(itemId) {var conn, _ref21, _ref22, results, fields;return regeneratorRuntime.wrap(function _callee18$(_context18) {while (1) {switch (_context18.prev = _context18.next) {case 0:_context18.prev = 0;_context18.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context18.sent;_context18.next = 6;return (
+              conn.query(
+              itemsQuery + " WHERE item_id=?",
+              [itemId]));case 6:_ref21 = _context18.sent;_ref22 = _slicedToArray(_ref21, 2);results = _ref22[0];fields = _ref22[1];if (!(
+
+            results.length === 0)) {_context18.next = 14;break;}return _context18.abrupt("return",
+            null);case 14:return _context18.abrupt("return",
+
+
+            results[0]);case 15:_context18.next = 21;break;case 17:_context18.prev = 17;_context18.t0 = _context18["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getItem");throw _context18.t0;case 21:case "end":return _context18.stop();}}}, _callee18, null, [[0, 17]]);}));return _getItem.apply(this, arguments);}function
+
+
+
+
+getItemsForStore(_x21) {return _getItemsForStore.apply(this, arguments);}function _getItemsForStore() {_getItemsForStore = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee19(storeId) {var conn, _ref23, _ref24, results, fields;return regeneratorRuntime.wrap(function _callee19$(_context19) {while (1) {switch (_context19.prev = _context19.next) {case 0:_context19.prev = 0;_context19.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context19.sent;_context19.next = 6;return (
+              conn.query(
+              itemsQuery + " WHERE store_id=?",
+              [storeId]));case 6:_ref23 = _context19.sent;_ref24 = _slicedToArray(_ref23, 2);results = _ref24[0];fields = _ref24[1];return _context19.abrupt("return",
+
+            results);case 13:_context19.prev = 13;_context19.t0 = _context19["catch"](0);
+
+            _errorHandler["default"].handleError(_context19.t0, "sqlHelpers/getItemsForStore");throw _context19.t0;case 17:case "end":return _context19.stop();}}}, _callee19, null, [[0, 13]]);}));return _getItemsForStore.apply(this, arguments);}function
+
+
+
+
+getAllItems() {return _getAllItems.apply(this, arguments);}function _getAllItems() {_getAllItems = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee20() {var conn, _ref25, _ref26, results, fields;return regeneratorRuntime.wrap(function _callee20$(_context20) {while (1) {switch (_context20.prev = _context20.next) {case 0:_context20.prev = 0;_context20.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context20.sent;_context20.next = 6;return (
+              conn.query(
+              itemsQuery));case 6:_ref25 = _context20.sent;_ref26 = _slicedToArray(_ref25, 2);results = _ref26[0];fields = _ref26[1];if (!(
+
+            results.length === 0)) {_context20.next = 14;break;}return _context20.abrupt("return",
+            null);case 14:return _context20.abrupt("return",
+
+
+            results);case 15:_context20.next = 21;break;case 17:_context20.prev = 17;_context20.t0 = _context20["catch"](0);
+
+
+            _errorHandler["default"].handleError(_context20.t0, "sqlHelpers/getAllItems");throw _context20.t0;case 21:case "end":return _context20.stop();}}}, _callee20, null, [[0, 17]]);}));return _getAllItems.apply(this, arguments);}function
+
+
+
+
+getItemsWithStatus(_x22) {return _getItemsWithStatus.apply(this, arguments);}function _getItemsWithStatus() {_getItemsWithStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee21(status) {var conn, _ref27, _ref28, results, fields;return regeneratorRuntime.wrap(function _callee21$(_context21) {while (1) {switch (_context21.prev = _context21.next) {case 0:_context21.prev = 0;_context21.next = 3;return (
 
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context21.sent;_context21.next = 6;return (
               conn.query(
-              itemsQuery + " WHERE item_id=?",
-              [itemId]));case 6:_ref27 = _context21.sent;_ref28 = _slicedToArray(_ref27, 2);results = _ref28[0];fields = _ref28[1];if (!(
+              itemsQuery + " WHERE status=?",
+              [status]));case 6:_ref27 = _context21.sent;_ref28 = _slicedToArray(_ref27, 2);results = _ref28[0];fields = _ref28[1];if (!(
 
             results.length === 0)) {_context21.next = 14;break;}return _context21.abrupt("return",
-            null);case 14:return _context21.abrupt("return",
+            []);case 14:return _context21.abrupt("return",
 
 
-            results[0]);case 15:_context21.next = 21;break;case 17:_context21.prev = 17;_context21.t0 = _context21["catch"](0);
+            results);case 15:_context21.next = 21;break;case 17:_context21.prev = 17;_context21.t0 = _context21["catch"](0);
 
 
-            _errorHandler["default"].handleError(_context21.t0, "sqlHelpers/getItem");throw _context21.t0;case 21:case "end":return _context21.stop();}}}, _callee21, null, [[0, 17]]);}));return _getItem.apply(this, arguments);}function
-
-
-
-
-getItemsForStore(_x23) {return _getItemsForStore.apply(this, arguments);}function _getItemsForStore() {_getItemsForStore = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee22(storeId) {var conn, _ref29, _ref30, results, fields;return regeneratorRuntime.wrap(function _callee22$(_context22) {while (1) {switch (_context22.prev = _context22.next) {case 0:_context22.prev = 0;_context22.next = 3;return (
-
-
-              _config["default"].dbInitConnectPromise());case 3:conn = _context22.sent;_context22.next = 6;return (
-              conn.query(
-              itemsQuery + " WHERE store_id=?",
-              [storeId]));case 6:_ref29 = _context22.sent;_ref30 = _slicedToArray(_ref29, 2);results = _ref30[0];fields = _ref30[1];return _context22.abrupt("return",
-
-            results);case 13:_context22.prev = 13;_context22.t0 = _context22["catch"](0);
-
-            _errorHandler["default"].handleError(_context22.t0, "sqlHelpers/getItemsForStore");throw _context22.t0;case 17:case "end":return _context22.stop();}}}, _callee22, null, [[0, 13]]);}));return _getItemsForStore.apply(this, arguments);}function
+            _errorHandler["default"].handleError(_context21.t0, "sqlHelpers/getItemsWithStatus");throw _context21.t0;case 21:case "end":return _context21.stop();}}}, _callee21, null, [[0, 17]]);}));return _getItemsWithStatus.apply(this, arguments);}function
 
 
 
 
-getAllItems() {return _getAllItems.apply(this, arguments);}function _getAllItems() {_getAllItems = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23() {var conn, _ref31, _ref32, results, fields;return regeneratorRuntime.wrap(function _callee23$(_context23) {while (1) {switch (_context23.prev = _context23.next) {case 0:_context23.prev = 0;_context23.next = 3;return (
+updateItemStatus(_x23, _x24) {return _updateItemStatus.apply(this, arguments);}function _updateItemStatus() {_updateItemStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee22(newStatus, itemId) {var conn;return regeneratorRuntime.wrap(function _callee22$(_context22) {while (1) {switch (_context22.prev = _context22.next) {case 0:_context22.prev = 0;_context22.next = 3;return (
 
-
-              _config["default"].dbInitConnectPromise());case 3:conn = _context23.sent;_context23.next = 6;return (
-              conn.query(
-              itemsQuery));case 6:_ref31 = _context23.sent;_ref32 = _slicedToArray(_ref31, 2);results = _ref32[0];fields = _ref32[1];if (!(
-
-            results.length === 0)) {_context23.next = 14;break;}return _context23.abrupt("return",
-            null);case 14:return _context23.abrupt("return",
-
-
-            results);case 15:_context23.next = 21;break;case 17:_context23.prev = 17;_context23.t0 = _context23["catch"](0);
-
-
-            _errorHandler["default"].handleError(_context23.t0, "sqlHelpers/getAllItems");throw _context23.t0;case 21:case "end":return _context23.stop();}}}, _callee23, null, [[0, 17]]);}));return _getAllItems.apply(this, arguments);}function
-
-
-
-
-getItemsWithStatus(_x24) {return _getItemsWithStatus.apply(this, arguments);}function _getItemsWithStatus() {_getItemsWithStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(status) {var conn, _ref33, _ref34, results, fields;return regeneratorRuntime.wrap(function _callee24$(_context24) {while (1) {switch (_context24.prev = _context24.next) {case 0:_context24.prev = 0;_context24.next = 3;return (
-
-
-              _config["default"].dbInitConnectPromise());case 3:conn = _context24.sent;_context24.next = 6;return (
-              conn.query(
-              itemsQuery + " WHERE status=?",
-              [status]));case 6:_ref33 = _context24.sent;_ref34 = _slicedToArray(_ref33, 2);results = _ref34[0];fields = _ref34[1];if (!(
-
-            results.length === 0)) {_context24.next = 14;break;}return _context24.abrupt("return",
-            []);case 14:return _context24.abrupt("return",
-
-
-            results);case 15:_context24.next = 21;break;case 17:_context24.prev = 17;_context24.t0 = _context24["catch"](0);
-
-
-            _errorHandler["default"].handleError(_context24.t0, "sqlHelpers/getItemsWithStatus");throw _context24.t0;case 21:case "end":return _context24.stop();}}}, _callee24, null, [[0, 17]]);}));return _getItemsWithStatus.apply(this, arguments);}function
-
-
-
-
-updateItemStatus(_x25, _x26) {return _updateItemStatus.apply(this, arguments);}function _updateItemStatus() {_updateItemStatus = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(newStatus, itemId) {var conn;return regeneratorRuntime.wrap(function _callee25$(_context25) {while (1) {switch (_context25.prev = _context25.next) {case 0:_context25.prev = 0;_context25.next = 3;return (
-
-              _config["default"].dbInitConnectPromise());case 3:conn = _context25.sent;if (!(
-            newStatus === "PAID")) {_context25.next = 9;break;}_context25.next = 7;return (
+              _config["default"].dbInitConnectPromise());case 3:conn = _context22.sent;if (!(
+            newStatus === "PAID")) {_context22.next = 9;break;}_context22.next = 7;return (
               conn.query("UPDATE items SET status=?, in_notification=1 WHERE item_id = ?",
 
-              [newStatus, itemId]));case 7:_context25.next = 11;break;case 9:_context25.next = 11;return (
+              [newStatus, itemId]));case 7:_context22.next = 11;break;case 9:_context22.next = 11;return (
 
 
               conn.query("UPDATE items SET status=? WHERE item_id = ?",
@@ -514,39 +451,106 @@ updateItemStatus(_x25, _x26) {return _updateItemStatus.apply(this, arguments);}f
               [newStatus, itemId]));case 11:
 
 
-            console.log("Successfully updated item status to " + newStatus + " for item " + itemId);_context25.next = 18;break;case 14:_context25.prev = 14;_context25.t0 = _context25["catch"](0);
+            console.log("Successfully updated item status to " + newStatus + " for item " + itemId);_context22.next = 18;break;case 14:_context22.prev = 14;_context22.t0 = _context22["catch"](0);
 
-            _errorHandler["default"].handleError(_context25.t0, "sqlHelpers/updateItemStatus");throw _context25.t0;case 18:case "end":return _context25.stop();}}}, _callee25, null, [[0, 14]]);}));return _updateItemStatus.apply(this, arguments);}function
-
-
+            _errorHandler["default"].handleError(_context22.t0, "sqlHelpers/updateItemStatus");throw _context22.t0;case 18:case "end":return _context22.stop();}}}, _callee22, null, [[0, 14]]);}));return _updateItemStatus.apply(this, arguments);}function
 
 
 
-setItemNotificationFlag(_x27) {return _setItemNotificationFlag.apply(this, arguments);}function _setItemNotificationFlag() {_setItemNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(item_id) {var conn;return regeneratorRuntime.wrap(function _callee26$(_context26) {while (1) {switch (_context26.prev = _context26.next) {case 0:_context26.prev = 0;_context26.next = 3;return (
 
 
-              _config["default"].dbInitConnectPromise());case 3:conn = _context26.sent;_context26.next = 6;return (
+setItemNotificationFlag(_x25) {return _setItemNotificationFlag.apply(this, arguments);}function _setItemNotificationFlag() {_setItemNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(item_id) {var conn;return regeneratorRuntime.wrap(function _callee23$(_context23) {while (1) {switch (_context23.prev = _context23.next) {case 0:_context23.prev = 0;_context23.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context23.sent;_context23.next = 6;return (
               conn.query("UPDATE items SET in_notification=1 where item_id = ?",
 
               [item_id]));case 6:
 
-            console.log("Set notification flag for item " + item_id);_context26.next = 13;break;case 9:_context26.prev = 9;_context26.t0 = _context26["catch"](0);
+            console.log("Set notification flag for item " + item_id);_context23.next = 13;break;case 9:_context23.prev = 9;_context23.t0 = _context23["catch"](0);
 
-            _errorHandler["default"].handleError(_context26.t0, "sqlHelpers/setItemNotificationFlag");throw _context26.t0;case 13:case "end":return _context26.stop();}}}, _callee26, null, [[0, 9]]);}));return _setItemNotificationFlag.apply(this, arguments);}function
-
-
+            _errorHandler["default"].handleError(_context23.t0, "sqlHelpers/setItemNotificationFlag");throw _context23.t0;case 13:case "end":return _context23.stop();}}}, _callee23, null, [[0, 9]]);}));return _setItemNotificationFlag.apply(this, arguments);}function
 
 
-unsetItemsNotificationFlag(_x28) {return _unsetItemsNotificationFlag.apply(this, arguments);}function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee27$(_context27) {while (1) {switch (_context27.prev = _context27.next) {case 0:_context27.prev = 0;_context27.next = 3;return (
+
+
+unsetItemsNotificationFlag(_x26) {return _unsetItemsNotificationFlag.apply(this, arguments);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// -------------------- BENEFICIARIES -------------------- //
+function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee24$(_context24) {while (1) {switch (_context24.prev = _context24.next) {case 0:_context24.prev = 0;_context24.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context24.sent;_context24.next = 6;return conn.query("UPDATE items SET in_notification=0 where item_id IN (?)", [item_ids]);case 6:_context24.next = 12;break;case 8:_context24.prev = 8;_context24.t0 = _context24["catch"](0);_errorHandler["default"].handleError(_context24.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context24.t0;case 12:case "end":return _context24.stop();}}}, _callee24, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}function getBeneficiaryInfo(_x27) {return _getBeneficiaryInfo.apply(this, arguments);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// TODO: re-use itemsQuery?
+function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(beneficiaryId) {var conn, _ref29, _ref30, results, fields;return regeneratorRuntime.wrap(function _callee25$(_context25) {while (1) {switch (_context25.prev = _context25.next) {case 0:_context25.prev = 0;_context25.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context25.sent;_context25.next = 6;return conn.query("SELECT beneficiary_id, first_name, last_name, story, " + "origin_city, origin_country, current_city, current_country, family_image_url, visible " + "FROM beneficiaries WHERE beneficiary_id = ?", [beneficiaryId]);case 6:_ref29 = _context25.sent;_ref30 = _slicedToArray(_ref29, 2);results = _ref30[0];fields = _ref30[1];if (!(results.length === 0)) {_context25.next = 12;break;}return _context25.abrupt("return", null);case 12:return _context25.abrupt("return", results[0]);case 15:_context25.prev = 15;_context25.t0 = _context25["catch"](0);_errorHandler["default"].handleError(_context25.t0, "sqlHelpers/getBeneficiaryInfo");throw _context25.t0;case 19:case "end":return _context25.stop();}}}, _callee25, null, [[0, 15]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function getBeneficiaryNeeds(_x28) {return _getBeneficiaryNeeds.apply(this, arguments);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// TODO: re-use itemsQuery?
+function _getBeneficiaryNeeds() {_getBeneficiaryNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(beneficiaryId) {var conn, _ref31, _ref32, results, fields;return regeneratorRuntime.wrap(function _callee26$(_context26) {while (1) {switch (_context26.prev = _context26.next) {case 0:_context26.prev = 0;_context26.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context26.sent;_context26.next = 6;return conn.query("SELECT item_id, link, items.name, pickup_code, price_euros, " + "status, store_id, icon_url, " + "stores.name as store_name, stores.google_maps as store_maps_link, " + "donations.timestamp as donation_timestamp, donor_fname, donor_lname, donor_country " + "FROM items " + "INNER JOIN categories USING(category_id) " + "INNER JOIN stores USING(store_id) " + "LEFT JOIN donations USING(donation_id)" + "WHERE beneficiary_id = ?", [beneficiaryId]);case 6:_ref31 = _context26.sent;_ref32 = _slicedToArray(_ref31, 2);results = _ref32[0];fields = _ref32[1];return _context26.abrupt("return", results);case 13:_context26.prev = 13;_context26.t0 = _context26["catch"](0);_errorHandler["default"].handleError(_context26.t0, "sqlHelpers/getBeneficiaryInfo");throw _context26.t0;case 17:case "end":return _context26.stop();}}}, _callee26, null, [[0, 13]]);}));return _getBeneficiaryNeeds.apply(this, arguments);}function getAllBeneficiaryInfoAndNeeds() {return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}function _getAllBeneficiaryInfoAndNeeds() {_getAllBeneficiaryInfoAndNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27() {var conn, _ref33, _ref34, results, fields;return regeneratorRuntime.wrap(function _callee27$(_context27) {while (1) {switch (_context27.prev = _context27.next) {case 0:_context27.prev = 0;_context27.next = 3;return (
 
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context27.sent;_context27.next = 6;return (
-              conn.query("UPDATE items SET in_notification=0 where item_id IN (?)",
+              conn.query(
+              "SELECT beneficiary_id, first_name, last_name, story, " +
+              "origin_city, origin_country, current_city, current_country, family_image_url, visible, " +
+              "item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " +
+              "stores.name AS store_name, " +
+              "donations.timestamp AS donation_timestamp, donor_fname, donor_lname, donor_country " +
+              "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
+              "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id"));case 6:_ref33 = _context27.sent;_ref34 = _slicedToArray(_ref33, 2);results = _ref34[0];fields = _ref34[1];return _context27.abrupt("return",
 
-              [item_ids]));case 6:_context27.next = 12;break;case 8:_context27.prev = 8;_context27.t0 = _context27["catch"](0);
+            results);case 13:_context27.prev = 13;_context27.t0 = _context27["catch"](0);
 
-
-            _errorHandler["default"].handleError(_context27.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context27.t0;case 12:case "end":return _context27.stop();}}}, _callee27, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}var _default = _defineProperty({
+            _errorHandler["default"].handleError(_context27.t0, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");throw _context27.t0;case 17:case "end":return _context27.stop();}}}, _callee27, null, [[0, 13]]);}));return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}var _default = (_insertMessageIntoDB$ = {
 
 
 
@@ -581,16 +585,16 @@ unsetItemsNotificationFlag(_x28) {return _unsetItemsNotificationFlag.apply(this,
   getItemsForNotificationEmail: getItemsForNotificationEmail,
   unsetItemsNotificationFlag: unsetItemsNotificationFlag,
 
-  // BENEFICIARIES
-  getBeneficiaryInfo: getBeneficiaryInfo,
-  getBeneficiaryNeeds: getBeneficiaryNeeds,
-  getAllBeneficiaryInfoAndNeeds: getAllBeneficiaryInfoAndNeeds,
-
   // ITEMS
   getItem: getItem,
   getItemsForStore: getItemsForStore,
   getAllItems: getAllItems,
   getItemsWithStatus: getItemsWithStatus,
   updateItemStatus: updateItemStatus,
-  setItemNotificationFlag: setItemNotificationFlag }, "unsetItemsNotificationFlag",
-unsetItemsNotificationFlag);exports["default"] = _default;
+  setItemNotificationFlag: setItemNotificationFlag }, _defineProperty(_insertMessageIntoDB$, "unsetItemsNotificationFlag",
+unsetItemsNotificationFlag), _defineProperty(_insertMessageIntoDB$, "getBeneficiaryInfo",
+
+
+getBeneficiaryInfo), _defineProperty(_insertMessageIntoDB$, "getBeneficiaryNeeds",
+getBeneficiaryNeeds), _defineProperty(_insertMessageIntoDB$, "getAllBeneficiaryInfoAndNeeds",
+getAllBeneficiaryInfoAndNeeds), _insertMessageIntoDB$);exports["default"] = _default;

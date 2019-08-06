@@ -27,7 +27,10 @@ function rowToItemObj(row) {
     icon: row.icon_url,
     status: row.status,
     pickupCode: row.pickup_code,
-    donationTimestamp: row.donation_timestamp
+    donationTimestamp: row.donation_timestamp,
+    donorFirst: row.donor_fname,
+    donorLast: row.donor_lname,
+    donorCountry: row.donor_country
   }
   return itemObj;
 }
