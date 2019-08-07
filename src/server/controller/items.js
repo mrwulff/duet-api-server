@@ -20,7 +20,7 @@ async function getItems(req, res) {
       }
       let needs = [];
       rows.forEach(function (row) {
-        needs.push(itemHelpers.rowToItemObj(row));
+        needs.push(itemHelpers.getFrontEndItemObj(row));
       });
       res.json(needs);
     }
@@ -32,7 +32,7 @@ async function getItems(req, res) {
       }
       let needs = [];
       rows.forEach(function (row) {
-        needs.push(itemHelpers.rowToItemObj(row));
+        needs.push(itemHelpers.getFrontEndItemObj(row));
       });
       res.json(needs);
     }

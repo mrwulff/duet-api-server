@@ -1,25 +1,8 @@
 "use strict";Object.defineProperty(exports, "__esModule", { value: true });exports["default"] = void 0;
+var _itemHelpers = _interopRequireDefault(require("../util/itemHelpers.js"));
 var _sqlHelpers = _interopRequireDefault(require("../util/sqlHelpers.js"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { "default": obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
 
-function rowToItemObj(row) {
-  // SQL row to item object (matches front-end object format)
-  var itemObj = {
-    itemId: row.item_id,
-    image: row.link,
-    name: row.name,
-    price: row.price_euros,
-    storeId: row.store_id,
-    storeName: row.store_name,
-    storeMapsLink: row.store_maps_link,
-    icon: row.icon_url,
-    status: row.status,
-    pickupCode: row.pickup_code,
-    donationTimestamp: row.donation_timestamp };
-
-  return itemObj;
-}
-
-function rowToBeneficiaryObj(row) {
+function getFrontEndBeneficiaryObj(row) {
   // SQL row to beneficiary object
   var beneficiaryObj = {
     beneficiaryId: row.beneficiary_id,
@@ -43,7 +26,7 @@ getSingleBeneficiaryInfoAndNeeds(_x) {return _getSingleBeneficiaryInfoAndNeeds.a
             null);case 5:
 
             // Convert beneficiary object fields
-            beneficiaryObj = rowToBeneficiaryObj(row);
+            beneficiaryObj = getFrontEndBeneficiaryObj(row);
             // Get beneficiary needs in SQL format
             _context.next = 8;return _sqlHelpers["default"].getBeneficiaryNeeds(beneficiaryId);case 8:beneficiaryNeeds = _context.sent;
             if (beneficiaryNeeds.length === 0) {
@@ -52,7 +35,7 @@ getSingleBeneficiaryInfoAndNeeds(_x) {return _getSingleBeneficiaryInfoAndNeeds.a
             needs = [];
             // Convert to format that the front-end code expects
             beneficiaryNeeds.forEach(function (row) {
-              needs.push(rowToItemObj(row));
+              needs.push(_itemHelpers["default"].getFrontEndItemObj(row));
             });
             beneficiaryObj["needs"] = needs;return _context.abrupt("return",
             beneficiaryObj);case 14:case "end":return _context.stop();}}}, _callee);}));return _getSingleBeneficiaryInfoAndNeeds.apply(this, arguments);}function
@@ -77,15 +60,15 @@ getAllBeneficiariesInfoAndNeeds() {return _getAllBeneficiariesInfoAndNeeds.apply
                   allBeneficiaryObjs.push(beneficiaryObj);
                 }
                 // Create beneficiaryObj with first need
-                beneficiaryObj = rowToBeneficiaryObj(row);
+                beneficiaryObj = getFrontEndBeneficiaryObj(row);
                 beneficiaryObj["needs"] = [
-                rowToItemObj(row)];
+                _itemHelpers["default"].getFrontEndItemObj(row)];
 
               }
               // Continue current beneficiary
               else {
                   // Append next item need
-                  beneficiaryObj["needs"].push(rowToItemObj(row));
+                  beneficiaryObj["needs"].push(_itemHelpers["default"].getFrontEndItemObj(row));
                 }
               // Move to next row (but possibly still the same beneficiaryId)
               currentBeneficiaryId = row.beneficiary_id;

@@ -1,25 +1,8 @@
 // Imports
+import itemHelpers from "../util/itemHelpers.js";
 import sqlHelpers from "../util/sqlHelpers.js";
 
-function rowToItemObj(row) {
-    // SQL row to item object (matches front-end object format)
-    let itemObj = {
-        itemId: row.item_id,
-        image: row.link,
-        name: row.name,
-        price: row.price_euros,
-        storeId: row.store_id,
-        storeName: row.store_name,
-        storeMapsLink: row.store_maps_link,
-        icon: row.icon_url,
-        status: row.status,
-        pickupCode: row.pickup_code,
-        donationTimestamp: row.donation_timestamp
-    }
-    return itemObj;
-}
-
-function rowToBeneficiaryObj(row) {
+function getFrontEndBeneficiaryObj(row) {
     // SQL row to beneficiary object
     let beneficiaryObj = {
         beneficiaryId: row.beneficiary_id,
@@ -43,7 +26,7 @@ async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
       return null;
     }
     // Convert beneficiary object fields
-    let beneficiaryObj = rowToBeneficiaryObj(row);
+    let beneficiaryObj = getFrontEndBeneficiaryObj(row);
     // Get beneficiary needs in SQL format
     let beneficiaryNeeds = await sqlHelpers.getBeneficiaryNeeds(beneficiaryId);
     if (beneficiaryNeeds.length === 0) {
@@ -52,7 +35,7 @@ async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
     let needs = [];
     // Convert to format that the front-end code expects
     beneficiaryNeeds.forEach(row => {
-        needs.push(rowToItemObj(row));
+        needs.push(itemHelpers.getFrontEndItemObj(row));
     });
     beneficiaryObj["needs"] = needs;
     return beneficiaryObj;
@@ -77,15 +60,15 @@ async function getAllBeneficiariesInfoAndNeeds() {
                 allBeneficiaryObjs.push(beneficiaryObj);
             }
             // Create beneficiaryObj with first need
-            beneficiaryObj = rowToBeneficiaryObj(row);
+            beneficiaryObj = getFrontEndBeneficiaryObj(row);
             beneficiaryObj["needs"] = [
-                rowToItemObj(row)
+                itemHelpers.getFrontEndItemObj(row)
             ]
         }
         // Continue current beneficiary
         else {
             // Append next item need
-            beneficiaryObj["needs"].push(rowToItemObj(row));
+            beneficiaryObj["needs"].push(itemHelpers.getFrontEndItemObj(row));
         }
         // Move to next row (but possibly still the same beneficiaryId)
         currentBeneficiaryId = row.beneficiary_id;

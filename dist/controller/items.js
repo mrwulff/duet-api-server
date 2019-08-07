@@ -20,7 +20,7 @@ getItems(_x, _x2) {return _getItems.apply(this, arguments);}function _getItems()
             }
             needs = [];
             rows.forEach(function (row) {
-              needs.push(_itemHelpers["default"].rowToItemObj(row));
+              needs.push(_itemHelpers["default"].getFrontEndItemObj(row));
             });
             res.json(needs);_context.next = 25;break;case 18:_context.next = 20;return (
 
@@ -32,7 +32,7 @@ getItems(_x, _x2) {return _getItems.apply(this, arguments);}function _getItems()
             }
             _needs = [];
             _rows.forEach(function (row) {
-              _needs.push(_itemHelpers["default"].rowToItemObj(row));
+              _needs.push(_itemHelpers["default"].getFrontEndItemObj(row));
             });
             res.json(_needs);case 25:_context.next = 31;break;case 27:_context.prev = 27;_context.t0 = _context["catch"](0);
 

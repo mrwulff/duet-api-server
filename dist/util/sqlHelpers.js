@@ -55,9 +55,8 @@ function _insertMessageIntoDB() {_insertMessageIntoDB = _asyncToGenerator( /*#__
 
 
 
-
 // -------------------- DONATIONS -------------------- //
-function _getFBMessengerInfoFromItemId() {_getFBMessengerInfoFromItemId = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(itemId) {var conn, _ref, _ref2, rows, fields;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.prev = 0;_context2.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context2.sent;_context2.next = 6;return conn.query("SELECT " + "items.name AS item_name, items.pickup_code, " + "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " + "stores.name AS store_name, " + "donations.donor_fname as donor_fname, donations.donor_lname as donor_lname, " + "donations.donor_country as donor_country " + "FROM items " + "INNER JOIN beneficiaries ON items.beneficiary_id = beneficiaries.beneficiary_id " + "INNER JOIN stores ON items.store_id = stores.store_id " + "LEFT JOIN donations ON items.donation_id = donations.donation_id " + "WHERE items.item_id=?", [itemId]);case 6:_ref = _context2.sent;_ref2 = _slicedToArray(_ref, 2);rows = _ref2[0];fields = _ref2[1];if (!(rows.length === 0)) {_context2.next = 15;break;}console.log("No rows found in getFBMessengerInfoFromItemId! Item ID: " + itemId);return _context2.abrupt("return", null);case 15:return _context2.abrupt("return", rows[0]);case 16:_context2.next = 22;break;case 18:_context2.prev = 18;_context2.t0 = _context2["catch"](0);_errorHandler["default"].handleError(_context2.t0, "sqlHelper/getFBMessengerInfoFromItemId");throw _context2.t0;case 22:case "end":return _context2.stop();}}}, _callee2, null, [[0, 18]]);}));return _getFBMessengerInfoFromItemId.apply(this, arguments);}function
+function _getFBMessengerInfoFromItemId() {_getFBMessengerInfoFromItemId = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(itemId) {var conn, _ref, _ref2, rows, fields;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.prev = 0;_context2.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context2.sent;_context2.next = 6;return conn.query("SELECT " + "items.name AS item_name, items.pickup_code, " + "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " + "stores.name AS store_name, " + "donor_fname, donor_lname, donor_country " + "FROM items " + "INNER JOIN beneficiaries ON items.beneficiary_id = beneficiaries.beneficiary_id " + "INNER JOIN stores ON items.store_id = stores.store_id " + "LEFT JOIN donations ON items.donation_id = donations.donation_id " + "WHERE items.item_id=?", [itemId]);case 6:_ref = _context2.sent;_ref2 = _slicedToArray(_ref, 2);rows = _ref2[0];fields = _ref2[1];if (!(rows.length === 0)) {_context2.next = 15;break;}console.log("No rows found in getFBMessengerInfoFromItemId! Item ID: " + itemId);return _context2.abrupt("return", null);case 15:return _context2.abrupt("return", rows[0]);case 16:_context2.next = 22;break;case 18:_context2.prev = 18;_context2.t0 = _context2["catch"](0);_errorHandler["default"].handleError(_context2.t0, "sqlHelper/getFBMessengerInfoFromItemId");throw _context2.t0;case 22:case "end":return _context2.stop();}}}, _callee2, null, [[0, 18]]);}));return _getFBMessengerInfoFromItemId.apply(this, arguments);}function
 insertDonationIntoDB(_x3) {return _insertDonationIntoDB.apply(this, arguments);}function _insertDonationIntoDB() {_insertDonationIntoDB = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(donationInfo) {var insertDonationQuery, insertDonationValues, conn, _ref3, _ref4, results, fields;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
             // Insert donation info into DB, return insert ID
             insertDonationQuery = "";
@@ -352,7 +351,7 @@ getItemsForNotificationEmail(_x19) {return _getItemsForNotificationEmail.apply(t
 // -------------------- ITEMS -------------------- //
 function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17(store_id) {var conn, updatedItems, _ref19, _ref20, results, fields, item;return regeneratorRuntime.wrap(function _callee17$(_context17) {while (1) {switch (_context17.prev = _context17.next) {case 0:_context17.prev = 0;_context17.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context17.sent;updatedItems = [];_context17.next = 7;return conn.query("SELECT * from items where store_id=? and in_notification=1", [store_id]);case 7:_ref19 = _context17.sent;_ref20 = _slicedToArray(_ref19, 2);results = _ref20[0];fields = _ref20[1];if (results.length === 0) {console.log("sqlHelpers/getItemsForNotificationEmail: No items included in notification");} else {results.forEach(function (obj) {item = { itemId: obj.item_id, itemImage: obj.link, itemName: obj.name, itemPrice: obj.price_euros };updatedItems.push(item);});}return _context17.abrupt("return", updatedItems);case 15:_context17.prev = 15;_context17.t0 = _context17["catch"](0);_errorHandler["default"].handleError(_context17.t0, "sqlHelpers/getItemsForNotificationEmail");throw _context17.t0;case 19:case "end":return _context17.stop();}}}, _callee17, null, [[0, 15]]);}));return _getItemsForNotificationEmail.apply(this, arguments);}var itemsQuery =
 "SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
-"status, store_id, icon_url, " +
+"status, comment, store_id, icon_url, " +
 "stores.name as store_name, stores.google_maps as store_maps_link, " +
 "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
 "donations.timestamp as donation_timestamp, donations.donor_email as donor_email, " +
@@ -370,7 +369,6 @@ getItem(_x20) {return _getItem.apply(this, arguments);}function _getItem() {_get
               conn.query(
               itemsQuery + " WHERE item_id=?",
               [itemId]));case 6:_ref21 = _context18.sent;_ref22 = _slicedToArray(_ref21, 2);results = _ref22[0];fields = _ref22[1];if (!(
-
             results.length === 0)) {_context18.next = 14;break;}return _context18.abrupt("return",
             null);case 14:return _context18.abrupt("return",
 
@@ -380,6 +378,8 @@ getItem(_x20) {return _getItem.apply(this, arguments);}function _getItem() {_get
 
             _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getItem");throw _context18.t0;case 21:case "end":return _context18.stop();}}}, _callee18, null, [[0, 17]]);}));return _getItem.apply(this, arguments);}function
 
+
+            _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getItem");throw _context18.t0;case 21:case "end":return _context18.stop();}}}, _callee18, null, [[0, 17]]);}));return _getItem.apply(this, arguments);}function
 
 
 
@@ -490,11 +490,30 @@ unsetItemsNotificationFlag(_x26) {return _unsetItemsNotificationFlag.apply(this,
 
 
 // -------------------- BENEFICIARIES -------------------- //
-function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee24$(_context24) {while (1) {switch (_context24.prev = _context24.next) {case 0:_context24.prev = 0;_context24.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context24.sent;_context24.next = 6;return conn.query("UPDATE items SET in_notification=0 where item_id IN (?)", [item_ids]);case 6:_context24.next = 12;break;case 8:_context24.prev = 8;_context24.t0 = _context24["catch"](0);_errorHandler["default"].handleError(_context24.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context24.t0;case 12:case "end":return _context24.stop();}}}, _callee24, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}function getBeneficiaryInfo(_x27) {return _getBeneficiaryInfo.apply(this, arguments);}
+function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee24$(_context24) {while (1) {switch (_context24.prev = _context24.next) {case 0:_context24.prev = 0;_context24.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context24.sent;_context24.next = 6;return conn.query("UPDATE items SET in_notification=0 where item_id IN (?)", [item_ids]);case 6:_context24.next = 12;break;case 8:_context24.prev = 8;_context24.t0 = _context24["catch"](0);_errorHandler["default"].handleError(_context24.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context24.t0;case 12:case "end":return _context24.stop();}}}, _callee24, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}var beneficiariesQuery = "SELECT beneficiary_id, first_name, last_name, story, " +
+"origin_city, origin_country, current_city, current_country, family_image_url, visible " +
+"FROM beneficiaries";function
+
+getBeneficiaryInfo(_x27) {return _getBeneficiaryInfo.apply(this, arguments);}function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(beneficiaryId) {var conn, _ref29, _ref30, results, fields;return regeneratorRuntime.wrap(function _callee25$(_context25) {while (1) {switch (_context25.prev = _context25.next) {case 0:_context25.prev = 0;_context25.next = 3;return (
+
+
+              _config["default"].dbInitConnectPromise());case 3:conn = _context25.sent;_context25.next = 6;return (
+              conn.query(
+              beneficiariesQuery +
+              " WHERE beneficiary_id = ?",
+              [beneficiaryId]));case 6:_ref29 = _context25.sent;_ref30 = _slicedToArray(_ref29, 2);results = _ref30[0];fields = _ref30[1];if (!(
+
+            results.length === 0)) {_context25.next = 12;break;}return _context25.abrupt("return",
+            null);case 12:return _context25.abrupt("return",
+
+            results[0]);case 15:_context25.prev = 15;_context25.t0 = _context25["catch"](0);
+
+            _errorHandler["default"].handleError(_context25.t0, "sqlHelpers/getBeneficiaryInfo");throw _context25.t0;case 19:case "end":return _context25.stop();}}}, _callee25, null, [[0, 15]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function
 
 
 
 
+getBeneficiaryNeeds(_x28) {return _getBeneficiaryNeeds.apply(this, arguments);}
 
 
 
@@ -511,44 +530,25 @@ function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGe
 
 
 // TODO: re-use itemsQuery?
-function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(beneficiaryId) {var conn, _ref29, _ref30, results, fields;return regeneratorRuntime.wrap(function _callee25$(_context25) {while (1) {switch (_context25.prev = _context25.next) {case 0:_context25.prev = 0;_context25.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context25.sent;_context25.next = 6;return conn.query("SELECT beneficiary_id, first_name, last_name, story, " + "origin_city, origin_country, current_city, current_country, family_image_url, visible " + "FROM beneficiaries WHERE beneficiary_id = ?", [beneficiaryId]);case 6:_ref29 = _context25.sent;_ref30 = _slicedToArray(_ref29, 2);results = _ref30[0];fields = _ref30[1];if (!(results.length === 0)) {_context25.next = 12;break;}return _context25.abrupt("return", null);case 12:return _context25.abrupt("return", results[0]);case 15:_context25.prev = 15;_context25.t0 = _context25["catch"](0);_errorHandler["default"].handleError(_context25.t0, "sqlHelpers/getBeneficiaryInfo");throw _context25.t0;case 19:case "end":return _context25.stop();}}}, _callee25, null, [[0, 15]]);}));return _getBeneficiaryInfo.apply(this, arguments);}function getBeneficiaryNeeds(_x28) {return _getBeneficiaryNeeds.apply(this, arguments);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// TODO: re-use itemsQuery?
-function _getBeneficiaryNeeds() {_getBeneficiaryNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(beneficiaryId) {var conn, _ref31, _ref32, results, fields;return regeneratorRuntime.wrap(function _callee26$(_context26) {while (1) {switch (_context26.prev = _context26.next) {case 0:_context26.prev = 0;_context26.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context26.sent;_context26.next = 6;return conn.query("SELECT item_id, link, items.name, pickup_code, price_euros, " + "status, store_id, icon_url, " + "stores.name as store_name, stores.google_maps as store_maps_link, " + "donations.timestamp as donation_timestamp, donor_fname, donor_lname, donor_country " + "FROM items " + "INNER JOIN categories USING(category_id) " + "INNER JOIN stores USING(store_id) " + "LEFT JOIN donations USING(donation_id)" + "WHERE beneficiary_id = ?", [beneficiaryId]);case 6:_ref31 = _context26.sent;_ref32 = _slicedToArray(_ref31, 2);results = _ref32[0];fields = _ref32[1];return _context26.abrupt("return", results);case 13:_context26.prev = 13;_context26.t0 = _context26["catch"](0);_errorHandler["default"].handleError(_context26.t0, "sqlHelpers/getBeneficiaryInfo");throw _context26.t0;case 17:case "end":return _context26.stop();}}}, _callee26, null, [[0, 13]]);}));return _getBeneficiaryNeeds.apply(this, arguments);}function getAllBeneficiaryInfoAndNeeds() {return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}function _getAllBeneficiaryInfoAndNeeds() {_getAllBeneficiaryInfoAndNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27() {var conn, _ref33, _ref34, results, fields;return regeneratorRuntime.wrap(function _callee27$(_context27) {while (1) {switch (_context27.prev = _context27.next) {case 0:_context27.prev = 0;_context27.next = 3;return (
+function _getBeneficiaryNeeds() {_getBeneficiaryNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(beneficiaryId) {var conn, _ref31, _ref32, results, fields;return regeneratorRuntime.wrap(function _callee26$(_context26) {while (1) {switch (_context26.prev = _context26.next) {case 0:_context26.prev = 0;_context26.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context26.sent;_context26.next = 6;return conn.query(itemsQuery + " WHERE beneficiary_id = ?", [beneficiaryId]);case 6:_ref31 = _context26.sent;_ref32 = _slicedToArray(_ref31, 2);results = _ref32[0];fields = _ref32[1];return _context26.abrupt("return", results);case 13:_context26.prev = 13;_context26.t0 = _context26["catch"](0);_errorHandler["default"].handleError(_context26.t0, "sqlHelpers/getBeneficiaryInfo");throw _context26.t0;case 17:case "end":return _context26.stop();}}}, _callee26, null, [[0, 13]]);}));return _getBeneficiaryNeeds.apply(this, arguments);}function getAllBeneficiaryInfoAndNeeds() {return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}function _getAllBeneficiaryInfoAndNeeds() {_getAllBeneficiaryInfoAndNeeds = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27() {var conn, _ref33, _ref34, results, fields;return regeneratorRuntime.wrap(function _callee27$(_context27) {while (1) {switch (_context27.prev = _context27.next) {case 0:_context27.prev = 0;_context27.next = 3;return (
 
 
               _config["default"].dbInitConnectPromise());case 3:conn = _context27.sent;_context27.next = 6;return (
               conn.query(
               "SELECT beneficiary_id, first_name, last_name, story, " +
               "origin_city, origin_country, current_city, current_country, family_image_url, visible, " +
-              "item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " +
-              "stores.name AS store_name, " +
+              "item_id, link, items.name, pickup_code, price_euros, comment, status, icon_url, " +
+              "store_id, stores.name AS store_name, " +
               "donations.timestamp AS donation_timestamp, donor_fname, donor_lname, donor_country " +
-              "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
-              "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id"));case 6:_ref33 = _context27.sent;_ref34 = _slicedToArray(_ref33, 2);results = _ref34[0];fields = _ref34[1];return _context27.abrupt("return",
+              "FROM beneficiaries " +
+              "INNER JOIN items USING(beneficiary_id) " +
+              "INNER JOIN categories USING(category_id) " +
+              "INNER JOIN stores USING(store_id) " +
+              "LEFT JOIN donations USING(donation_id) " +
+              "ORDER BY beneficiary_id"));case 6:_ref33 = _context27.sent;_ref34 = _slicedToArray(_ref33, 2);results = _ref34[0];fields = _ref34[1];return _context27.abrupt("return",
 
             results);case 13:_context27.prev = 13;_context27.t0 = _context27["catch"](0);
+
 
             _errorHandler["default"].handleError(_context27.t0, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");throw _context27.t0;case 17:case "end":return _context27.stop();}}}, _callee27, null, [[0, 13]]);}));return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}var _default = (_insertMessageIntoDB$ = {
 

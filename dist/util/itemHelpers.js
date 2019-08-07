@@ -13,7 +13,7 @@ function generatePickupCode(itemId) {
   return code;
 }
 
-function rowToItemObj(row) {
+function getFrontEndItemObj(row) {
   // SQL row to item object
   var itemObj = {
     itemId: row.item_id,
@@ -21,6 +21,7 @@ function rowToItemObj(row) {
     name: row.name,
     size: row.size,
     price: row.price_euros,
+    comment: row.comment,
     storeId: row.store_id,
     storeName: row.store_name,
     storeMapsLink: row.store_maps_link,
@@ -75,6 +76,6 @@ listRequestedItemsAndSetNotificiationFlags() {return _listRequestedItemsAndSetNo
 
 {
   generatePickupCode: generatePickupCode,
-  rowToItemObj: rowToItemObj,
+  getFrontEndItemObj: getFrontEndItemObj,
   getNextItemStatus: getNextItemStatus,
   listRequestedItemsAndSetNotificiationFlags: listRequestedItemsAndSetNotificiationFlags };exports["default"] = _default;

@@ -34,8 +34,7 @@ async function getFBMessengerInfoFromItemId(itemId) {
       "items.name AS item_name, items.pickup_code, " +
       "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " +
       "stores.name AS store_name, " +
-      "donations.donor_fname as donor_fname, donations.donor_lname as donor_lname, " +
-      "donations.donor_country as donor_country " +
+      "donor_fname, donor_lname, donor_country " +
       "FROM items " +
       "INNER JOIN beneficiaries ON items.beneficiary_id = beneficiaries.beneficiary_id " +
       "INNER JOIN stores ON items.store_id = stores.store_id " +
@@ -352,7 +351,7 @@ async function getItemsForNotificationEmail(store_id) {
 // -------------------- ITEMS -------------------- //
 let itemsQuery =
   "SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
-  "status, store_id, icon_url, " +
+  "status, comment, store_id, icon_url, " +
   "stores.name as store_name, stores.google_maps as store_maps_link, " +
   "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
   "donations.timestamp as donation_timestamp, donations.donor_email as donor_email, " +
@@ -490,14 +489,17 @@ async function unsetItemsNotificationFlag(item_ids) {
 
 
 // -------------------- BENEFICIARIES -------------------- //
+let beneficiariesQuery = "SELECT beneficiary_id, first_name, last_name, story, " +
+  "origin_city, origin_country, current_city, current_country, family_image_url, visible " +
+  "FROM beneficiaries";
+
 async function getBeneficiaryInfo(beneficiaryId) {
   // Get beneficiary info for 1 beneficiary
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
-      "SELECT beneficiary_id, first_name, last_name, story, " +
-      "origin_city, origin_country, current_city, current_country, family_image_url, visible " +
-      "FROM beneficiaries WHERE beneficiary_id = ?",
+      beneficiariesQuery +
+      " WHERE beneficiary_id = ?",
       [beneficiaryId]
     );
     if (results.length === 0) {
@@ -510,21 +512,13 @@ async function getBeneficiaryInfo(beneficiaryId) {
   }
 }
 
-// TODO: re-use itemsQuery?
 async function getBeneficiaryNeeds(beneficiaryId) {
   // Get item needs for 1 beneficiary
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
-      "SELECT item_id, link, items.name, pickup_code, price_euros, " +
-      "status, store_id, icon_url, " +
-      "stores.name as store_name, stores.google_maps as store_maps_link, " +
-      "donations.timestamp as donation_timestamp, donor_fname, donor_lname, donor_country " +
-      "FROM items " +
-      "INNER JOIN categories USING(category_id) " +
-      "INNER JOIN stores USING(store_id) " +
-      "LEFT JOIN donations USING(donation_id)" +
-      "WHERE beneficiary_id = ?",
+      itemsQuery +
+      " WHERE beneficiary_id = ?",
       [beneficiaryId]
     );
     return results;
@@ -542,11 +536,15 @@ async function getAllBeneficiaryInfoAndNeeds() {
     let [results, fields] = await conn.query(
       "SELECT beneficiary_id, first_name, last_name, story, " +
       "origin_city, origin_country, current_city, current_country, family_image_url, visible, " +
-      "item_id, link, items.name, pickup_code, price_euros, status, store_id, icon_url, " +
-      "stores.name AS store_name, " +
+      "item_id, link, items.name, pickup_code, price_euros, comment, status, icon_url, " +
+      "store_id, stores.name AS store_name, " +
       "donations.timestamp AS donation_timestamp, donor_fname, donor_lname, donor_country " +
-      "FROM beneficiaries INNER JOIN items USING(beneficiary_id) INNER JOIN categories USING(category_id) " +
-      "INNER JOIN stores USING(store_id) LEFT JOIN donations USING(donation_id) ORDER BY beneficiary_id"
+      "FROM beneficiaries " +
+      "INNER JOIN items USING(beneficiary_id) " + 
+      "INNER JOIN categories USING(category_id) " +
+      "INNER JOIN stores USING(store_id) " +
+      "LEFT JOIN donations USING(donation_id) " +
+      "ORDER BY beneficiary_id"
     );
     return results;
   } catch (err) {
