@@ -9,37 +9,37 @@ getItems(_x, _x2) {return _getItems.apply(this, arguments);}function _getItems()
 
 
             req.query.item_id) {_context.next = 8;break;}_context.next = 4;return (
-              _sqlHelpers["default"].getItem(req.query.item_id));case 4:item = _context.sent;
-            res.json([item]);_context.next = 25;break;case 8:if (!
+              _sqlHelpers["default"].getItem(req.query.item_id));case 4:item = _context.sent;return _context.abrupt("return",
+            res.json([item]));case 8:if (!
 
 
-            req.query.store_id) {_context.next = 18;break;}_context.next = 11;return (
-              _sqlHelpers["default"].getItemsForStore(req.query.store_id));case 11:rows = _context.sent;
-            if (rows.length === 0) {
-              res.send({ msg: "No Item Needs" });
-            }
+            req.query.store_id) {_context.next = 19;break;}_context.next = 11;return (
+              _sqlHelpers["default"].getItemsForStore(req.query.store_id));case 11:rows = _context.sent;if (!(
+            rows.length === 0)) {_context.next = 14;break;}return _context.abrupt("return",
+            res.send([]));case 14:
+
             needs = [];
             rows.forEach(function (row) {
               needs.push(_itemHelpers["default"].getFrontEndItemObj(row));
-            });
-            res.json(needs);_context.next = 25;break;case 18:_context.next = 20;return (
+            });return _context.abrupt("return",
+            res.json(needs));case 19:_context.next = 21;return (
 
 
 
-              _sqlHelpers["default"].getAllItems());case 20:_rows = _context.sent;
-            if (_rows.length === 0) {
-              res.send({ msg: "No Item Needs" });
-            }
+              _sqlHelpers["default"].getAllItems());case 21:_rows = _context.sent;if (!(
+            _rows.length === 0)) {_context.next = 24;break;}return _context.abrupt("return",
+            res.send([]));case 24:
+
             _needs = [];
             _rows.forEach(function (row) {
               _needs.push(_itemHelpers["default"].getFrontEndItemObj(row));
-            });
-            res.json(_needs);case 25:_context.next = 31;break;case 27:_context.prev = 27;_context.t0 = _context["catch"](0);
+            });return _context.abrupt("return",
+            res.json(_needs));case 27:_context.next = 33;break;case 29:_context.prev = 29;_context.t0 = _context["catch"](0);
 
 
 
-            _errorHandler["default"].handleError(_context.t0, "items/getItems");
-            res.status(500).send();case 31:case "end":return _context.stop();}}}, _callee, null, [[0, 27]]);}));return _getItems.apply(this, arguments);}function
+            _errorHandler["default"].handleError(_context.t0, "items/getItems");return _context.abrupt("return",
+            res.status(500).send());case 33:case "end":return _context.stop();}}}, _callee, null, [[0, 29]]);}));return _getItems.apply(this, arguments);}function
 
 
 

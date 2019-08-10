@@ -10,36 +10,36 @@ async function getItems(req, res) {
     // Get single item
     if (req.query.item_id) {
       let item = await sqlHelpers.getItem(req.query.item_id);
-      res.json([item]);
+      return res.json([item]);
     }
     // Get items for store
     else if (req.query.store_id) {
       let rows = await sqlHelpers.getItemsForStore(req.query.store_id);
       if (rows.length === 0) {
-        res.send({ msg: "No Item Needs" });
+        return res.send([]);
       }
       let needs = [];
       rows.forEach(function (row) {
         needs.push(itemHelpers.getFrontEndItemObj(row));
       });
-      res.json(needs);
+      return res.json(needs);
     }
     // Get all items
     else {
       let rows = await sqlHelpers.getAllItems();
       if (rows.length === 0) {
-        res.send({ msg: "No Item Needs" });
+        return res.send([]);
       }
       let needs = [];
       rows.forEach(function (row) {
         needs.push(itemHelpers.getFrontEndItemObj(row));
       });
-      res.json(needs);
+      return res.json(needs);
     }
   }
   catch (err) {
     errorHandler.handleError(err, "items/getItems");
-    res.status(500).send();
+    return res.status(500).send();
   }
 }
 

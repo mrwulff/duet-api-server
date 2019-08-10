@@ -369,6 +369,7 @@ getItem(_x20) {return _getItem.apply(this, arguments);}function _getItem() {_get
               conn.query(
               itemsQuery + " WHERE item_id=?",
               [itemId]));case 6:_ref21 = _context18.sent;_ref22 = _slicedToArray(_ref21, 2);results = _ref22[0];fields = _ref22[1];if (!(
+
             results.length === 0)) {_context18.next = 14;break;}return _context18.abrupt("return",
             null);case 14:return _context18.abrupt("return",
 
@@ -378,8 +379,6 @@ getItem(_x20) {return _getItem.apply(this, arguments);}function _getItem() {_get
 
             _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getItem");throw _context18.t0;case 21:case "end":return _context18.stop();}}}, _callee18, null, [[0, 17]]);}));return _getItem.apply(this, arguments);}function
 
-
-            _errorHandler["default"].handleError(_context18.t0, "sqlHelpers/getItem");throw _context18.t0;case 21:case "end":return _context18.stop();}}}, _callee18, null, [[0, 17]]);}));return _getItem.apply(this, arguments);}function
 
 
 
@@ -548,7 +547,6 @@ function _getBeneficiaryNeeds() {_getBeneficiaryNeeds = _asyncToGenerator( /*#__
               "ORDER BY beneficiary_id"));case 6:_ref33 = _context27.sent;_ref34 = _slicedToArray(_ref33, 2);results = _ref34[0];fields = _ref34[1];return _context27.abrupt("return",
 
             results);case 13:_context27.prev = 13;_context27.t0 = _context27["catch"](0);
-
 
             _errorHandler["default"].handleError(_context27.t0, "sqlHelpers/getAllBeneficiaryInfoAndNeeds");throw _context27.t0;case 17:case "end":return _context27.stop();}}}, _callee27, null, [[0, 13]]);}));return _getAllBeneficiaryInfoAndNeeds.apply(this, arguments);}var _default = (_insertMessageIntoDB$ = {
 
