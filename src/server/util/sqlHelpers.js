@@ -354,6 +354,7 @@ let itemsQuery =
   "status, comment, store_id, icon_url, " +
   "stores.name as store_name, stores.google_maps as store_maps_link, " +
   "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
+  "family_image_url, has_family_photo, " +
   "donations.timestamp as donation_timestamp, donations.donor_email as donor_email, " +
   "donations.donor_fname as donor_first, donations.donor_lname as donor_last, donations.donor_country as donor_country " +
   "FROM items " +
@@ -490,7 +491,8 @@ async function unsetItemsNotificationFlag(item_ids) {
 
 // -------------------- BENEFICIARIES -------------------- //
 let beneficiariesQuery = "SELECT beneficiary_id, first_name, last_name, story, " +
-  "origin_city, origin_country, current_city, current_country, family_image_url, visible " +
+  "origin_city, origin_country, current_city, current_country, " +
+  "family_image_url, has_family_photo, visible " +
   "FROM beneficiaries";
 
 async function getBeneficiaryInfo(beneficiaryId) {
@@ -535,7 +537,8 @@ async function getAllBeneficiaryInfoAndNeeds() {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
       "SELECT beneficiary_id, first_name, last_name, story, " +
-      "origin_city, origin_country, current_city, current_country, family_image_url, visible, " +
+      "origin_city, origin_country, current_city, current_country, " +
+      "family_image_url, has_family_photo, visible, " +
       "item_id, link, items.name, pickup_code, price_euros, comment, status, icon_url, " +
       "store_id, stores.name AS store_name, " +
       "donations.timestamp AS donation_timestamp, donor_fname, donor_lname, donor_country " +

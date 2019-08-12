@@ -14,6 +14,7 @@ function getFrontEndBeneficiaryObj(row) {
         currentCity: row.current_city,
         currentCountry: row.current_country,
         familyImage: row.family_image_url,
+        hasFamilyPhoto: row.has_family_photo,
         visible: row.visible
     };
     return beneficiaryObj;

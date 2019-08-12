@@ -121,21 +121,38 @@ sendItemStatusUpdateEmail(_x6) {return _sendItemStatusUpdateEmail.apply(this, ar
 
 
 
-sendItemPickedUpEmail(_x7) {return _sendItemPickedUpEmail.apply(this, arguments);}function _sendItemPickedUpEmail() {_sendItemPickedUpEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(itemResult) {var emailTemplateId, recipientList, subject, _msg5;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:_context6.prev = 0;
+sendItemPickedUpEmail(_x7) {return _sendItemPickedUpEmail.apply(this, arguments);}function _sendItemPickedUpEmail() {_sendItemPickedUpEmail = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(itemResult) {var emailTemplateId, recipientList, subject, _msg5;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:_context6.prev = 0;if (
 
-            // Send item status update email: PICKED_UP
+
+            itemResult.donor_first) {_context6.next = 3;break;}throw (
+              new Error("Missing donor_first!"));case 3:if (
+
+            itemResult.donor_email) {_context6.next = 5;break;}throw (
+              new Error("Missing donor_email!"));case 5:
+
+            // Get email template, family_image_url depending on whether beneficiary has family photo
+            // TODO: implement Spence's design with family photo
+            // var emailTemplateId, family_image_url;
+            // var family_image_url;
+            // if (itemResult.has_family_photo) {
+            //   emailTemplateId = 'd-f309ea910a9a4b0a80fcf920ae48f075'; // family photo
+            //   family_image_url = itemResult.family_image_url;
+            // } else {
+            //   emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3'; // no family photo
+            //   family_image_url = 'https://duet-web-assets.s3-us-west-1.amazonaws.com/Website+Assets/banner.png'; // Duet cover photo
+            // }
+            // Set subject, recipient list depending on environment
             emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3';
 
 
-            if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "sandbox") {
-              recipientList = ["duet.giving@gmail.com"];
-              subject = "[SANDBOX] You've made a difference";
-            } else if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" && itemResult.donor_email && itemResult.donor_first) {
+            if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" || process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'prod') {
               recipientList = [itemResult.donor_email, "duet.giving@gmail.com"];
               subject = "You've made a difference";
             } else {
-              _errorHandler["default"].handleError("Unable to send itemPickedUpEmail! itemResult: " + JSON.stringify(itemResult), "sendgridHelpers/sendItemPickedUpEmail");
+              recipientList = ["duet.giving@gmail.com"];
+              subject = "[SANDBOX] You've made a difference";
             }
+            // Send message
             _msg5 = {
               to: recipientList,
               from: "duet@giveduet.org",
@@ -145,13 +162,15 @@ sendItemPickedUpEmail(_x7) {return _sendItemPickedUpEmail.apply(this, arguments)
                 item_name: itemResult.name,
                 item_link: itemResult.link,
                 donor_first: itemResult.donor_first,
-                beneficiary_last: itemResult.beneficiary_last } };_context6.next = 6;return (
+                beneficiary_last: itemResult.beneficiary_last,
+                beneficiary_link: process.env.DUET_BENEFICIARIES_URL + '/' + itemResult.beneficiary_id
+                // family_image_url: family_image_url
+              } };_context6.next = 10;return (
 
+              sgMail.sendMultiple(_msg5));case 10:
+            console.log("Item pickup message delivered successfully.");_context6.next = 16;break;case 13:_context6.prev = 13;_context6.t0 = _context6["catch"](0);
 
-              sgMail.sendMultiple(_msg5));case 6:
-            console.log("Item pickup message delivered successfully.");_context6.next = 12;break;case 9:_context6.prev = 9;_context6.t0 = _context6["catch"](0);
-
-            _errorHandler["default"].handleError(_context6.t0, "sendgridHelpers/sendItemPickedUpEmail");case 12:case "end":return _context6.stop();}}}, _callee6, null, [[0, 9]]);}));return _sendItemPickedUpEmail.apply(this, arguments);}var _default =
+            _errorHandler["default"].handleError(_context6.t0, "sendgridHelpers/sendItemPickedUpEmail");case 16:case "end":return _context6.stop();}}}, _callee6, null, [[0, 13]]);}));return _sendItemPickedUpEmail.apply(this, arguments);}var _default =
 
 
 

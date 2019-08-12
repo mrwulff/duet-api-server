@@ -123,19 +123,36 @@ async function sendItemStatusUpdateEmail(itemResult) {
 
 async function sendItemPickedUpEmail(itemResult) {
   try {
-    // Send item status update email: PICKED_UP
+    // Error checks
+    if (!itemResult.donor_first) {
+      throw new Error("Missing donor_first!");
+    }
+    if (!itemResult.donor_email) {
+      throw new Error("Missing donor_email!");
+    }
+    // Get email template, family_image_url depending on whether beneficiary has family photo
+    // TODO: implement Spence's design with family photo
+    // var emailTemplateId, family_image_url;
+    // var family_image_url;
+    // if (itemResult.has_family_photo) {
+    //   emailTemplateId = 'd-f309ea910a9a4b0a80fcf920ae48f075'; // family photo
+    //   family_image_url = itemResult.family_image_url;
+    // } else {
+    //   emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3'; // no family photo
+    //   family_image_url = 'https://duet-web-assets.s3-us-west-1.amazonaws.com/Website+Assets/banner.png'; // Duet cover photo
+    // }
+    // Set subject, recipient list depending on environment
     const emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3';
     let recipientList;
     let subject;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "sandbox") {
-      recipientList = ["duet.giving@gmail.com"];
-      subject = "[SANDBOX] You've made a difference";
-    } else if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" && itemResult.donor_email && itemResult.donor_first) {
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" || process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'prod') {
       recipientList = [itemResult.donor_email, "duet.giving@gmail.com"];
       subject = "You've made a difference";
     } else {
-      errorHandler.handleError("Unable to send itemPickedUpEmail! itemResult: " + JSON.stringify(itemResult), "sendgridHelpers/sendItemPickedUpEmail");
+      recipientList = ["duet.giving@gmail.com"];
+      subject = "[SANDBOX] You've made a difference";
     }
+    // Send message
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
@@ -145,7 +162,9 @@ async function sendItemPickedUpEmail(itemResult) {
         item_name: itemResult.name,
         item_link: itemResult.link,
         donor_first: itemResult.donor_first,
-        beneficiary_last: itemResult.beneficiary_last
+        beneficiary_last: itemResult.beneficiary_last,
+        beneficiary_link: (process.env.DUET_BENEFICIARIES_URL + '/' + itemResult.beneficiary_id),
+        // family_image_url: family_image_url
       }
     };
     await sgMail.sendMultiple(msg);

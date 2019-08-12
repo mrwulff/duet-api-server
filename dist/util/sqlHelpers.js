@@ -354,6 +354,7 @@ function _getItemsForNotificationEmail() {_getItemsForNotificationEmail = _async
 "status, comment, store_id, icon_url, " +
 "stores.name as store_name, stores.google_maps as store_maps_link, " +
 "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
+"family_image_url, has_family_photo, " +
 "donations.timestamp as donation_timestamp, donations.donor_email as donor_email, " +
 "donations.donor_fname as donor_first, donations.donor_lname as donor_last, donations.donor_country as donor_country " +
 "FROM items " +
@@ -490,7 +491,8 @@ unsetItemsNotificationFlag(_x26) {return _unsetItemsNotificationFlag.apply(this,
 
 // -------------------- BENEFICIARIES -------------------- //
 function _unsetItemsNotificationFlag() {_unsetItemsNotificationFlag = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(item_ids) {var conn;return regeneratorRuntime.wrap(function _callee24$(_context24) {while (1) {switch (_context24.prev = _context24.next) {case 0:_context24.prev = 0;_context24.next = 3;return _config["default"].dbInitConnectPromise();case 3:conn = _context24.sent;_context24.next = 6;return conn.query("UPDATE items SET in_notification=0 where item_id IN (?)", [item_ids]);case 6:_context24.next = 12;break;case 8:_context24.prev = 8;_context24.t0 = _context24["catch"](0);_errorHandler["default"].handleError(_context24.t0, "sqlHelpers/unsetItemsNotificationFlag");throw _context24.t0;case 12:case "end":return _context24.stop();}}}, _callee24, null, [[0, 8]]);}));return _unsetItemsNotificationFlag.apply(this, arguments);}var beneficiariesQuery = "SELECT beneficiary_id, first_name, last_name, story, " +
-"origin_city, origin_country, current_city, current_country, family_image_url, visible " +
+"origin_city, origin_country, current_city, current_country, " +
+"family_image_url, has_family_photo, visible " +
 "FROM beneficiaries";function
 
 getBeneficiaryInfo(_x27) {return _getBeneficiaryInfo.apply(this, arguments);}function _getBeneficiaryInfo() {_getBeneficiaryInfo = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(beneficiaryId) {var conn, _ref29, _ref30, results, fields;return regeneratorRuntime.wrap(function _callee25$(_context25) {while (1) {switch (_context25.prev = _context25.next) {case 0:_context25.prev = 0;_context25.next = 3;return (
@@ -535,7 +537,8 @@ function _getBeneficiaryNeeds() {_getBeneficiaryNeeds = _asyncToGenerator( /*#__
               _config["default"].dbInitConnectPromise());case 3:conn = _context27.sent;_context27.next = 6;return (
               conn.query(
               "SELECT beneficiary_id, first_name, last_name, story, " +
-              "origin_city, origin_country, current_city, current_country, family_image_url, visible, " +
+              "origin_city, origin_country, current_city, current_country, " +
+              "family_image_url, has_family_photo, visible, " +
               "item_id, link, items.name, pickup_code, price_euros, comment, status, icon_url, " +
               "store_id, stores.name AS store_name, " +
               "donations.timestamp AS donation_timestamp, donor_fname, donor_lname, donor_country " +
