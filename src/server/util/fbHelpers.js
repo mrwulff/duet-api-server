@@ -17,6 +17,9 @@ async function sendPickupNotification(itemId) {
             message += "\nThis item was donated by " + fbMessengerInfo.donor_fname + " " + fbMessengerInfo.donor_lname +
                 " (Country: " + fbMessengerInfo.donor_country + ")\n";
         }
+        if (fbMessengerInfo.link) {
+            message += ("\nPhoto: " + fbMessengerInfo.link);
+        }
         messenger.sendTextMessage({
             id: fbMessengerInfo.fb_psid,
             text: message,

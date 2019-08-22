@@ -31,7 +31,7 @@ async function getFBMessengerInfoFromItemId(itemId) {
     let conn = await config.dbInitConnectPromise();
     let [rows, fields] = await conn.query(
       "SELECT " +
-      "items.name AS item_name, items.pickup_code, " +
+      "items.name AS item_name, items.pickup_code, items.link, " +
       "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " +
       "stores.name AS store_name, " +
       "donor_fname, donor_lname, donor_country " +
