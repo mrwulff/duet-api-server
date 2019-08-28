@@ -1,9 +1,6 @@
 global._babelPolyfill = false;
 
-if (!global._babelPolyfill) {
-	require('babel-polyfill');
-}
-
+require("babel-polyfill");
 import express from "express";
 import routes from "./routes/index";
 import refugeeRoutes from "./routes/refugee";
