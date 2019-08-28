@@ -2,7 +2,7 @@ import sqlHelpers from "../util/sqlHelpers.js";
 import storeHelpers from '../util/storeHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
 import errorHandler from "../util/errorHandler.js";
-import 'babel-polyfill';
+
 var CronJob = require('cron').CronJob;
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
