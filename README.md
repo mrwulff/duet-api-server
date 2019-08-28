@@ -17,10 +17,7 @@ To start the server locally using `/src` files:
 ```
 nodemon --exec npm run start-dev
 ```
-When adding changes to the `/src` folder, remember to build them into the `/dist` folder
-```
-npm run build
-```
+
 ##### Running server
 In development:
 ```
