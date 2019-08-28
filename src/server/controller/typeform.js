@@ -45,7 +45,9 @@ async function processTypeformV4(req, res) {
     let photoUrl = encodeURI(origPhotoUrl);
     let itemName = typeformHelpers.getAnswerFromQuestionReference("item-name", answers, 'choice');
     let origPrice = typeformHelpers.getAnswerFromQuestionReference("item-price", answers, 'text');
-    let price = origPrice.replace(/,/g, '.').replace(":", ".").replace(/[^\d.]/g, ''); // replace "," with "."; remove non-numeric characters
+    console.log("Original price: " + origPrice);
+    let price = typeformHelpers.processPriceInput(origPrice);
+    console.log("Processed price: " + price);
     let size = typeformHelpers.getAnswerFromQuestionReference("item-size", answers, 'text'); // might be null
     let comment = typeformHelpers.getAnswerFromQuestionReference("comment", answers, 'text'); // might be null
     let store = typeformHelpers.getAnswerFromQuestionReference("store-name", answers, 'choice');
