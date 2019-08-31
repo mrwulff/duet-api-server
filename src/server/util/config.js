@@ -1,27 +1,12 @@
 import mysql from "mysql2";
 require("dotenv").config();
 
-// SQL
-let conn;
-function dbInitConnect() {
-  if (!conn) {
-    conn = mysql.createConnection({
-      host: process.env.DATABASE_HOST,
-      port: process.env.DATABASE_PORT,
-      user: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASS,
-      database: process.env.DATABASE
-    });
-  }
-  return conn;
-}
-
 // SQL, Promise version
 let connPromise;
 async function dbInitConnectPromise() {
   if (!connPromise) {
     let mysqlPromise = require('mysql2/promise');
-    connPromise = await mysqlPromise.createConnection({
+    connPromise = await mysqlPromise.createPool({
       host: process.env.DATABASE_HOST,
       port: process.env.DATABASE_PORT,
       user: process.env.DATABASE_USER,
@@ -83,7 +68,8 @@ function paypalInit() {
 
 
 export default { 
-  dbInitConnect, dbInitConnectPromise,
+  // dbInitConnect, 
+  dbInitConnectPromise,
   sendgridInit, 
   s3Init, 
   fbMessengerInit, 

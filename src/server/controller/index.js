@@ -4,7 +4,6 @@ import config from "./../util/config.js";
 
 // store this in environment variable later
 const secret = "secretkey";
-const conn = config.dbInitConnect();
 
 // NOTE: DEPRECATED
 // function login(req, res) {
