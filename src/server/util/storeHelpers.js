@@ -28,8 +28,10 @@ async function sendBankTransfersToStores() {
         paymentMethod: "bank"
       });
     }));
-    // send balance update email to duet.giving@gmail.com
-    await transferwiseHelpers.sendTransferwiseEuroBalanceUpdateEmail();
+    // if payment was sent, send balance update email to duet.giving@gmail.com
+    if (storesNeedingTransfer.length) {
+      await transferwiseHelpers.sendTransferwiseEuroBalanceUpdateEmail();
+    }
   } catch (err) {
     errorHandler.handleError(err, "storeHelpers/sendBankTransfersToStores");
   }
