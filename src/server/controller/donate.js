@@ -4,6 +4,7 @@ import sqlHelpers from "../util/sqlHelpers.js";
 import paypalHelpers from "../util/paypalHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
+import itemHelpers from "../util/itemHelpers.js";
 
 async function itemPaid(req, res) {
   let donationInfo = req.body;
@@ -22,11 +23,9 @@ async function itemPaid(req, res) {
         donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
       }
 
-      
       donationInfo.itemIds.forEach(async function (itemId) {
         // Mark items as donated
         await sqlHelpers.markItemAsDonated(itemId, donationId);
-
         // Send generic item status updated email
         let itemResult = await sqlHelpers.getItem(itemId);
         if (itemResult) {
@@ -36,22 +35,26 @@ async function itemPaid(req, res) {
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
       // Send PayPal payout to stores with payment_method='paypal'
-      if (process.env.PAYPAL_MODE === "live" || process.env.PAYPAL_MODE === "sandbox") {
-        let payoutInfo = await sqlHelpers.getPayoutInfo(donationInfo.itemIds);
-        payoutInfo.forEach(singleStoreResult => {
-          paypalHelpers.sendPayout(
-            singleStoreResult.paypal,
-            singleStoreResult.payment_amount,
-            "EUR",
-            singleStoreResult.item_ids
-            );
-          console.log("Successfully sent payout(s) for item IDs: " + donationInfo.itemIds);
+      let payoutInfo = await sqlHelpers.getPayPalPayoutInfo(donationInfo.itemIds);
+      await Promise.all(payoutInfo.map(async singleStoreResult => {
+        await paypalHelpers.sendPayout(
+          singleStoreResult.paypal,
+          singleStoreResult.payment_amount,
+          "EUR",
+          singleStoreResult.item_ids
+        );
+        console.log("Successfully sent payout(s) for item IDs: " + donationInfo.itemIds);
+        // send "incoming payment" email to store
+        sendgridHelpers.sendStorePaymentEmail({
+          storeEmail: singleStoreResult.store_email,
+          storeName: singleStoreResult.store_name,
+          paymentAmountEuros: singleStoreResult.payment_amount,
+          paymentMethod: "PayPal",
+          itemIds: itemHelpers.itemIdsListToString(singleStoreResult.item_ids),
         });
-      }
-
-      if (process.env.SET_STORE_NOTIFICATION_FLAG === 'true') {
-        await sqlHelpers.setStoreNotificationFlags(donationInfo.itemIds);
-      }
+      }));
+      // Check remaining balances
+      await paypalHelpers.checkPayPalEuroBalanceAndSendEmailIfLow();
 
       // SEND EMAIL TO DONOR
       if (donationInfo.email) {

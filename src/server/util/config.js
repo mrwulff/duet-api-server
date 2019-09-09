@@ -66,6 +66,22 @@ function paypalInit() {
   return paypal;
 }
 
+// PayPal NVP: https://www.npmjs.com/package/paypal-nvp-api
+let paypalNVP;
+function paypalNVPInit() {
+  if (!paypalNVP) {
+    const paypalNVPPackage = require('paypal-nvp-api');
+    var config = {
+      mode: process.env.PAYPAL_MODE,
+      username: process.env.PAYPAL_NVP_API_USERNAME,
+      password: process.env.PAYPAL_NVP_API_PASSWORD,
+      signature: process.env.PAYPAL_NVP_API_SIGNATURE
+    };
+    paypalNVP = paypalNVPPackage(config);
+  }
+  return paypalNVP;
+}
+
 
 export default { 
   // dbInitConnect, 
@@ -73,4 +89,6 @@ export default {
   sendgridInit, 
   s3Init, 
   fbMessengerInit, 
-  paypalInit };
+  paypalInit,
+  paypalNVPInit
+};

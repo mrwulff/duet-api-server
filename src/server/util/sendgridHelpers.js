@@ -68,14 +68,17 @@ async function sendStoreNotificationEmail(storeNotificationInfo) {
   try {
     // Send store notification email
     let subject;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'sandbox') {
-      subject = "[SANDBOX] Duet: The following items need your attention!";
-    } else {
+    let recipientList;
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'live') {
       subject = "Duet: The following items need your attention!";
+      recipientList = ["duet.giving@gmail.com", storeNotificationInfo.email];
+    } else {
+      subject = "[SANDBOX] Duet: The following items need your attention!";
+      recipientList = ["duet.giving@gmail.com"];
     }
 
     const msg = {
-      to: storeNotificationInfo.recipientList,
+      to: recipientList,
       from: "duet@giveduet.org",
       templateId: "d-435a092f0be54b07b5135799ac7dfb01",
       dynamic_template_data: {
@@ -85,14 +88,69 @@ async function sendStoreNotificationEmail(storeNotificationInfo) {
       }
     };
     await sgMail.sendMultiple(msg);
-    console.log(`Message delivered to ${storeNotificationInfo.name} at ${storeNotificationInfo.email} successfully.`);
+    console.log(`Store notification email delivered to ${storeNotificationInfo.name} at ${storeNotificationInfo.email} successfully.`);
   } catch (err) {
     errorHandler.handleError(err, "sendgridHelpers/sendStoreNotificationEmail");
   }
 }
 
+async function sendStorePaymentEmail(storePaymentInfo) {
+  // Inputs: storeEmail, storeName, paymentAmountEuros, paymentMethod, itemIds (list)
+  try {
+    let subject;
+    let recipientList;
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'live') {
+      subject = "Duet: You have an incoming payment!";
+      recipientList = ["duet.giving@gmail.com", storePaymentInfo.storeEmail];
+    } else {
+      subject = "[SANDBOX] Duet: You have an incoming payment!";
+      recipientList = ["duet.giving@gmail.com"];
+    }
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: "d-65decba44d8e4ba08439fe846db2340c",
+      dynamic_template_data: {
+        storeName: storePaymentInfo.storeName,
+        paymentAmountEuros: storePaymentInfo.paymentAmountEuros,
+        paymentMethod: storePaymentInfo.paymentMethod,
+        itemIds: storePaymentInfo.itemIds, // string (e.g. #41, #42, #43)
+        subject: subject
+      }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Store payment email delivered to ${storePaymentInfo.storeName} at ${storePaymentInfo.storeEmail} successfully.`);
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendStoreNotificationEmail");
+  }
+}
+
+async function sendBalanceUpdateEmail(paymentSite, currency, balance, subjectTag) {
+  try {
+    var env = (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" ? "PROD" : "SANDBOX");
+    const msg = {
+      to: "duet.giving@gmail.com",
+      from: "duet@giveduet.org",
+      templateId: "d-3bd8a48f8cf64a188e4fd3b6ef73faf8",
+      dynamic_template_data: {
+        subject: `[${env} - ${subjectTag}] Account Balance Update`,
+        paymentSite: paymentSite,
+        currency: currency,
+        balance: balance
+      }
+    };
+    await sgMail.send(msg);
+    console.log(`${paymentSite} balance update email delivered to duet.giving@gmail.com successfully.`);
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendBalanceUpdateEmail");
+  }
+}
+
 async function sendItemStatusUpdateEmail(itemResult) {
   try {
+    if (process.env.SEND_ITEM_STATUS_UPDATE_EMAILS === "false") {
+      return;
+    }
     // Send item status update email
     const emailTemplateId = 'd-15967181f418425fa3510cb674b7f580';
     const msg = {
@@ -145,7 +203,7 @@ async function sendItemPickedUpEmail(itemResult) {
     const emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3';
     let recipientList;
     let subject;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" || process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'prod') {
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
       recipientList = [itemResult.donor_email, "duet.giving@gmail.com"];
       subject = "You've made a difference";
     } else {
@@ -179,6 +237,8 @@ export default {
   sendTypeformErrorEmail,
   sendDonorThankYouEmail,
   sendStoreNotificationEmail,
+  sendStorePaymentEmail,
+  sendBalanceUpdateEmail,
   sendItemStatusUpdateEmail,
   sendItemPickedUpEmail
-}
+};

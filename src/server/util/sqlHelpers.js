@@ -104,8 +104,8 @@ async function markItemAsDonated(itemId, donationId) {
       "UPDATE items " +
       "INNER JOIN stores USING(store_id) " +
       "SET status='PAID', " +
-      "donation_id=?, " +
-      "in_notification=CASE payment_method WHEN 'paypal' THEN 1 ELSE in_notification END " +
+      "donation_id=? " +
+      // "in_notification=CASE payment_method WHEN 'paypal' THEN 1 ELSE in_notification END " +
       "WHERE item_id=?",
       [donationId, itemId]
     );
@@ -182,14 +182,16 @@ async function getItemNameTranslation(language, itemName) {
   }
 }
 
-// -------------------- PAYPAL -------------------- //
-async function getPayoutInfo(itemIds) {
+// -------------------- PAYMENTS -------------------- //
+async function getPayPalPayoutInfo(itemIds) {
   // Get stores' Payout info for list of items
   // Returns a list containing payout info for each store that we have to send a payout to
   try {
     let conn = await config.dbInitConnectPromise();
     let [rows, fields] = await conn.query(
       "SELECT stores.paypal AS paypal, " +
+      "stores.name AS store_name, " +
+      "stores.email AS store_email, " +
       "payouts.payment_amount AS payment_amount, " +
       "payouts.item_ids AS item_ids " +
       "FROM stores AS stores " +
@@ -206,11 +208,59 @@ async function getPayoutInfo(itemIds) {
       [itemIds]);
     // convert item_ids from string to list
     rows.forEach(singleStoreResult => {
-      singleStoreResult.item_ids = singleStoreResult.item_ids.split(",");
+      singleStoreResult.item_ids = singleStoreResult.item_ids.split(",").map(parseInt);
     });
     return rows;
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/getPayoutInfo");
+    errorHandler.handleError(err, "sqlHelpers/getPayPalPayoutInfo");
+    throw err;
+  }
+}
+
+async function getStoresNeedingBankTransfer() {
+  // Returns a list containing bank transfer info for each store that we have to send a bank transfer to
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [rows, fields] = await conn.query(
+      "SELECT stores.name AS store_name, " +
+      "stores.email AS store_email, " +
+      "stores.iban AS iban, " +
+      "payouts.payment_amount AS payment_amount, " +
+      "payouts.item_ids AS item_ids " +
+      "FROM stores " +
+      "INNER JOIN (" +
+      "SELECT store_id, " +
+      "SUM(price_euros) AS payment_amount, " +
+      "GROUP_CONCAT(item_id) AS item_ids " +
+      "FROM items " +
+      "WHERE status = 'PAID' AND bank_transfer_sent = 0 " +
+      "GROUP BY store_id" +
+      ") AS payouts " +
+      "USING(store_id) " +
+      "WHERE stores.payment_method = 'transferwise'",
+    );
+    // convert item_ids from string to list
+    rows.forEach(singleStoreResult => {
+      singleStoreResult.item_ids = singleStoreResult.item_ids.split(",").map(parseInt);
+    });
+    return rows;
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getStoresNeedingBankTransfer");
+    throw err;
+  }
+}
+
+async function setBankTransferSentFlag(itemIds) {
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [rows, fields] = await conn.query(
+      "UPDATE items " +
+      "SET bank_transfer_sent = 1 " +
+      "WHERE item_id IN (?)",
+      [itemIds]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/setBankTransferSentFlag");
     throw err;
   }
 }
@@ -543,7 +593,7 @@ async function getAllBeneficiaryInfoAndNeeds() {
       "store_id, stores.name AS store_name, " +
       "donations.timestamp AS donation_timestamp, donor_fname, donor_lname, donor_country " +
       "FROM beneficiaries " +
-      "INNER JOIN items USING(beneficiary_id) " + 
+      "INNER JOIN items USING(beneficiary_id) " +
       "INNER JOIN categories USING(category_id) " +
       "INNER JOIN stores USING(store_id) " +
       "LEFT JOIN donations USING(donation_id) " +
@@ -572,8 +622,10 @@ export default {
   updateItemPickupCode,
   updateItemPhotoLink,
 
-  // PAYPAL
-  getPayoutInfo,
+  // PAYMENTS
+  getPayPalPayoutInfo,
+  getStoresNeedingBankTransfer,
+  setBankTransferSentFlag,
 
   // STORES
   getStoreIdFromName,

@@ -13,6 +13,12 @@ function generatePickupCode(itemId) {
   return code;
 }
 
+function itemIdsListToString(itemIdsList) {
+  var itemIdsStr = itemIdsList.map(id => "#" + String(id)); // e.g. ["#63", "#43"]
+  itemIdsStr = itemIdsStr.join(", "); // e.g. "#79, #75, #10"
+  return itemIdsStr;
+}
+
 function getFrontEndItemObj(row) {
   // SQL row to item object
   let itemObj = {
@@ -76,6 +82,7 @@ async function listRequestedItemsAndSetNotificiationFlags() {
 
 export default {
   generatePickupCode,
+  itemIdsListToString,
   getFrontEndItemObj,
   getNextItemStatus,
   listRequestedItemsAndSetNotificiationFlags
