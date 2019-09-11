@@ -183,6 +183,10 @@ async function getItemNameTranslation(language, itemName) {
 }
 
 // -------------------- PAYMENTS -------------------- //
+function itemIdsGroupConcatStringToNumberList(itemIdsStr) {
+  return itemIdsStr.split(",").map(Number);
+}
+
 async function getPayPalPayoutInfo(itemIds) {
   // Get stores' Payout info for list of items
   // Returns a list containing payout info for each store that we have to send a payout to
@@ -208,7 +212,7 @@ async function getPayPalPayoutInfo(itemIds) {
       [itemIds]);
     // convert item_ids from string to list
     rows.forEach(singleStoreResult => {
-      singleStoreResult.item_ids = singleStoreResult.item_ids.split(",").map(parseInt);
+      singleStoreResult.item_ids = itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids);
     });
     return rows;
   } catch (err) {
@@ -241,7 +245,7 @@ async function getStoresNeedingBankTransfer() {
     );
     // convert item_ids from string to list
     rows.forEach(singleStoreResult => {
-      singleStoreResult.item_ids = singleStoreResult.item_ids.split(",").map(parseInt);
+      singleStoreResult.item_ids = itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids);
     });
     return rows;
   } catch (err) {

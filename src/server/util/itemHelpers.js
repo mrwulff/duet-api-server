@@ -14,7 +14,7 @@ function generatePickupCode(itemId) {
 }
 
 function itemIdsListToString(itemIdsList) {
-  var itemIdsStr = itemIdsList.map(id => "#" + String(id)); // e.g. ["#63", "#43"]
+  var itemIdsStr = itemIdsList.map(id => `#${id}`); // e.g. ["#63", "#43"]
   itemIdsStr = itemIdsStr.join(", "); // e.g. "#79, #75, #10"
   return itemIdsStr;
 }

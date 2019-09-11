@@ -19,7 +19,7 @@ async function sendBankTransfersToStores() {
       // set "bank_transfer_sent" flag to avoid duplicate payments
       await sqlHelpers.setBankTransferSentFlag(result.item_ids);
       // send email to store
-      var itemIdsStr = itemHelpers.itemIdsListToString(result.item_ids)
+      var itemIdsStr = itemHelpers.itemIdsListToString(result.item_ids);
       await sendgridHelpers.sendStorePaymentEmail({
         storeEmail: result.store_email,
         storeName: result.store_name,
@@ -27,6 +27,7 @@ async function sendBankTransfersToStores() {
         itemIds: itemIdsStr,
         paymentMethod: "bank"
       });
+      console.log(`${result.store_name} bank transfer item_ids: ${itemIdsStr}`);
     }));
     // if payment was sent, send balance update email to duet.giving@gmail.com
     if (storesNeedingTransfer.length) {
