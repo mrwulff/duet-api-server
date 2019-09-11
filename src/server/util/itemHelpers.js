@@ -43,26 +43,20 @@ function getFrontEndItemObj(row) {
 }
 
 function getNextItemStatus(oldStatus) {
-  // Move to next item status
-  let newStatus = oldStatus;
   switch (oldStatus) {
     case 'REQUESTED':
-      newStatus = 'LISTED';
-      break;
+      return 'LISTED';
     case 'LISTED':
-      newStatus = 'VERIFIED';
-      break;
+      return 'VERIFIED';
     case 'VERIFIED':
-      newStatus = 'PAID';
-      break;
+      return 'PAID';
     case 'PAID':
-      newStatus = 'READY_FOR_PICKUP';
-      break;
+      return 'READY_FOR_PICKUP';
     case 'READY_FOR_PICKUP':
-      newStatus = 'PICKED_UP';
-      break;
+      return 'PICKED_UP';
+    default:
+      return oldStatus;
   }
-  return newStatus;
 }
 
 async function listRequestedItemsAndSetNotificiationFlags() {

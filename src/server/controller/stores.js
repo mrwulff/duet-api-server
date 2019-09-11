@@ -7,8 +7,8 @@ import errorHandler from "../util/errorHandler.js";
 var CronJob = require('cron').CronJob;
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
-  // novel items to that (1) need price approval or (2) need to be picked up.
-  // Also moves REQUESTED items to LISTED (and sets notification flags)
+// novel items to that (1) need price approval or (2) need to be picked up.
+// Also moves REQUESTED items to LISTED (and sets notification flags)
 new CronJob(process.env.CRON_INTERVAL_STORE_NOTIFICATIONS, async function () {
   console.log('running cron job to move REQUESTED items to LISTED...');
   await itemHelpers.listRequestedItemsAndSetNotificiationFlags();
@@ -34,9 +34,9 @@ async function login(req, res) {
       }
       else {
         res.status(200).send({
-          storeId: storeResult["store_id"],
-          name: storeResult["name"],
-          email: storeResult["email"]
+          storeId: storeResult.store_id,
+          name: storeResult.name,
+          email: storeResult.email
         });
       }
     } else {
@@ -50,7 +50,7 @@ async function login(req, res) {
 
 async function sendBankTransfer(req, res) {
   try {
-    var transferId;
+    let transferId;
     if (req.body.reference) {
       transferId = await transferwiseHelpers.sendBankTransfer(req.body.storeName, req.body.iban, req.body.amount, "EUR", req.body.reference);
     } else {

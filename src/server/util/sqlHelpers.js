@@ -7,10 +7,10 @@ import errorHandler from './errorHandler.js';
 
 // Insert message into database
 async function insertMessageIntoDB(message) {
-  let source = message['source'];
-  let sender = message['sender'];
-  let recipient = message['recipient'];
-  let content = message['content'];
+  let source = message.source;
+  let sender = message.sender;
+  let recipient = message.recipient;
+  let content = message.content;
 
   try {
     let conn = await config.dbInitConnectPromise();
@@ -46,9 +46,9 @@ async function getFBMessengerInfoFromItemId(itemId) {
       console.log("No rows found in getFBMessengerInfoFromItemId! Item ID: " + itemId);
       return null;
     }
-    else {
-      return rows[0];
-    }
+    
+    return rows[0];
+    
   } catch (err) {
     errorHandler.handleError(err, "sqlHelper/getFBMessengerInfoFromItemId");
     throw err;
@@ -124,15 +124,15 @@ async function insertItemFromTypeform(itemInfo) {
       "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,status,store_id,link,in_notification) " +
       "VALUES (?,?,?,?,?,?,?,?,?,?)",
       [itemInfo.itemNameEnglish,
-      itemInfo.size,
-      itemInfo.price,
-      itemInfo.beneficiaryId,
-      itemInfo.categoryId,
-      itemInfo.comment,
-      itemInfo.status,
-      itemInfo.storeId,
-      itemInfo.photoUrl,
-      itemInfo.in_notification]
+        itemInfo.size,
+        itemInfo.price,
+        itemInfo.beneficiaryId,
+        itemInfo.categoryId,
+        itemInfo.comment,
+        itemInfo.status,
+        itemInfo.storeId,
+        itemInfo.photoUrl,
+        itemInfo.in_notification]
     );
     return results.insertId;
   } catch (err) {
@@ -210,11 +210,11 @@ async function getPayPalPayoutInfo(itemIds) {
       "USING(store_id) " +
       "WHERE stores.payment_method = 'paypal'",
       [itemIds]);
-    // convert item_ids from string to list
-    rows.forEach(singleStoreResult => {
-      singleStoreResult.item_ids = itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids);
-    });
-    return rows;
+
+    return rows.map(singleStoreResult => ({
+      ...singleStoreResult,
+      item_ids: itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids)
+    }));
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getPayPalPayoutInfo");
     throw err;
@@ -243,11 +243,11 @@ async function getStoresNeedingBankTransfer() {
       "USING(store_id) " +
       "WHERE stores.payment_method = 'transferwise'",
     );
-    // convert item_ids from string to list
-    rows.forEach(singleStoreResult => {
-      singleStoreResult.item_ids = itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids);
-    });
-    return rows;
+
+    return rows.map(singleStoreResult => ({
+      ...singleStoreResult,
+      item_ids: itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids)
+    }));
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getStoresNeedingBankTransfer");
     throw err;
@@ -290,9 +290,9 @@ async function getStoreInfoFromEmail(email) {
     );
     if (results.length === 0) {
       return null;
-    } else {
-      return results[0];
-    }
+    } 
+    return results[0];
+    
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getStoreInfoFromEmail");
     throw err;
@@ -428,9 +428,9 @@ async function getItem(itemId) {
     if (results.length === 0) {
       return null;
     }
-    else {
-      return results[0];
-    }
+    
+    return results[0];
+    
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getItem");
     throw err;
@@ -462,9 +462,9 @@ async function getAllItems() {
     if (results.length === 0) {
       return null;
     }
-    else {
-      return results;
-    }
+    
+    return results;
+    
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getAllItems");
     throw err;
@@ -482,9 +482,9 @@ async function getItemsWithStatus(status) {
     if (results.length === 0) {
       return [];
     }
-    else {
-      return results;
-    }
+    
+    return results;
+    
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getItemsWithStatus");
     throw err;

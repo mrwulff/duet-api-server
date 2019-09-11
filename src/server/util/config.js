@@ -54,8 +54,9 @@ function fbMessengerInit() {
 let paypal;
 function paypalInit() {
   if (!paypal) {
+    // eslint-disable-next-line no-unused-expressions
     ("use strict");
-    var paypalConfig = {
+    const paypalConfig = {
       mode: process.env.PAYPAL_MODE,
       client_id: process.env.PAYPAL_CLIENT_ID,
       client_secret: process.env.PAYPAL_CLIENT_SECRET
@@ -71,7 +72,7 @@ let paypalNVP;
 function paypalNVPInit() {
   if (!paypalNVP) {
     const paypalNVPPackage = require('paypal-nvp-api');
-    var config = {
+    const config = {
       mode: process.env.PAYPAL_MODE,
       username: process.env.PAYPAL_NVP_API_USERNAME,
       password: process.env.PAYPAL_NVP_API_PASSWORD,

@@ -9,9 +9,9 @@ import errorHandler from './errorHandler.js';
 // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
 async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   try {
-    var note = "Payment for Item IDs: " + itemHelpers.itemIdsListToString(itemIds); // e.g. "Item IDs: #79, #75, #10"
+    const note = "Payment for Item IDs: " + itemHelpers.itemIdsListToString(itemIds); // e.g. "Item IDs: #79, #75, #10"
     console.log("Attempting payout of " + String(amount) + " " + String(currencyCode) + " to " + payeeEmail);
-    var payoutInfo = {
+    const payoutInfo = {
       sender_batch_header: {
         email_subject: "You have a payment from Duet!"
       },
@@ -28,7 +28,7 @@ async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
       ]
     };
 
-    var sync_mode = "false";
+    const sync_mode = "false";
     return new Promise(function (resolve, reject) {
       paypal.payout.create(payoutInfo, sync_mode, function (error, payoutResp) {
         if (error) {
@@ -48,17 +48,17 @@ async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
 
 async function getPayPalEuroBalance() {
   try {
-    var result = await paypalNVP.request('GetBalance', {
+    const result = await paypalNVP.request('GetBalance', {
       RETURNALLCURRENCIES: 1
     });
     // console.log(result);
-    var paypalEuroBalance;
+    let paypalEuroBalance;
     // use paypal's stupid legacy conventions to get the EUR balance
-      // see: https://developer.paypal.com/docs/classic/api/merchant/GetBalance-API-Operation-NVP/
-      // e.g. L_CURRENCYCODE0 = USD, L_AMT0 = 100.00, L_CURRENCYCODE1 = EUR, L_AMT1 = 99.00
+    // see: https://developer.paypal.com/docs/classic/api/merchant/GetBalance-API-Operation-NVP/
+    // e.g. L_CURRENCYCODE0 = USD, L_AMT0 = 100.00, L_CURRENCYCODE1 = EUR, L_AMT1 = 99.00
     for (const key of Object.keys(result)) {
-      if (key.startsWith("L_CURRENCYCODE") && result[key] == "EUR") {
-        var currencyNum = parseInt(key.substring("L_CURRENCYCODE".length));
+      if (key.startsWith("L_CURRENCYCODE") && result[key] === "EUR") {
+        const currencyNum = parseInt(key.substring("L_CURRENCYCODE".length), 10);
         paypalEuroBalance = result[`L_AMT${currencyNum}`];
       }
     }
@@ -72,7 +72,7 @@ async function getPayPalEuroBalance() {
 
 async function checkPayPalEuroBalanceAndSendEmailIfLow() {
   try {
-    var paypalEuroBalance = await getPayPalEuroBalance();
+    const paypalEuroBalance = await getPayPalEuroBalance();
     if (paypalEuroBalance <= process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
       console.log("WARNING: Low PayPal Euro balance! Sending warning email to duet.giving@gmail.com");
       await sendgridHelpers.sendBalanceUpdateEmail("PayPal", "EUR", paypalEuroBalance, "WARNING");

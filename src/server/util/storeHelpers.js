@@ -15,11 +15,11 @@ async function sendBankTransfersToStores() {
     let storesNeedingTransfer = await sqlHelpers.getStoresNeedingBankTransfer();
     await Promise.all(storesNeedingTransfer.map(async result => {
       // send payment
-      var transferId = await transferwiseHelpers.sendBankTransfer(result.store_name, result.iban, result.payment_amount, "EUR");
+      const transferId = await transferwiseHelpers.sendBankTransfer(result.store_name, result.iban, result.payment_amount, "EUR");
       // set "bank_transfer_sent" flag to avoid duplicate payments
       await sqlHelpers.setBankTransferSentFlag(result.item_ids);
       // send email to store
-      var itemIdsStr = itemHelpers.itemIdsListToString(result.item_ids);
+      const itemIdsStr = itemHelpers.itemIdsListToString(result.item_ids);
       await sendgridHelpers.sendStorePaymentEmail({
         storeEmail: result.store_email,
         storeName: result.store_name,

@@ -6,15 +6,15 @@ import errorHandler from "../util/errorHandler.js";
 
 async function getProfileId() {
   try {
-    var profileInfo = await rp({
+    const profileInfo = await rp({
       uri: process.env.TRANSFERWISE_API + "/v1/profiles",
       headers: {
         Authorization: `Bearer ${process.env.TRANSFERWISE_API_KEY}`,
       },
       json: true
     });
-    var personalProfile = profileInfo.find(profile => profile.type === "personal");
-    var profileId = personalProfile.id;
+    const personalProfile = profileInfo.find(profile => profile.type === "personal");
+    const profileId = personalProfile.id;
     return profileId;
   } catch (err) {
     errorHandler.handleError(err, "transferwiseHelpers/getProfileId");
@@ -24,7 +24,7 @@ async function getProfileId() {
 
 async function getEuroBalanceInfo(profileId) {
   try {
-    var response = await rp({
+    const response = await rp({
       uri: process.env.TRANSFERWISE_API + "/v1/borderless-accounts",
       headers: {
         Authorization: `Bearer ${process.env.TRANSFERWISE_API_KEY}`,
@@ -34,8 +34,8 @@ async function getEuroBalanceInfo(profileId) {
       },
       json: true
     });
-    var duetProfile = response.find(profile => profile.profileId === profileId);
-    var eurBalance = duetProfile.balances.find(balance => balance.currency === "EUR");
+    const duetProfile = response.find(profile => profile.profileId === profileId);
+    const eurBalance = duetProfile.balances.find(balance => balance.currency === "EUR");
     return eurBalance;
   } catch (err) {
     errorHandler.handleError(err, "transferwiseHelpers/getEuroBalanceInfo");
@@ -45,7 +45,7 @@ async function getEuroBalanceInfo(profileId) {
 
 async function createEuroQuote(profileId, targetAmount) {
   try {
-    var response = await rp({
+    const response = await rp({
       method: 'POST',
       uri: process.env.TRANSFERWISE_API + "/v1/quotes",
       headers: {
@@ -62,8 +62,8 @@ async function createEuroQuote(profileId, targetAmount) {
       },
       json: true
     });
-    var fee = response.fee;
-    var sourceAmount = response.sourceAmount;
+    const fee = response.fee;
+    const sourceAmount = response.sourceAmount;
     console.log(`Created quote for ${targetAmount}€. Fee: ${fee}. Source amount: ${sourceAmount}`);
     return response.id;
   } catch (err) {
@@ -74,7 +74,7 @@ async function createEuroQuote(profileId, targetAmount) {
 
 async function createRecipientAccount(storeName, currency, iban) {
   try {
-    var response = await rp({
+    const response = await rp({
       method: 'POST',
       uri: process.env.TRANSFERWISE_API + "/v1/accounts",
       headers: {
@@ -102,7 +102,7 @@ async function createRecipientAccount(storeName, currency, iban) {
 
 async function createTransfer(targetAccount, quoteId, customerTransactionId, reference = "From Duet") {
   try {
-    var response = await rp({
+    const response = await rp({
       method: 'POST',
       uri: process.env.TRANSFERWISE_API + "/v1/transfers",
       headers: {
@@ -128,7 +128,7 @@ async function createTransfer(targetAccount, quoteId, customerTransactionId, ref
 
 async function fundTransfer(transferId) {
   try {
-    var response = await rp({
+    const response = await rp({
       method: 'POST',
       uri: process.env.TRANSFERWISE_API + "/v1/transfers/" + transferId + "/payments",
       headers: {
@@ -166,18 +166,18 @@ async function fundTransfer(transferId) {
 // send transfer to one store
 async function sendBankTransfer(storeName, iban, amount, recipientCurrency) {
   try {
-    var uuid = uuidv4();
-    var profileId = await getProfileId();
+    const uuid = uuidv4();
+    const profileId = await getProfileId();
     // check for sufficient balance before proceeding
-    var eurBalanceInfo = await getEuroBalanceInfo(profileId);
-    var availableEur = eurBalanceInfo.amount.value;
+    const eurBalanceInfo = await getEuroBalanceInfo(profileId);
+    const availableEur = eurBalanceInfo.amount.value;
     if (availableEur < amount) {
       throw new Error(`Insufficient balance in TransferWise EUR account! Available: ${availableEur}. Transfer amt: ${amount}`);
     }
-    var quoteId = await createEuroQuote(profileId, amount);
-    var recipientId = await createRecipientAccount(storeName, recipientCurrency, iban);
-    var transferId = await createTransfer(recipientId, quoteId, uuid);
-    var fundingResponse = await fundTransfer(transferId);
+    const quoteId = await createEuroQuote(profileId, amount);
+    const recipientId = await createRecipientAccount(storeName, recipientCurrency, iban);
+    const transferId = await createTransfer(recipientId, quoteId, uuid);
+    const fundingResponse = await fundTransfer(transferId);
     console.log(`Successfully sent payment of ${amount}€ to ${storeName}! Payment UUID: ${uuid}. Transfer Id: ${transferId}`);
     return transferId;
   }
@@ -189,10 +189,10 @@ async function sendBankTransfer(storeName, iban, amount, recipientCurrency) {
 
 async function sendTransferwiseEuroBalanceUpdateEmail() {
   try {
-    var profileId = await getProfileId();
-    var eurBalanceInfo = await getEuroBalanceInfo(profileId);
-    var availableEur = eurBalanceInfo.amount.value;
-    var subjectTag = (availableEur <= process.env.TRANSFERWISE_LOW_BALANCE_THRESHOLD ? "WARNING" : "INFO");
+    const profileId = await getProfileId();
+    const eurBalanceInfo = await getEuroBalanceInfo(profileId);
+    const availableEur = eurBalanceInfo.amount.value;
+    const subjectTag = (availableEur <= process.env.TRANSFERWISE_LOW_BALANCE_THRESHOLD ? "WARNING" : "INFO");
     sendgridHelpers.sendBalanceUpdateEmail("Transferwise", "EUR", availableEur, subjectTag);
   }
   catch (err) {

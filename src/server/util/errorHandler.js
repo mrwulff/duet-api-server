@@ -4,21 +4,20 @@ require("dotenv").config();
 // Standard error handler: console log, and send us an email
 function handleError(err, functionName = false) {
   try {
-    err = err.toString();
     if (functionName) {
-      console.log("Error in " + functionName + ": " + err);
+      console.log("Error in " + functionName + ": " + err.toString());
       if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
-        sendgridHelpers.sendErrorEmail(err, functionName);
+        sendgridHelpers.sendErrorEmail(err.toString(), functionName);
       }
     }
     else {
-      console.log("Error in unknown function: " + err);
+      console.log("Error in unknown function: " + err.toString());
       if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
-        sendgridHelpers.sendErrorEmail(err, "unknownFunction");
+        sendgridHelpers.sendErrorEmail(err.toString(), "unknownFunction");
       }
     }
   } catch (err) {
-    console.log("Error in errorHandler/handleError (lol): " + err);
+    console.log("Error in errorHandler/handleError (lol): " + err.toString());
   }
 };
 

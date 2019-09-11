@@ -1,7 +1,7 @@
 global._babelPolyfill = false;
 
 if (!global._babelPolyfill) {
-	require('babel-polyfill');
+  require('babel-polyfill');
 }
 
 import express from "express";
@@ -50,24 +50,25 @@ function requireAuth(req, res, next) {
   // decode token
   if (token) {
     // verifies secret and checks exp
-    jwt.verify(token, "secretkey", function(err, decoded) {
+    return jwt.verify(token, "secretkey", function(err, decoded) {
       if (err) {
         return res.json({
           success: false,
           message: "Failed to authenticate token."
         });
-      } else {
-        // if everything is good, save to request for use in other routes
-        req.decoded = decoded;
-        next();
-      }
-    });
-  } else {
-    // if there is no token
-    // return an error
-    return res.status(403).send({
-      success: false,
-      message: "No token provided."
+      } 
+      // if everything is good, save to request for use in other routes
+      req.decoded = decoded;
+      return next();
+      
     });
   }
+
+  // if there is no token
+  // return an error
+  return res.status(403).send({
+    success: false,
+    message: "No token provided."
+  });
+  
 }

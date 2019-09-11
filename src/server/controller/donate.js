@@ -70,10 +70,10 @@ async function itemPaid(req, res) {
       res.status(500).send({ error: err });
     }
     return res.status(200).send();
-  } else {
-    console.log('Item ids not found in request body for item donation');
-    return res.status(200).json();
-  }
+  } 
+  console.log('Item ids not found in request body for item donation');
+  return res.status(200).json();
+  
 }
 
 export default {

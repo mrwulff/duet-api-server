@@ -13,7 +13,7 @@ async function getItems(req, res) {
       return res.json([item]);
     }
     // Get items for store
-    else if (req.query.store_id) {
+    if (req.query.store_id) {
       let rows = await sqlHelpers.getItemsForStore(req.query.store_id);
       if (rows.length === 0) {
         return res.send([]);
@@ -25,17 +25,17 @@ async function getItems(req, res) {
       return res.json(needs);
     }
     // Get all items
-    else {
-      let rows = await sqlHelpers.getAllItems();
-      if (rows.length === 0) {
-        return res.send([]);
-      }
-      let needs = [];
-      rows.forEach(function (row) {
-        needs.push(itemHelpers.getFrontEndItemObj(row));
-      });
-      return res.json(needs);
+    
+    let rows = await sqlHelpers.getAllItems();
+    if (rows.length === 0) {
+      return res.send([]);
     }
+    let needs = [];
+    rows.forEach(function (row) {
+      needs.push(itemHelpers.getFrontEndItemObj(row));
+    });
+    return res.json(needs);
+    
   }
   catch (err) {
     errorHandler.handleError(err, "items/getItems");

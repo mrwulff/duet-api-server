@@ -1,7 +1,7 @@
 import errorHandler from './errorHandler.js';
 
 // find question from array with a given Typeform question-reference
-  // use startsWith instead of ===, because there are multiple item-name-... questions for different categories
+// use startsWith instead of ===, because there are multiple item-name-... questions for different categories
 function getAnswerFromQuestionReference(questionReference, answers, type) {
   try {
     let answer = answers.find(answer => answer.field.ref.startsWith(questionReference));
@@ -12,13 +12,16 @@ function getAnswerFromQuestionReference(questionReference, answers, type) {
     }
     if (type === 'choice') {
       return answer.choice.label;
-    } else if (type === 'text') {
+    } if (type === 'text') {
       return answer.text;
-    } else if (type === 'file') {
+    } if (type === 'file') {
       return answer.file_url;
-    } else if (type === 'phone_number') {
+    } if (type === 'phone_number') {
       return answer.phone_number;
-    }
+    } 
+    // TODO throw an exception here since this case in invalid
+    return null;
+    
   } catch (err) {
     errorHandler.handleError(err, "typeformHelpers/getAnswerFromQuestionReference");
     throw err;

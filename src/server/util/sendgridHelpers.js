@@ -127,7 +127,7 @@ async function sendStorePaymentEmail(storePaymentInfo) {
 
 async function sendBalanceUpdateEmail(paymentSite, currency, balance, subjectTag) {
   try {
-    var env = (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" ? "PROD" : "SANDBOX");
+    const env = (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" ? "PROD" : "SANDBOX");
     const msg = {
       to: "duet.giving@gmail.com",
       from: "duet@giveduet.org",

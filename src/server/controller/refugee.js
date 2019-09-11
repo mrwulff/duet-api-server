@@ -13,18 +13,16 @@ async function getNeeds(req, res) {
         msg: "Beneficiary does not exist"
       });
     }
-    res.json(beneficiaryObj);
+    return res.json(beneficiaryObj);
   }
   // No beneficiary ID specified --> get all beneficiary info and needs
-  else {
-    let allBeneficiaryObjs = await refugeeHelpers.getAllBeneficiariesInfoAndNeeds();
-    if (!allBeneficiaryObjs) {
-      return res.json({
-        msg: "No beneficiaries exist"
-      });
-    }
-    res.json(allBeneficiaryObjs);
+  let allBeneficiaryObjs = await refugeeHelpers.getAllBeneficiariesInfoAndNeeds();
+  if (!allBeneficiaryObjs) {
+    return res.json({
+      msg: "No beneficiaries exist"
+    });
   }
+  return res.json(allBeneficiaryObjs);
 }
 
 export default { 
