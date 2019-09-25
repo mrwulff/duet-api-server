@@ -31,15 +31,12 @@ async function getFBMessengerInfoFromItemId(itemId) {
     let conn = await config.dbInitConnectPromise();
     let [rows, fields] = await conn.query(
       "SELECT " +
-      "items.name AS item_name, items.pickup_code, items.link, " +
-      "beneficiaries.fb_psid, beneficiaries.first_name, beneficiaries.last_name, " +
-      "stores.name AS store_name, " +
-      "donor_fname, donor_lname, donor_country " +
-      "FROM items " +
-      "INNER JOIN beneficiaries ON items.beneficiary_id = beneficiaries.beneficiary_id " +
-      "INNER JOIN stores ON items.store_id = stores.store_id " +
-      "LEFT JOIN donations ON items.donation_id = donations.donation_id " +
-      "WHERE items.item_id=?",
+      "item_name, pickup_code, item_photo_link, " + 
+      "fb_psid, beneficiary_first, beneficiary_last, " +
+      "store_name, " +
+      "donor_first, donor_last, donor_country " +
+      "FROM items_view " +
+      "WHERE item_id=?",
       [itemId]
     );
     if (rows.length === 0) {
@@ -203,7 +200,7 @@ async function getPayPalPayoutInfo(itemIds) {
       "SELECT store_id, " +
       "SUM(price_euros) AS payment_amount, " +
       "GROUP_CONCAT(item_id) AS item_ids " +
-      "FROM items " +
+      "FROM items_view " +
       "WHERE item_id IN (?) " +
       "GROUP BY store_id" +
       ") AS payouts " +
@@ -236,7 +233,7 @@ async function getStoresNeedingBankTransfer() {
       "SELECT store_id, " +
       "SUM(price_euros) AS payment_amount, " +
       "GROUP_CONCAT(item_id) AS item_ids " +
-      "FROM items " +
+      "FROM items_view " +
       "WHERE status = 'PAID' AND bank_transfer_sent = 0 " +
       "GROUP BY store_id" +
       ") AS payouts " +
@@ -318,7 +315,7 @@ async function setStoreNotificationFlags(itemIds) {
 
     // Get list of all store IDs that need notification flag set
     let [storeIdResults, fields] = await conn.query(
-      "SELECT store_id FROM items WHERE item_id IN (?)",
+      "SELECT store_id FROM items_view WHERE item_id IN (?)",
       [itemIds]);
     let storeIdsList = storeIdResults.map(storeIdResult => storeIdResult.store_id);
 
@@ -377,7 +374,8 @@ async function getItemsForNotificationEmail(store_id) {
     let conn = await config.dbInitConnectPromise();
     let updatedItems = [];
     let [results, fields] = await conn.query(
-      `SELECT * from items where store_id=? and in_notification=1`,
+      "SELECT item_id, item_photo_link, item_name, price_euros " + 
+      "FROM items_view where store_id=? and in_notification=1",
       [store_id]
     );
     if (results.length === 0) {
@@ -388,8 +386,8 @@ async function getItemsForNotificationEmail(store_id) {
       results.forEach(function (obj) {
         item = {
           itemId: obj.item_id,
-          itemImage: obj.link,
-          itemName: obj.name,
+          itemImage: obj.item_photo_link,
+          itemName: obj.item_name,
           itemPrice: obj.price_euros,
         }
         updatedItems.push(item);
@@ -403,19 +401,7 @@ async function getItemsForNotificationEmail(store_id) {
 }
 
 // -------------------- ITEMS -------------------- //
-let itemsQuery =
-  "SELECT item_id, size, link, items.name, pickup_code, price_euros, " +
-  "status, comment, store_id, icon_url, " +
-  "stores.name as store_name, stores.google_maps as store_maps_link, " +
-  "beneficiary_id, beneficiaries.first_name as beneficiary_first, beneficiaries.last_name as beneficiary_last, " +
-  "family_image_url, has_family_photo, " +
-  "donations.timestamp as donation_timestamp, donations.donor_email as donor_email, " +
-  "donations.donor_fname as donor_first, donations.donor_lname as donor_last, donations.donor_country as donor_country " +
-  "FROM items " +
-  "INNER JOIN categories USING(category_id) " +
-  "INNER JOIN stores USING(store_id) " +
-  "INNER JOIN beneficiaries USING(beneficiary_id) " +
-  "LEFT JOIN donations USING(donation_id)";
+let itemsQuery = "SELECT * FROM items_view";
 
 async function getItem(itemId) {
   // Get single item
@@ -544,18 +530,13 @@ async function unsetItemsNotificationFlag(item_ids) {
 
 
 // -------------------- BENEFICIARIES -------------------- //
-let beneficiariesQuery = "SELECT beneficiary_id, first_name, last_name, story, " +
-  "origin_city, origin_country, current_city, current_country, " +
-  "family_image_url, has_family_photo, visible " +
-  "FROM beneficiaries";
 
 async function getBeneficiaryInfo(beneficiaryId) {
   // Get beneficiary info for 1 beneficiary
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
-      beneficiariesQuery +
-      " WHERE beneficiary_id = ?",
+      "SELECT * FROM beneficiaries_view WHERE beneficiary_id = ?",
       [beneficiaryId]
     );
     if (results.length === 0) {
@@ -573,35 +554,22 @@ async function getBeneficiaryNeeds(beneficiaryId) {
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
-      itemsQuery +
-      " WHERE beneficiary_id = ?",
+      "SELECT * FROM items_view WHERE beneficiary_id = ?",
       [beneficiaryId]
     );
     return results;
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/getBeneficiaryInfo");
+    errorHandler.handleError(err, "sqlHelpers/getBeneficiaryNeeds");
     throw err;
   }
 }
 
-// TODO: re-use itemsQuery?
 async function getAllBeneficiaryInfoAndNeeds() {
   // Get beneficiary info and needs for all beneficiaries
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
-      "SELECT beneficiary_id, first_name, last_name, story, " +
-      "origin_city, origin_country, current_city, current_country, " +
-      "family_image_url, has_family_photo, visible, " +
-      "item_id, link, items.name, pickup_code, price_euros, comment, status, icon_url, " +
-      "store_id, stores.name AS store_name, " +
-      "donations.timestamp AS donation_timestamp, donor_fname, donor_lname, donor_country " +
-      "FROM beneficiaries " +
-      "INNER JOIN items USING(beneficiary_id) " +
-      "INNER JOIN categories USING(category_id) " +
-      "INNER JOIN stores USING(store_id) " +
-      "LEFT JOIN donations USING(donation_id) " +
-      "ORDER BY beneficiary_id"
+      "SELECT * FROM beneficiaries_and_items_view"
     );
     return results;
   } catch (err) {

@@ -57,5 +57,7 @@
     "request-promise": "^4.2.4",
     "uuid": "^3.3.3"
   },
-  "pre-commit": ["lint"]
+  "pre-commit": [
+    "lint"
+  ]
 }

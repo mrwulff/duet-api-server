@@ -3,12 +3,8 @@ import controller from "./../controller/currency";
 
 const router = express.Router();
 
-router.get("/update", (req, res) => {
-  controller.updateCurrencyRates(req, res);
-});
+router.get("/update", controller.updateCurrencyRates);
 
-router.get("/", (req, res) => {
-  controller.getCurrencyRates(req, res);
-});
+router.get("/", controller.getCurrencyRates);
 
 export default router;

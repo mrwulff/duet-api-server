@@ -9,16 +9,16 @@ async function sendPickupNotification(itemId) {
   // Send pickup notification for itemId
   try {
     let fbMessengerInfo = await sqlHelpers.getFBMessengerInfoFromItemId(itemId);
-    let message = (fbMessengerInfo.first_name) ? "Hi " + fbMessengerInfo.first_name : "Hi";
+    let message = (fbMessengerInfo.beneficiary_first) ? "Hi " + fbMessengerInfo.beneficiary_first : "Hi";
     message += ", this is an automated message from Duet!\n" +
             "Your " + fbMessengerInfo.item_name + " is now available for pickup from " + fbMessengerInfo.store_name + ".\n" +
             "Please use pick-up code: " + fbMessengerInfo.pickup_code;
-    if (fbMessengerInfo.donor_fname && fbMessengerInfo.donor_lname && fbMessengerInfo.donor_country) {
-      message += "\nThis item was donated by " + fbMessengerInfo.donor_fname + " " + fbMessengerInfo.donor_lname +
+    if (fbMessengerInfo.donor_first && fbMessengerInfo.donor_lname && fbMessengerInfo.donor_country) {
+      message += "\nThis item was donated by " + fbMessengerInfo.donor_first + " " + fbMessengerInfo.donor_lname +
                 " (Country: " + fbMessengerInfo.donor_country + ")\n";
     }
-    if (fbMessengerInfo.link) {
-      message += ("\nPhoto: " + fbMessengerInfo.link);
+    if (fbMessengerInfo.item_photo_link) {
+      message += ("\nPhoto: " + fbMessengerInfo.item_photo_link);
     }
     messenger.sendTextMessage({
       id: fbMessengerInfo.fb_psid,
@@ -26,7 +26,7 @@ async function sendPickupNotification(itemId) {
       messaging_type: "MESSAGE_TAG",
       tag: "SHIPPING_UPDATE"
     });
-    console.log('Sent pickup notification to ' + fbMessengerInfo.first_name + " " + fbMessengerInfo.last_name +
+    console.log('Sent pickup notification to ' + fbMessengerInfo.beneficiary_first + " " + fbMessengerInfo.beneficiary_last +
             " for " + fbMessengerInfo.item_name + " with itemId: " + itemId);
   } catch (err) {
     errorHandler.handleError(err, "fbHelpers/sendPickupNotification");

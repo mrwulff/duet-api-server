@@ -161,9 +161,9 @@ async function sendItemStatusUpdateEmail(itemResult) {
         subject: (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") ? "[PROD] - Item Status Update" : "[SANDBOX] - Item Status Update",
         status: itemResult.status,
         itemId: itemResult.item_id,
-        itemName: itemResult.name,
+        itemName: itemResult.item_name,
         itemSize: itemResult.size,
-        itemLink: itemResult.link,
+        itemLink: itemResult.item_photo_link,
         pickupCode: itemResult.pickup_code,
         refugeeName: `${itemResult.beneficiary_first} ${itemResult.beneficiary_last}`,
         refugeeId: itemResult.beneficiary_id,
@@ -217,8 +217,8 @@ async function sendItemPickedUpEmail(itemResult) {
       templateId: emailTemplateId,
       dynamic_template_data: {
         subject: subject,
-        item_name: itemResult.name,
-        item_link: itemResult.link,
+        item_name: itemResult.item_name,
+        item_link: itemResult.item_photo_link,
         donor_first: itemResult.donor_first,
         beneficiary_last: itemResult.beneficiary_last,
         beneficiary_link: (process.env.DUET_BENEFICIARIES_URL + '/' + itemResult.beneficiary_id),
@@ -240,5 +240,5 @@ export default {
   sendStorePaymentEmail,
   sendBalanceUpdateEmail,
   sendItemStatusUpdateEmail,
-  sendItemPickedUpEmail
+  sendItemPickedUpEmail,
 };

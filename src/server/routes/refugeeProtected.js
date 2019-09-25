@@ -8,8 +8,6 @@ const app = express();
 //   typeformController.processTypeformV3(req, res);
 // });
 
-router.post("/typeformV4", (req, res) => {
-  typeformController.processTypeformV4(req, res);
-});
+router.post("/typeformV4", typeformController.processTypeformV4);
 
 export default router;

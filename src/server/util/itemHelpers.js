@@ -23,8 +23,8 @@ function getFrontEndItemObj(row) {
   // SQL row to item object
   let itemObj = {
     itemId: row.item_id,
-    image: row.link,
-    name: row.name,
+    image: row.item_photo_link,
+    name: row.item_name,
     size: row.size,
     price: row.price_euros,
     comment: row.comment,
@@ -35,8 +35,8 @@ function getFrontEndItemObj(row) {
     status: row.status,
     pickupCode: row.pickup_code,
     donationTimestamp: row.donation_timestamp,
-    donorFirst: row.donor_fname,
-    donorLast: row.donor_lname,
+    donorFirst: row.donor_first,
+    donorLast: row.donor_last,
     donorCountry: row.donor_country
   }
   return itemObj;
