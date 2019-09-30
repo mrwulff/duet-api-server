@@ -42,6 +42,13 @@ function getFrontEndItemObj(row) {
   return itemObj;
 }
 
+function dedupItemsListById(items) {
+  // Remove duplicates from "items". If 2 items have the same itemId, pick the first one
+  const itemIds = items.map(item => item.itemId);
+  let uniqueIds = [...new Set(itemIds)];
+  return uniqueIds.map(id => items.find(item => item.itemId === id));
+}
+
 function getNextItemStatus(oldStatus) {
   switch (oldStatus) {
     case 'REQUESTED':
@@ -78,6 +85,7 @@ export default {
   generatePickupCode,
   itemIdsListToString,
   getFrontEndItemObj,
+  dedupItemsListById,
   getNextItemStatus,
   listRequestedItemsAndSetNotificiationFlags
 }

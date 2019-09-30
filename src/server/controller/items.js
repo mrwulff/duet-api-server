@@ -49,7 +49,9 @@ async function updateItemStatus(req, res) {
   try {
     if (Array.isArray(req.body.items)) {
       if (req.body.items.length > 0) {
-        req.body.items.forEach(async item => {
+        console.log(`Updating item statuses for itemIds: ${req.body.items.map(item => item.itemId)}`);
+        const itemsUnique = itemHelpers.dedupItemsListById(req.body.items);
+        itemsUnique.forEach(async item => {
           // Update item status in DB
           let newStatus = itemHelpers.getNextItemStatus(item.status);
           await sqlHelpers.updateItemStatus(newStatus, item.itemId);
