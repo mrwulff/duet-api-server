@@ -10,6 +10,7 @@ function getFrontEndBeneficiaryObj(row) {
     firstName: row.beneficiary_first,
     lastName: row.beneficiary_last,
     story: row.story,
+    language: row.language,
     numFamilyMembers: Number(row.num_family_members),
     originCity: row.origin_city,
     originCountry: row.origin_country,
