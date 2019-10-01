@@ -37,7 +37,7 @@ function weightedRandSelection(idToWeight) {
     }
   }
   console.log("WARNING (matchingHelpers/weightedRandSelection): reached end of loop; returning first key");
-  return idToWeight.keys()[0];
+  return Object.keys(idToWeight)[0];
 }
 
 function shuffle(array) {
@@ -86,7 +86,7 @@ function assignScoresToBeneficiaries(beneficiaryObjs) {
   return beneficiaryScores;
 }
 
-function getSelectedBeneficiaryId(beneficiaryObjs) {
+function getMatchedBeneficiaryId(beneficiaryObjs) {
   // return next family, and the new array
   const beneficiaryScores = assignScoresToBeneficiaries(beneficiaryObjs);
   const selectedBeneficiaryId = Number(weightedRandSelection(beneficiaryScores));
@@ -98,7 +98,7 @@ function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBene
   let additionalBeneficiaries = [];
   const donatableBeneficiaries = refugeeHelpers.getDonatableBeneficiaries(beneficiaryObjs);
   // get matched beneficiary
-  const selectedBeneficiaryId = getSelectedBeneficiaryId(donatableBeneficiaries);
+  const selectedBeneficiaryId = getMatchedBeneficiaryId(donatableBeneficiaries);
   const matchedBeneficiary = beneficiaryObjs.find(beneficiary => beneficiary.beneficiaryId === selectedBeneficiaryId);
   // randomly get N other additional beneficiaries
   additionalBeneficiaries = beneficiaryObjs.filter(beneficiary => beneficiary.beneficiaryId !== selectedBeneficiaryId);
@@ -113,5 +113,6 @@ function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBene
 }
 
 export default {
+  assignScoresToBeneficiaries,
   getMatchedAndAdditionalBeneficiaries
 }

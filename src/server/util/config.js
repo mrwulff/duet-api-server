@@ -1,4 +1,3 @@
-import mysql from "mysql2";
 require("dotenv").config();
 
 // SQL, Promise version

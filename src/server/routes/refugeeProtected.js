@@ -1,13 +1,8 @@
 import express from "express";
-import typeformController from "./../controller/typeform";
+import refugeeController from "./../controller/refugee";
 
 const router = express.Router();
-const app = express();
 
-// router.post("/typeformV3", (req, res) => {
-//   typeformController.processTypeformV3(req, res);
-// });
-
-router.post("/typeformV4", typeformController.processTypeformV4);
+router.get("/scores", refugeeController.getScores);
 
 export default router;

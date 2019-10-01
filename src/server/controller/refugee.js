@@ -43,7 +43,18 @@ async function getMatch(req, res) {
   }
 }
 
+async function getScores(req, res) {
+  try {
+    const beneficiaryScores = await refugeeHelpers.getBeneficiaryScores();
+    return res.json(beneficiaryScores);
+  } catch (err) {
+    errorHandler.handleError(err, "refugee/getScores");
+    return res.status(500).send();
+  }
+}
+
 export default { 
   getNeeds,
-  getMatch
+  getMatch,
+  getScores
 };

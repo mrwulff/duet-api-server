@@ -12,11 +12,11 @@ import donateRoutes from "./routes/donate";
 import itemsRoutes from "./routes/items";
 import storeRoutes from "./routes/stores";
 import currencyRoutes from "./routes/currency";
-import jwt from "jsonwebtoken";
 import cors from "cors";
 import bodyParser from "body-parser";
+import { passport } from './util/auth.js';
 
-require('dotenv').config()
+require('dotenv').config();
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -27,10 +27,13 @@ app.use(bodyParser.json());
 // enable CORS
 app.use(cors());
 
+// enable passport
+app.use(passport.initialize());
+
 app.use("/api", routes);
 
 app.use("/api/refugee", refugeeRoutes);
-//app.use("/api/refugee", requireAuth, refugeeProtectedRoutes);
+app.use("/api/refugee", passport.authenticate('basic', { session: false }), refugeeProtectedRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/refugee", refugeeProtectedRoutes);
 app.use("/api/donate", donateRoutes);
@@ -39,36 +42,3 @@ app.use("/api/currency", currencyRoutes);
 app.listen(PORT, () => {
   console.log(`Please navigate to port ${PORT}`);
 });
-
-// middleware for authenticating valid tokens
-// endpoints defined after this are protected
-function requireAuth(req, res, next) {
-  console.log("checking token");
-  // check header or url parameters or post parameters for token
-  let token =
-    req.body.token || req.query.token || req.headers["x-access-token"];
-  // decode token
-  if (token) {
-    // verifies secret and checks exp
-    return jwt.verify(token, "secretkey", function(err, decoded) {
-      if (err) {
-        return res.json({
-          success: false,
-          message: "Failed to authenticate token."
-        });
-      } 
-      // if everything is good, save to request for use in other routes
-      req.decoded = decoded;
-      return next();
-      
-    });
-  }
-
-  // if there is no token
-  // return an error
-  return res.status(403).send({
-    success: false,
-    message: "No token provided."
-  });
-  
-}

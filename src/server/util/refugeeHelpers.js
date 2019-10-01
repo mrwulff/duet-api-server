@@ -103,9 +103,20 @@ async function getAllBeneficiariesInfoAndNeeds() {
   return allBeneficiaryObjs;
 }
 
+async function getBeneficiaryScores() {
+  const rows = await sqlHelpers.getAllBeneficiaryInfoAndNeeds();
+  if (rows.length === 0) {
+    console.log("No beneficiaries");
+    return {};
+  }
+  const allBeneficiaryObjs = getBeneficiaryObjsFromSQLRows(rows);
+  const beneficiaryScores = matchingHelpers.assignScoresToBeneficiaries(allBeneficiaryObjs);
+  return beneficiaryScores;
+}
+
 async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) {
   // get matched beneficiary, and N other additional beneficiaries
-  let rows = await sqlHelpers.getAllBeneficiaryInfoAndNeeds(); // get beneficiary info in SQL format
+  const rows = await sqlHelpers.getAllBeneficiaryInfoAndNeeds(); // get beneficiary info in SQL format
   if (rows.length === 0) {
     console.log("No beneficiaries");
     return null;
@@ -116,9 +127,15 @@ async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) 
 }
 
 export default {
+  // Filters
   getActiveBeneficiaries,
   getDonatableBeneficiaries,
+
+  // Needs
   getSingleBeneficiaryInfoAndNeeds,
   getAllBeneficiariesInfoAndNeeds,
+
+  // Matching
+  getBeneficiaryScores,
   getMatchedAndAdditionalBeneficiaries
 }
