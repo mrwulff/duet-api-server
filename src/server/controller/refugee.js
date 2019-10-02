@@ -2,7 +2,6 @@
 import sqlHelpers from "../util/sqlHelpers.js";
 import refugeeHelpers from "../util/refugeeHelpers.js";
 import errorHandler from "../util/errorHandler.js";
-import { getMaxListeners } from "cluster";
 
 // Get needs for either 1 or all beneficiaries
 async function getNeeds(req, res) {
