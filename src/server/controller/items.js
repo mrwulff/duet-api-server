@@ -8,9 +8,9 @@ async function getItems(req, res) {
   // Get item info
   try {
     // Get single item
-    if (req.query.item_id) {
+    if (req.query.item_id && typeof req.query.item_id === 'number') {
       let item = await sqlHelpers.getItem(req.query.item_id);
-      return res.json([item]);
+      return res.json([getFrontEndItemObj(item)]);
     }
     // Get items for store
     if (req.query.store_id) {
@@ -24,16 +24,21 @@ async function getItems(req, res) {
       });
       return res.json(needs);
     }
+    // Get list of items
+    if (req.query.item_id && req.query.item_id.length) {
+      let rows = await sqlHelpers.getItems(req.query.item_id);
+      if (rows.length === 0) {
+        return res.send([]);
+      }
+      let needs = rows.map(row => itemHelpers.getFrontEndItemObj(row));
+      return res.json(needs);
+    }
     // Get all items
-    
     let rows = await sqlHelpers.getAllItems();
     if (rows.length === 0) {
       return res.send([]);
     }
-    let needs = [];
-    rows.forEach(function (row) {
-      needs.push(itemHelpers.getFrontEndItemObj(row));
-    });
+    let needs = rows.map(row => itemHelpers.getFrontEndItemObj(row));
     return res.json(needs);
     
   }

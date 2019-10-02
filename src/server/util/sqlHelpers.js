@@ -414,9 +414,25 @@ async function getItem(itemId) {
     if (results.length === 0) {
       return null;
     }
-    
     return results[0];
-    
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getItem");
+    throw err;
+  }
+}
+
+async function getItems(itemIds) {
+  // Get a list of items
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [results, fields] = await conn.query(
+      itemsQuery + " WHERE item_id IN (?)",
+      [itemIds]
+    );
+    if (results.length === 0) {
+      return [];
+    }
+    return results;
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getItem");
     throw err;
@@ -612,6 +628,7 @@ export default {
 
   // ITEMS
   getItem,
+  getItems,
   getItemsForStore,
   getAllItems,
   getItemsWithStatus,
