@@ -1,5 +1,6 @@
 // Imports
 import refugeeHelpers from "../util/refugeeHelpers.js";
+require('dotenv').config();
 
 // config vars
 const totalEurDonatedWeight = Number(process.env.BENEFICIARY_MATCHING_TOTAL_EUR_DONATED_WEIGHT);
@@ -113,6 +114,7 @@ function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBene
 }
 
 export default {
+  getTotalWeight,
   assignScoresToBeneficiaries,
   getMatchedAndAdditionalBeneficiaries
 }
