@@ -8,13 +8,21 @@ async function getItems(req, res) {
   // Get item info
   try {
     // Get list of items
-    if (req.body.item_ids) {
-      let rows = await sqlHelpers.getItems(req.body.item_ids);
+    if (req.query.item_id && req.query.item_id.length) {
+      let rows = await sqlHelpers.getItems(req.query.item_id);
       if (rows.length === 0) {
         return res.send([]);
       }
       let needs = rows.map(row => itemHelpers.getFrontEndItemObj(row));
       return res.json(needs);
+    }
+    // Get single item
+    if (req.query.item_id) {
+      let item = await sqlHelpers.getItem(req.query.item_id);
+      if (!item) {
+        return res.send([]);
+      }
+      return res.json([getFrontEndItemObj(item)]);
     }
     // Get items for store
     if (req.query.store_id) {
@@ -35,7 +43,7 @@ async function getItems(req, res) {
     }
     let needs = rows.map(row => itemHelpers.getFrontEndItemObj(row));
     return res.json(needs);
-    
+
   }
   catch (err) {
     errorHandler.handleError(err, "items/getItems");
@@ -155,7 +163,7 @@ async function updateItemStatus(req, res) {
 //   }
 // }
 
-export default { 
+export default {
   getItems,
   updateItemStatus,
   // verifyItems,
