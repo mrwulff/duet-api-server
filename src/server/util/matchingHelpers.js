@@ -87,9 +87,9 @@ function assignScoresToBeneficiaries(beneficiaryObjs) {
   return beneficiaryScores;
 }
 
-function getMatchedBeneficiaryId(beneficiaryObjs) {
+function getMatchedBeneficiaryId(donatableBeneficiaries) {
   // return next family, and the new array
-  const beneficiaryScores = assignScoresToBeneficiaries(beneficiaryObjs);
+  const beneficiaryScores = assignScoresToBeneficiaries(donatableBeneficiaries);
   const selectedBeneficiaryId = Number(weightedRandSelection(beneficiaryScores));
   return selectedBeneficiaryId;
 }

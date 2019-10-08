@@ -31,12 +31,12 @@ function getFrontEndBeneficiaryObj(row) {
 
 function getActiveBeneficiaries(beneficiaryObjs) {
   return beneficiaryObjs.filter(
-    beneficiary => (beneficiary.totalItemsDonatable > 0 || beneficiary.totalItemsDonated > 0)
+    beneficiary => (beneficiary.totalItemsDonatable > 0 || beneficiary.totalItemsDonated > 0) && beneficiary.visible
   );
 }
 
 function getDonatableBeneficiaries(beneficiaryObjs) {
-  return beneficiaryObjs.filter(beneficiary => beneficiary.totalItemsDonatable > 0);
+  return beneficiaryObjs.filter(beneficiary => beneficiary.totalItemsDonatable > 0 && beneficiary.visible);
 }
 
 async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
@@ -111,7 +111,8 @@ async function getBeneficiaryScores() {
     return {};
   }
   const allBeneficiaryObjs = getBeneficiaryObjsFromSQLRows(rows);
-  const beneficiaryScores = matchingHelpers.assignScoresToBeneficiaries(allBeneficiaryObjs);
+  const donatableBeneficiaries = getDonatableBeneficiaries(allBeneficiaryObjs);
+  const beneficiaryScores = matchingHelpers.assignScoresToBeneficiaries(donatableBeneficiaries);
   return beneficiaryScores;
 }
 
