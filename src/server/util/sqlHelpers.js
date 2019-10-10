@@ -52,7 +52,44 @@ async function getFBMessengerInfoFromItemId(itemId) {
   }
 }
 
+// -------------------- DONORS -------------------- //
+
+async function getDonorInfo(donorEmail) {
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [results, fields] = await conn.query(
+      "SELECT * from donors_view WHERE donor_email=?",
+      [donorEmail]
+    );
+    if (results.length === 0) {
+      return null;
+    }
+    return results[0];
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getDonorInfo");
+    throw err;
+  }
+}
+
+
 // -------------------- DONATIONS -------------------- //
+
+async function getDonationInfo(donationId) {
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [results, fields] = await conn.query(
+      "SELECT * from donations WHERE donation_id=?",
+      [donationId]
+    );
+    if (results.length === 0) {
+      return null;
+    }
+    return results[0];
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getDonationInfo");
+    throw err;
+  }
+}
 
 async function insertDonationIntoDB(donationInfo) {
   // Insert donation info into DB, return insert ID
@@ -440,7 +477,7 @@ async function getItems(itemIds) {
 }
 
 async function getItemsForStore(storeId) {
-  // Get all items associated with this store
+  // Get all items associated with this storeId
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
@@ -454,8 +491,24 @@ async function getItemsForStore(storeId) {
   }
 }
 
+async function getItemsForDonation(donationId) {
+  // Get all items associated with this donationId
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [results, fields] = await conn.query(
+      itemsQuery
+      + " INNER JOIN donations USING(donation_id) WHERE donation_id=?",
+      [donationId]
+    );
+    return results;
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getItemsForDonation");
+    throw err;
+  }
+}
+
 async function getAllItems() {
-  // Get all items associated with this store
+  // Get all items
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
@@ -600,7 +653,11 @@ export default {
   insertMessageIntoDB,
   getFBMessengerInfoFromItemId,
 
+  // DONORS
+  getDonorInfo,
+
   // DONATIONS
+  getDonationInfo,
   markItemAsDonated,
   insertDonationIntoDB,
 
@@ -630,6 +687,7 @@ export default {
   getItem,
   getItems,
   getItemsForStore,
+  getItemsForDonation,
   getAllItems,
   getItemsWithStatus,
   updateItemStatus,

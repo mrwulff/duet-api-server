@@ -1,10 +1,20 @@
 require("dotenv").config();
-import { strict } from "assert";
 import sqlHelpers from "../util/sqlHelpers.js";
 import paypalHelpers from "../util/paypalHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 import itemHelpers from "../util/itemHelpers.js";
+import donationHelpers from "../util/donationHelpers.js";
+
+async function getDonation(req, res) {
+  try {
+    let donationObj = await donationHelpers.getDonationObjFromDonationId(req.query.donation_id);
+    return res.json(donationObj);
+  } catch (err) {
+    errorHandler.handleError(err, "donate/getDonation");
+    return res.status(500).send();
+  }
+}
 
 async function itemPaid(req, res) {
   let donationInfo = req.body;
@@ -15,8 +25,9 @@ async function itemPaid(req, res) {
       let donationId;
       if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
         console.log("Error: Call to itemPaid() without donor email in live mode!");
-        res.status(500).send("Error: Could not retrieve donor email!");
-      } else if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
+        return res.status(500).send("Error: Could not retrieve donor email!");
+      }
+      if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
         console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");
         donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
       } else {
@@ -67,7 +78,7 @@ async function itemPaid(req, res) {
 
     } catch (err) {
       errorHandler.handleError(err, "donate/itemPaid");
-      res.status(500).send({ error: err });
+      return res.status(500).send();
     }
     return res.status(200).send();
   } 
@@ -77,5 +88,6 @@ async function itemPaid(req, res) {
 }
 
 export default {
+  getDonation,
   itemPaid
 };
