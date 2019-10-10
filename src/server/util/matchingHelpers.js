@@ -100,9 +100,9 @@ function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBene
   const donatableBeneficiaries = refugeeHelpers.getDonatableBeneficiaries(beneficiaryObjs);
   // get matched beneficiary
   const selectedBeneficiaryId = getMatchedBeneficiaryId(donatableBeneficiaries);
-  const matchedBeneficiary = beneficiaryObjs.find(beneficiary => beneficiary.beneficiaryId === selectedBeneficiaryId);
+  const matchedBeneficiary = donatableBeneficiaries.find(beneficiary => beneficiary.beneficiaryId === selectedBeneficiaryId);
   // randomly get N other additional beneficiaries
-  additionalBeneficiaries = beneficiaryObjs.filter(beneficiary => beneficiary.beneficiaryId !== selectedBeneficiaryId);
+  additionalBeneficiaries = donatableBeneficiaries.filter(beneficiary => beneficiary.beneficiaryId !== selectedBeneficiaryId);
   additionalBeneficiaries = shuffle(additionalBeneficiaries);
   if (numAdditionalBeneficiaries) {
     additionalBeneficiaries = additionalBeneficiaries.slice(0, numAdditionalBeneficiaries);
