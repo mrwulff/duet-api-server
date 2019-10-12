@@ -18,8 +18,26 @@ jobs:
       - run:
           name: lint
           command: npm run lint
-
 workflows:
-  all:
+  build-and-deploy:
     jobs:
       - lint
+      - aws-ecr/build-and-push-image:
+          account-url: AWS_ECR_ACCOUNT_URL
+          repo: duet-api
+          region: AWS_DEFAULT_REGION
+          tag: '${CIRCLE_SHA1}'
+          filters:
+            branches:
+              only: rm_aws_config
+      - aws-ecs/deploy-service-update:
+          requires:
+            - aws-ecr/build-and-push-image
+          aws-region: AWS_DEFAULT_REGION
+          family: 'duet-website'
+          cluster-name: 'duet-website-staging'
+          service-name: 'duet-website-staging'
+          container-image-name-updates: 'container=duet-api,image-and-tag=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/duet-api:${CIRCLE_SHA1}'
+          filters:
+            branches:
+              only: rm_aws_config
