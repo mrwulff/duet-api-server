@@ -32,7 +32,7 @@ function s3Init() {
   if (!s3) {
     const AWS = require("aws-sdk");
     s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY,
+      accessKeyId: process.env.AWS_ACCESS_KEY_S3,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_S3
     });
   }
