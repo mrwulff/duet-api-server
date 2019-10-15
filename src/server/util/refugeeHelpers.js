@@ -3,7 +3,7 @@ import itemHelpers from "../util/itemHelpers.js";
 import sqlHelpers from "../util/sqlHelpers.js";
 import matchingHelpers from "../util/matchingHelpers.js";
 
-function getFrontEndBeneficiaryObj(row) {
+function sqlRowToBeneficiaryObj(row) {
   // SQL row to beneficiary object
   let beneficiaryObj = {
     beneficiaryId: Number(row.beneficiary_id),
@@ -41,12 +41,12 @@ function getDonatableBeneficiaries(beneficiaryObjs) {
 
 async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
   // Get beneficiary info
-  let row = await sqlHelpers.getBeneficiaryInfo(beneficiaryId);
+  let row = await sqlHelpers.getBeneficiaryRow(beneficiaryId);
   if (!row) {
     return null;
   }
   // Convert beneficiary object fields
-  let beneficiaryObj = getFrontEndBeneficiaryObj(row);
+  let beneficiaryObj = sqlRowToBeneficiaryObj(row);
   // Get beneficiary needs in SQL format
   let beneficiaryNeeds = await sqlHelpers.getBeneficiaryNeeds(beneficiaryId);
   if (beneficiaryNeeds.length === 0) {
@@ -55,7 +55,7 @@ async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
   let needs = [];
   // Convert to format that the front-end code expects
   beneficiaryNeeds.forEach(row => {
-    needs.push(itemHelpers.getFrontEndItemObj(row));
+    needs.push(itemHelpers.sqlRowToItemObj(row));
   });
   beneficiaryObj.needs = needs;
   return beneficiaryObj;
@@ -74,9 +74,9 @@ function getBeneficiaryObjsFromSQLRows(rows) {
         allBeneficiaryObjs.push(beneficiaryObj);
       }
       // Create beneficiaryObj with first need
-      beneficiaryObj = getFrontEndBeneficiaryObj(row);
+      beneficiaryObj = sqlRowToBeneficiaryObj(row);
       if (row.item_id) {
-        beneficiaryObj.needs = [itemHelpers.getFrontEndItemObj(row)];
+        beneficiaryObj.needs = [itemHelpers.sqlRowToItemObj(row)];
       } else {
         beneficiaryObj.needs = [];
       }
@@ -84,7 +84,7 @@ function getBeneficiaryObjsFromSQLRows(rows) {
     // Continue current beneficiary
     else {
       // Append next item need
-      beneficiaryObj.needs.push(itemHelpers.getFrontEndItemObj(row));
+      beneficiaryObj.needs.push(itemHelpers.sqlRowToItemObj(row));
     }
     // Move to next row (but possibly still the same beneficiaryId)
     currentBeneficiaryId = row.beneficiary_id;
@@ -129,6 +129,8 @@ async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) 
 }
 
 export default {
+  sqlRowToBeneficiaryObj,
+
   // Filters
   getActiveBeneficiaries,
   getDonatableBeneficiaries,

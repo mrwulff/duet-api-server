@@ -2,6 +2,10 @@
 require("dotenv").config();
 import config from '../util/config.js';
 import errorHandler from './errorHandler.js';
+import storeHelpers from '../util/storeHelpers.js';
+import donorHelpers from './donorHelpers.js';
+import itemHelpers from './itemHelpers.js';
+import refugeeHelpers from './refugeeHelpers.js'
 
 // -------------------- FACEBOOK MESSENGER -------------------- //
 
@@ -54,7 +58,7 @@ async function getFBMessengerInfoFromItemId(itemId) {
 
 // -------------------- DONORS -------------------- //
 
-async function getDonorInfo(donorEmail) {
+async function getDonorRowFromDonorEmail(donorEmail) {
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
@@ -66,7 +70,20 @@ async function getDonorInfo(donorEmail) {
     }
     return results[0];
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/getDonorInfo");
+    errorHandler.handleError(err, "sqlHelpers/getDonorRowFromDonorEmail");
+    throw err;
+  }
+}
+
+async function getDonorObjFromDonorEmail(donorEmail) {
+  try {
+    let donorRow = await getDonorRowFromDonorEmail(donorEmail);
+    if (!donorRow) {
+      throw new Error(`getDonorObjFromDonorEmail: donor not found for email: ${donorEmail}`);
+    }
+    return donorHelpers.sqlRowToDonorObj(donorRow);
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getDonorObjFromDonorEmail");
     throw err;
   }
 }
@@ -74,7 +91,7 @@ async function getDonorInfo(donorEmail) {
 
 // -------------------- DONATIONS -------------------- //
 
-async function getDonationInfo(donationId) {
+async function getDonationRow(donationId) {
   try {
     let conn = await config.dbInitConnectPromise();
     let [results, fields] = await conn.query(
@@ -86,7 +103,7 @@ async function getDonationInfo(donationId) {
     }
     return results[0];
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/getDonationInfo");
+    errorHandler.handleError(err, "sqlHelpers/getDonationRow");
     throw err;
   }
 }
@@ -304,6 +321,27 @@ async function setBankTransferSentFlag(itemIds) {
 }
 
 // -------------------- STORES -------------------- //
+async function getStoreObjFromStoreId(storeId) {
+  try {
+    let conn = await config.dbInitConnectPromise();
+    let [results, fields] = await conn.query("SELECT * from stores WHERE store_id=?", [storeId]);
+    return storeHelpers.sqlRowToStoreObj(results[0]);
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getStoreObjFromId");
+    throw err;
+  }
+}
+
+async function getStoreObjFromStoreEmail(storeEmail) {
+  try {
+    let [results, fields] = await conn.query("SELECT * from stores WHERE email=?", [storeEmail]);
+    return storeHelpers.sqlRowToStoreObj(results[0]);
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getStoreObjFromStoreEmail");
+    throw err;
+  }
+}
+
 async function getStoreIdFromName(storeName) {
   try {
     let conn = await config.dbInitConnectPromise();
@@ -440,7 +478,7 @@ async function getItemsForNotificationEmail(store_id) {
 // -------------------- ITEMS -------------------- //
 let itemsQuery = "SELECT * FROM items_view";
 
-async function getItem(itemId) {
+async function getItemRow(itemId) {
   // Get single item
   try {
     let conn = await config.dbInitConnectPromise();
@@ -453,12 +491,12 @@ async function getItem(itemId) {
     }
     return results[0];
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/getItem");
+    errorHandler.handleError(err, "sqlHelpers/getItemRow");
     throw err;
   }
 }
 
-async function getItems(itemIds) {
+async function getItemRows(itemIds) {
   // Get a list of items
   try {
     let conn = await config.dbInitConnectPromise();
@@ -471,7 +509,30 @@ async function getItems(itemIds) {
     }
     return results;
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/getItem");
+    errorHandler.handleError(err, "sqlHelpers/getItemRows");
+    throw err;
+  }
+}
+
+async function getItemObjFromItemId(itemId) {
+  try {
+    let row = await getItemRow(itemId);
+    if (!row) {
+      throw new Error(`getItemObjFromItemId: item not found for itemId: ${itemId}`);
+    }
+    return itemHelpers.sqlRowToItemObj(row);
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getItemObjFromItemId");
+    throw err;
+  }
+}
+
+async function getItemObjsFromItemIds(itemIds) {
+  try {
+    let rows = await getItemRows(itemIds);
+    return rows.map(row => itemHelpers.sqlRowToItemObj(row));
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getItemObjsFromItemIds");
     throw err;
   }
 }
@@ -600,7 +661,7 @@ async function unsetItemsNotificationFlag(item_ids) {
 
 // -------------------- BENEFICIARIES -------------------- //
 
-async function getBeneficiaryInfo(beneficiaryId) {
+async function getBeneficiaryRow(beneficiaryId) {
   // Get beneficiary info for 1 beneficiary
   try {
     let conn = await config.dbInitConnectPromise();
@@ -613,7 +674,20 @@ async function getBeneficiaryInfo(beneficiaryId) {
     }
     return results[0];
   } catch (err) {
-    errorHandler.handleError(err, "sqlHelpers/getBeneficiaryInfo");
+    errorHandler.handleError(err, "sqlHelpers/getBeneficiaryRow");
+    throw err;
+  }
+}
+
+async function getBeneficiaryObjFromBeneficiaryId(beneficiaryId) {
+  try {
+    const row = await getBeneficiaryRow(beneficiaryId);
+    if (!row) {
+      throw new Error(`getBeneficiaryObjFromBeneficiaryId: beneficiary not found for beneficiaryId: ${beneficiaryId}`);
+    }
+    return refugeeHelpers.sqlRowToBeneficiaryObj(row);
+  } catch (err) {
+    errorHandler.handleError(err, "sqlHelpers/getBeneficiaryObjFromBeneficiaryId");
     throw err;
   }
 }
@@ -654,10 +728,11 @@ export default {
   getFBMessengerInfoFromItemId,
 
   // DONORS
-  getDonorInfo,
+  getDonorRowFromDonorEmail,
+  getDonorObjFromDonorEmail,
 
   // DONATIONS
-  getDonationInfo,
+  getDonationRow,
   markItemAsDonated,
   insertDonationIntoDB,
 
@@ -673,6 +748,8 @@ export default {
   setBankTransferSentFlag,
 
   // STORES
+  getStoreObjFromStoreId,
+  getStoreObjFromStoreEmail,
   getStoreIdFromName,
   getStoreInfoFromEmail,
   getStoresThatNeedNotification,
@@ -684,8 +761,10 @@ export default {
   unsetItemsNotificationFlag,
 
   // ITEMS
-  getItem,
-  getItems,
+  getItemObjFromItemId,
+  getItemObjsFromItemIds,
+  getItemRow,
+  getItemRows,
   getItemsForStore,
   getItemsForDonation,
   getAllItems,
@@ -695,7 +774,8 @@ export default {
   unsetItemsNotificationFlag,
 
   // BENEFICIARIES
-  getBeneficiaryInfo,
+  getBeneficiaryRow,
+  getBeneficiaryObjFromBeneficiaryId,
   getBeneficiaryNeeds,
   getAllBeneficiaryInfoAndNeeds
 }

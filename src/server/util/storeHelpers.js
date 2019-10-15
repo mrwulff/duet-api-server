@@ -4,6 +4,19 @@ import sendgridHelpers from '../util/sendgridHelpers.js';
 import transferwiseHelpers from '../util/transferwiseHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
 
+function sqlRowToStoreObj(sqlRow) {
+  return {
+    storeId: sqlRow.store_id,
+    storeName: sqlRow.store_name,
+    storeEmail: sqlRow.email,
+    storePhoneNumber: sqlRow.phone_number,
+    storeMapsLink: sqlRow.google_maps,
+    storePaymentMethod: sqlRow.payment_method,
+    storeIban: sqlRow.iban,
+    storePaypal: sqlRow.paypal
+  };
+}
+
 async function sendBankTransfersToStores() {
   // 1. check for stores needing payment
   // 2. send payment
@@ -75,6 +88,7 @@ async function sendNotificationEmailsToStores() {
 }
 
 export default {
+  sqlRowToStoreObj,
   sendBankTransfersToStores,
   sendNotificationEmailsToStores
 };

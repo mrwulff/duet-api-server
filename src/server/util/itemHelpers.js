@@ -1,6 +1,32 @@
 import sqlHelpers from '../util/sqlHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 
+function sqlRowToItemObj(row) {
+  // SQL row to item object
+  let itemObj = {
+    itemId: row.item_id,
+    image: row.item_photo_link,
+    name: row.item_name,
+    size: row.size,
+    price: row.price_euros.toFixed(2),
+    comment: row.comment,
+    storeId: row.store_id,
+    storeName: row.store_name,
+    storeMapsLink: row.store_maps_link,
+    icon: row.icon_url,
+    status: row.status,
+    pickupCode: row.pickup_code,
+    requestedTimestamp: row.requested_timestamp,
+    beneficiaryId: row.beneficiary_id,
+    donorFirst: row.donor_first,
+    donorLast: row.donor_last,
+    donorEmail: row.donor_email,
+    donorCountry: row.donor_country,
+    donationTimestamp: row.donation_timestamp,
+  }
+  return itemObj;
+}
+
 function generatePickupCode(itemId) {
   let code = "DUET-";
   let pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -17,29 +43,6 @@ function itemIdsListToString(itemIdsList) {
   var itemIdsStr = itemIdsList.map(id => `#${id}`); // e.g. ["#63", "#43"]
   itemIdsStr = itemIdsStr.join(", "); // e.g. "#79, #75, #10"
   return itemIdsStr;
-}
-
-function getFrontEndItemObj(row) {
-  // SQL row to item object
-  let itemObj = {
-    itemId: row.item_id,
-    image: row.item_photo_link,
-    name: row.item_name,
-    size: row.size,
-    price: row.price_euros,
-    comment: row.comment,
-    storeId: row.store_id,
-    storeName: row.store_name,
-    storeMapsLink: row.store_maps_link,
-    icon: row.icon_url,
-    status: row.status,
-    pickupCode: row.pickup_code,
-    donationTimestamp: row.donation_timestamp,
-    donorFirst: row.donor_first,
-    donorLast: row.donor_last,
-    donorCountry: row.donor_country
-  }
-  return itemObj;
 }
 
 function dedupItemsListById(items) {
@@ -84,7 +87,7 @@ async function listRequestedItemsAndSetNotificiationFlags() {
 export default {
   generatePickupCode,
   itemIdsListToString,
-  getFrontEndItemObj,
+  sqlRowToItemObj,
   dedupItemsListById,
   getNextItemStatus,
   listRequestedItemsAndSetNotificiationFlags

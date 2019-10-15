@@ -34,15 +34,13 @@ async function itemPaid(req, res) {
         donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
       }
 
-      donationInfo.itemIds.forEach(async function (itemId) {
-        // Mark items as donated
+      await Promise.all(donationInfo.itemIds.map(async itemId => {
         await sqlHelpers.markItemAsDonated(itemId, donationId);
-        // Send generic item status updated email
-        let itemResult = await sqlHelpers.getItem(itemId);
+        let itemResult = await sqlHelpers.getItemRow(itemId);
         if (itemResult) {
           sendgridHelpers.sendItemStatusUpdateEmail(itemResult);
         }
-      });
+      }));
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
       // Send PayPal payout to stores with payment_method='paypal'
@@ -69,11 +67,12 @@ async function itemPaid(req, res) {
 
       // SEND EMAIL TO DONOR
       if (donationInfo.email) {
-        let donorInfo = {
-          email: donationInfo.email,
-          firstName: donationInfo.firstName
-        }
-        sendgridHelpers.sendDonorThankYouEmail(donorInfo);
+        const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
+        const donorObj = await sqlHelpers.getDonorObjFromDonorEmail(donationInfo.email);
+        const itemObjs = await sqlHelpers.getItemObjsFromItemIds(donationInfo.itemIds);
+        const beneficiaryId = itemObjs[0].beneficiaryId; // NOTE: assume all items are from the same beneficiary
+        const beneficiaryObj = await sqlHelpers.getBeneficiaryObjFromBeneficiaryId(beneficiaryId);
+        sendgridHelpers.sendDonorThankYouEmailV2(beneficiaryObj, donationObj, donorObj, itemObjs);
       }
 
     } catch (err) {

@@ -3,6 +3,8 @@ import config from "../util/config.js";
 import errorHandler from "../util/errorHandler.js";
 const sgMail = config.sendgridInit(); // Sendgrid
 
+const unsubGroupId = 11371; // Automated Donation Updates unsub group
+
 async function sendErrorEmail(err, functionName) {
   try {
     // Send error email to duet.giving@gmail.com
@@ -36,11 +38,43 @@ async function sendDonorThankYouEmail(donorInfo) {
         subject: (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") ? "Thank you from Duet" : "[SANDBOX] Thank you from Duet"
       }
     };
-
     await sgMail.sendMultiple(msg);
     console.log(`Donation confirmation sent ${donorInfo.email} to successfully.`);
   } catch (err) {
     errorHandler.handleError(error, "sendgridHelpers/sendDonorThankYouEmail");
+  }
+}
+
+async function sendDonorThankYouEmailV2(beneficiaryObj, donationObj, donorObj, itemObjs) {
+  try {
+    const emailTemplateId = "d-fb8c05dc69cd4bcbae0bb47f3571ef7d";
+    let subjectTag = "";
+    let recipientList;
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
+      recipientList = [donorObj.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: emailTemplateId,
+      dynamic_template_data: {
+        subjectTag: subjectTag,
+        donor: donorObj,
+        donation: donationObj,
+        beneficiary: beneficiaryObj,
+        items: itemObjs,
+      },
+      asm: {
+        groupId: unsubGroupId
+      }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Donation thank you v2 message delivered successfully to ${recipientList}`);
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendDonorThankYouEmailV2");
   }
 }
 
@@ -188,17 +222,6 @@ async function sendItemPickedUpEmail(itemResult) {
     if (!itemResult.donor_email) {
       throw new Error("Missing donor_email!");
     }
-    // Get email template, family_image_url depending on whether beneficiary has family photo
-    // TODO: implement Spence's design with family photo
-    // var emailTemplateId, family_image_url;
-    // var family_image_url;
-    // if (itemResult.has_family_photo) {
-    //   emailTemplateId = 'd-f309ea910a9a4b0a80fcf920ae48f075'; // family photo
-    //   family_image_url = itemResult.family_image_url;
-    // } else {
-    //   emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3'; // no family photo
-    //   family_image_url = 'https://duet-web-assets.s3-us-west-1.amazonaws.com/Website+Assets/banner.png'; // Duet cover photo
-    // }
     // Set subject, recipient list depending on environment
     const emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3';
     let recipientList;
@@ -232,13 +255,48 @@ async function sendItemPickedUpEmail(itemResult) {
   }
 }
 
+async function sendItemPickedUpEmailV2(beneficiaryObj, donorObj, itemObj, storeObj) {
+  try {
+    let subjectTag = "";
+    let recipientList;
+    const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
+      recipientList = [donor.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: emailTemplateId,
+      dynamic_template_data: {
+        subjectTag: subjectTag,
+        item: itemObj,
+        donor: donorObj,
+        beneficiary: beneficiaryObj,
+        store: storeObj
+      },
+      asm: {
+        groupId: unsubGroupId
+      }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Item pickup message V2 delivered successfully to ${recipientList}`);
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendItemPickedUpEmailV2");
+  }
+}
+
 export default {
   sendErrorEmail,
   sendTypeformErrorEmail,
   sendDonorThankYouEmail,
+  sendDonorThankYouEmailV2,
   sendStoreNotificationEmail,
   sendStorePaymentEmail,
   sendBalanceUpdateEmail,
   sendItemStatusUpdateEmail,
   sendItemPickedUpEmail,
+  sendItemPickedUpEmailV2
 };

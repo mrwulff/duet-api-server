@@ -19,8 +19,7 @@ function getAnswerFromQuestionReference(questionReference, answers, type) {
     } if (type === 'phone_number') {
       return answer.phone_number;
     } 
-    // TODO throw an exception here since this case in invalid
-    return null;
+    throw new Error(`Unknown Typeform question type: ${type}`);
     
   } catch (err) {
     errorHandler.handleError(err, "typeformHelpers/getAnswerFromQuestionReference");
