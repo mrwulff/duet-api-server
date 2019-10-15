@@ -63,9 +63,9 @@ async function sendDonorThankYouEmailV2(beneficiaryObj, donationObj, donorObj, i
       dynamic_template_data: {
         subjectTag: subjectTag,
         donor: donorObj,
-        donation: donationObj,
+        donation: {...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2)},
         beneficiary: beneficiaryObj,
-        items: itemObjs,
+        items: itemObjs.map(itemObj => ({...itemObj, price: itemObj.price.toFixed(2)})),
       },
       asm: {
         groupId: unsubGroupId
@@ -272,7 +272,7 @@ async function sendItemPickedUpEmailV2(beneficiaryObj, donorObj, itemObj, storeO
       templateId: emailTemplateId,
       dynamic_template_data: {
         subjectTag: subjectTag,
-        item: itemObj,
+        item: {...itemObj, price: itemObj.price.toFixed(2)},
         donor: donorObj,
         beneficiary: beneficiaryObj,
         store: storeObj

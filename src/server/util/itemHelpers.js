@@ -8,7 +8,7 @@ function sqlRowToItemObj(row) {
     image: row.item_photo_link,
     name: row.item_name,
     size: row.size,
-    price: row.price_euros.toFixed(2),
+    price: row.price_euros,
     comment: row.comment,
     storeId: row.store_id,
     storeName: row.store_name,

@@ -7,7 +7,7 @@ function sqlRowToDonationObj(donationRow, donorObj, itemObjs) {
   let donationObj = {
     donationId: Number(donationRow.donation_id),
     donationTimestamp: donationRow.donation_timestamp,
-    donationAmtUsd: donationRow.donation_amt_usd.toFixed(2),
+    donationAmtUsd: donationRow.donation_amt_usd,
     donor: donorObj,
     items: itemObjs
   };
