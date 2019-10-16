@@ -261,7 +261,7 @@ async function sendItemPickedUpEmailV2(beneficiaryObj, donorObj, itemObj, storeO
     let recipientList;
     const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
     if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
-      recipientList = [donor.donorEmail, "duet.giving@gmail.com"];
+      recipientList = [donorObj.donorEmail, "duet.giving@gmail.com"];
     } else {
       recipientList = ["duet.giving@gmail.com"];
       subjectTag = "[SANDBOX] ";
