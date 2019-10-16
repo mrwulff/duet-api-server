@@ -6,7 +6,7 @@
   "scripts": {
     "test": "ava",
     "start": "npm run build && node dist/index.js",
-    "start-dev": "NODE_ENV=development babel-node src/server/index.js",
+    "dev": "NODE_ENV=development babel-node src/server/index.js",
     "start-on-windows": "set NODE_ENV=development && babel-node src/server/index.js",
     "build": "babel ./src/server/ --retain-lines -d ./dist --copy-files",
     "lint": "eslint src/**/* tests/**/*",
