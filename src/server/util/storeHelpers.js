@@ -7,7 +7,7 @@ import itemHelpers from '../util/itemHelpers.js';
 function sqlRowToStoreObj(sqlRow) {
   return {
     storeId: sqlRow.store_id,
-    storeName: sqlRow.store_name,
+    storeName: sqlRow.name,
     storeEmail: sqlRow.email,
     storePhoneNumber: sqlRow.phone_number,
     storeMapsLink: sqlRow.google_maps,
