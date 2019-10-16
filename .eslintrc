@@ -139,6 +139,7 @@
     "no-void": "error",
     "no-warning-comments": ["off", { "terms": ["todo", "fixme", "xxx"], "location": "start" }],
     "no-with": "error",
+    "prefer-const": "error",
     "prefer-promise-reject-errors": ["error", { "allowEmptyReject": true }],
     "prefer-named-capture-group": "off",
     "radix": "error",

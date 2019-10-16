@@ -16,7 +16,7 @@ passport.use(new BasicStrategy(
     if (password !== duet_admin_password) {
       return done(null, false, { message: "Incorrect password" });
     }
-    let admin_user = {
+    const admin_user = {
       username: duet_admin_username,
       password: duet_admin_password
     };

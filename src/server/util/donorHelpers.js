@@ -1,7 +1,7 @@
 import sqlHelpers from '../util/sqlHelpers.js';
 
 function sqlRowToDonorObj(row) {
-  let donationObj = {
+  const donationObj = {
     donorEmail: row.donor_email,
     donorFirst: row.donor_fname,
     donorLast: row.donor_lname,

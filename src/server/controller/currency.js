@@ -23,7 +23,7 @@ new CronJob(process.env.CRON_INTERVAL_CURRENCY, function () {
 // Get currency rates in openexchangerates format
 async function getCurrencyRates(req, res) {
   try {
-    let currencyRates = await currencyHelpers.getCurrencyRates();
+    const currencyRates = await currencyHelpers.getCurrencyRates();
     return res.json(currencyRates);
   } catch (err) {
     errorHandler.handleError(err, "currency/getCurrencyRates");

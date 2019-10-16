@@ -1,0 +1,12 @@
+{
+  "itemNameEnglish": "Detergent",
+  "size": null,
+  "price": "8.90",
+  "beneficiaryId": "343",
+  "categoryId": 1,
+  "comment": null,
+  "status": "REQUESTED",
+  "storeId": 3,
+  "photoUrl": "https://duet-web-assets.s3.us-west-1.amazonaws.com/item-photos/item-243.jpg",
+  "in_notification": 0
+}

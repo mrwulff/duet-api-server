@@ -26,9 +26,9 @@ new CronJob(process.env.CRON_INTERVAL_BANK_TRANSFERS,
 
 async function login(req, res) {
   try {
-    let email = req.body.email;
+    const email = req.body.email;
     if (email) {
-      let storeResult = await sqlHelpers.getStoreInfoFromEmail(email);
+      const storeResult = await sqlHelpers.getStoreInfoFromEmail(email);
       if (!storeResult) {
         res.status(400).send({ err: "Store email does not exist" });
       }

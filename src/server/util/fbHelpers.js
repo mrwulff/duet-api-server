@@ -8,7 +8,7 @@ const messenger = config.fbMessengerInit(); // FB Messenger
 async function sendPickupNotification(itemId) {
   // Send pickup notification for itemId
   try {
-    let fbMessengerInfo = await sqlHelpers.getFBMessengerInfoFromItemId(itemId);
+    const fbMessengerInfo = await sqlHelpers.getFBMessengerInfoFromItemId(itemId);
     let message = "";
     // Arabic
     if (fbMessengerInfo.language === 'ar') {

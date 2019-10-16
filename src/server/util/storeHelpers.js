@@ -25,7 +25,7 @@ async function sendBankTransfersToStores() {
   // 5. send Transferwise balance email to duet.giving@gmail.com
   try {
     // get all stores needing payment via bank transfer
-    let storesNeedingTransfer = await sqlHelpers.getStoresNeedingBankTransfer();
+    const storesNeedingTransfer = await sqlHelpers.getStoresNeedingBankTransfer();
     await Promise.all(storesNeedingTransfer.map(async result => {
       // send payment
       const transferId = await transferwiseHelpers.sendBankTransfer(result.store_name, result.iban, result.payment_amount, "EUR");
@@ -54,7 +54,7 @@ async function sendBankTransfersToStores() {
 async function sendNotificationEmailsToStores() {
   try {
     // Get stores that need notifying
-    let results = await sqlHelpers.getStoresThatNeedNotification();
+    const results = await sqlHelpers.getStoresThatNeedNotification();
 
     if (results.length < 1) {
       // no stores need notification

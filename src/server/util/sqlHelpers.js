@@ -11,13 +11,13 @@ import refugeeHelpers from './refugeeHelpers.js'
 
 // Insert message into database
 async function insertMessageIntoDB(message) {
-  let source = message.source;
-  let sender = message.sender;
-  let recipient = message.recipient;
-  let content = message.content;
+  const source = message.source;
+  const sender = message.sender;
+  const recipient = message.recipient;
+  const content = message.content;
 
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query(
       "INSERT INTO messages (source, sender, recipient, message) VALUES (?,?,?,?)",
       [source, sender, recipient, content]
@@ -32,8 +32,8 @@ async function insertMessageIntoDB(message) {
 // Get all info necessary to send a pickup notification
 async function getFBMessengerInfoFromItemId(itemId) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [rows, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
       "SELECT " +
       "item_name, pickup_code, item_photo_link, " + 
       "fb_psid, beneficiary_first, beneficiary_last, language, " +
@@ -60,8 +60,8 @@ async function getFBMessengerInfoFromItemId(itemId) {
 
 async function getDonorRowFromDonorEmail(donorEmail) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       "SELECT * from donors_view WHERE donor_email=?",
       [donorEmail]
     );
@@ -77,7 +77,7 @@ async function getDonorRowFromDonorEmail(donorEmail) {
 
 async function getDonorObjFromDonorEmail(donorEmail) {
   try {
-    let donorRow = await getDonorRowFromDonorEmail(donorEmail);
+    const donorRow = await getDonorRowFromDonorEmail(donorEmail);
     if (!donorRow) {
       throw new Error(`getDonorObjFromDonorEmail: donor not found for email: ${donorEmail}`);
     }
@@ -93,8 +93,8 @@ async function getDonorObjFromDonorEmail(donorEmail) {
 
 async function getDonationRow(donationId) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       "SELECT * from donations WHERE donation_id=?",
       [donationId]
     );
@@ -113,7 +113,7 @@ async function insertDonationIntoDB(donationInfo) {
   let insertDonationQuery = "";
   let insertDonationValues = [];
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     if (donationInfo.email) {
       insertDonationQuery = "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
         " VALUES (NOW(),?,?,?,?,?,?,?)";
@@ -138,7 +138,7 @@ async function insertDonationIntoDB(donationInfo) {
         donationInfo.country
       ]
     }
-    let [results, fields] = await conn.execute(insertDonationQuery, insertDonationValues);
+    const [results, fields] = await conn.execute(insertDonationQuery, insertDonationValues);
     console.log("Successfully entered donation into DB: %j", donationInfo);
     return results.insertId;
   } catch (err) {
@@ -150,7 +150,7 @@ async function insertDonationIntoDB(donationInfo) {
 async function markItemAsDonated(itemId, donationId) {
   // Mark item as donated, note that it requires store notification
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query(
       "UPDATE items " +
       "INNER JOIN stores USING(store_id) " +
@@ -170,8 +170,8 @@ async function markItemAsDonated(itemId, donationId) {
 
 async function insertItemFromTypeform(itemInfo) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,status,store_id,link,in_notification) " +
       "VALUES (?,?,?,?,?,?,?,?,?,?)",
       [itemInfo.itemNameEnglish,
@@ -194,7 +194,7 @@ async function insertItemFromTypeform(itemInfo) {
 
 async function updateItemPickupCode(itemId, pickupCode) {
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query(
       "UPDATE items SET pickup_code=? WHERE item_id=?",
       [pickupCode, itemId]
@@ -207,7 +207,7 @@ async function updateItemPickupCode(itemId, pickupCode) {
 
 async function updateItemPhotoLink(itemId, photoUrl) {
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query(
       "UPDATE items SET link=? WHERE item_id=?",
       [photoUrl, itemId]
@@ -221,8 +221,8 @@ async function updateItemPhotoLink(itemId, photoUrl) {
 async function getItemNameTranslation(language, itemName) {
   // Get name_english, category_id from itemName in given language
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [matchedItemNames, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [matchedItemNames, fields] = await conn.query(
       "SELECT name_english, category_id FROM item_types WHERE ?? LIKE ?",
       ["name_" + language, "%" + itemName + "%"]
     );
@@ -242,8 +242,8 @@ async function getPayPalPayoutInfo(itemIds) {
   // Get stores' Payout info for list of items
   // Returns a list containing payout info for each store that we have to send a payout to
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [rows, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
       "SELECT stores.paypal AS paypal, " +
       "stores.name AS store_name, " +
       "stores.email AS store_email, " +
@@ -275,8 +275,8 @@ async function getPayPalPayoutInfo(itemIds) {
 async function getStoresNeedingBankTransfer() {
   // Returns a list containing bank transfer info for each store that we have to send a bank transfer to
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [rows, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
       "SELECT stores.name AS store_name, " +
       "stores.email AS store_email, " +
       "stores.iban AS iban, " +
@@ -307,8 +307,8 @@ async function getStoresNeedingBankTransfer() {
 
 async function setBankTransferSentFlag(itemIds) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [rows, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
       "UPDATE items " +
       "SET bank_transfer_sent = 1 " +
       "WHERE item_id IN (?)",
@@ -323,8 +323,8 @@ async function setBankTransferSentFlag(itemIds) {
 // -------------------- STORES -------------------- //
 async function getStoreObjFromStoreId(storeId) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query("SELECT * from stores WHERE store_id=?", [storeId]);
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query("SELECT * from stores WHERE store_id=?", [storeId]);
     return storeHelpers.sqlRowToStoreObj(results[0]);
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getStoreObjFromId");
@@ -334,7 +334,7 @@ async function getStoreObjFromStoreId(storeId) {
 
 async function getStoreObjFromStoreEmail(storeEmail) {
   try {
-    let [results, fields] = await conn.query("SELECT * from stores WHERE email=?", [storeEmail]);
+    const [results, fields] = await conn.query("SELECT * from stores WHERE email=?", [storeEmail]);
     return storeHelpers.sqlRowToStoreObj(results[0]);
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getStoreObjFromStoreEmail");
@@ -344,8 +344,8 @@ async function getStoreObjFromStoreEmail(storeEmail) {
 
 async function getStoreIdFromName(storeName) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query("SELECT store_id FROM stores WHERE name=?", [storeName]);
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query("SELECT store_id FROM stores WHERE name=?", [storeName]);
     return results[0].store_id;
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getStoreIdFromName");
@@ -355,8 +355,8 @@ async function getStoreIdFromName(storeName) {
 
 async function getStoreInfoFromEmail(email) {
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       "SELECT store_id, name, email FROM stores WHERE email=?",
       [email]
     );
@@ -374,8 +374,8 @@ async function getStoreInfoFromEmail(email) {
 async function getStoresThatNeedNotification() {
   // Return a list of store objects that need notifying
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query("SELECT * from stores where needs_notification=1");
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query("SELECT * from stores where needs_notification=1");
     return results;
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getStoresThatNeedNotification");
@@ -386,13 +386,13 @@ async function getStoresThatNeedNotification() {
 async function setStoreNotificationFlags(itemIds) {
   // Set store notification flag to 1 for all stores that interact with these items
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
 
     // Get list of all store IDs that need notification flag set
-    let [storeIdResults, fields] = await conn.query(
+    const [storeIdResults, fields] = await conn.query(
       "SELECT store_id FROM items_view WHERE item_id IN (?)",
       [itemIds]);
-    let storeIdsList = storeIdResults.map(storeIdResult => storeIdResult.store_id);
+    const storeIdsList = storeIdResults.map(storeIdResult => storeIdResult.store_id);
 
     // Set needs_notification to 1
     await conn.query(
@@ -408,7 +408,7 @@ async function setStoreNotificationFlags(itemIds) {
 
 async function setSingleStoreNotificationFlag(storeId) {
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query("UPDATE stores SET needs_notification=1 where store_id=?",
       [storeId]
     );
@@ -421,7 +421,7 @@ async function setSingleStoreNotificationFlag(storeId) {
 
 async function unsetSingleStoreNotificationFlag(storeId) {
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query("UPDATE stores SET needs_notification=0 where store_id=?",
       [storeId]
     );
@@ -435,7 +435,7 @@ async function unsetSingleStoreNotificationFlag(storeId) {
 async function resetAllStoreNotificationFlags() {
   // Reset all stores' notification flags
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query("UPDATE stores SET needs_notification=0");
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/resetAllStoreNotificationFlags");
@@ -446,9 +446,9 @@ async function resetAllStoreNotificationFlags() {
 async function getItemsForNotificationEmail(store_id) {
   // Get items to notify the given store about
   try {
-    let conn = await config.dbInitConnectPromise();
-    let updatedItems = [];
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const updatedItems = [];
+    const [results, fields] = await conn.query(
       "SELECT item_id, item_photo_link, item_name, price_euros " + 
       "FROM items_view where store_id=? and in_notification=1",
       [store_id]
@@ -476,13 +476,13 @@ async function getItemsForNotificationEmail(store_id) {
 }
 
 // -------------------- ITEMS -------------------- //
-let itemsQuery = "SELECT * FROM items_view";
+const itemsQuery = "SELECT * FROM items_view";
 
 async function getItemRow(itemId) {
   // Get single item
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       itemsQuery + " WHERE item_id=?",
       [itemId]
     );
@@ -499,8 +499,8 @@ async function getItemRow(itemId) {
 async function getItemRows(itemIds) {
   // Get a list of items
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       itemsQuery + " WHERE item_id IN (?)",
       [itemIds]
     );
@@ -516,7 +516,7 @@ async function getItemRows(itemIds) {
 
 async function getItemObjFromItemId(itemId) {
   try {
-    let row = await getItemRow(itemId);
+    const row = await getItemRow(itemId);
     if (!row) {
       throw new Error(`getItemObjFromItemId: item not found for itemId: ${itemId}`);
     }
@@ -529,7 +529,7 @@ async function getItemObjFromItemId(itemId) {
 
 async function getItemObjsFromItemIds(itemIds) {
   try {
-    let rows = await getItemRows(itemIds);
+    const rows = await getItemRows(itemIds);
     return rows.map(row => itemHelpers.sqlRowToItemObj(row));
   } catch (err) {
     errorHandler.handleError(err, "sqlHelpers/getItemObjsFromItemIds");
@@ -540,8 +540,8 @@ async function getItemObjsFromItemIds(itemIds) {
 async function getItemsForStore(storeId) {
   // Get all items associated with this storeId
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       itemsQuery + " WHERE store_id=?",
       [storeId]
     );
@@ -555,8 +555,8 @@ async function getItemsForStore(storeId) {
 async function getItemsForDonation(donationId) {
   // Get all items associated with this donationId
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       itemsQuery
       + " INNER JOIN donations USING(donation_id) WHERE donation_id=?",
       [donationId]
@@ -571,8 +571,8 @@ async function getItemsForDonation(donationId) {
 async function getAllItems() {
   // Get all items
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       itemsQuery
     );
     if (results.length === 0) {
@@ -590,8 +590,8 @@ async function getAllItems() {
 async function getItemsWithStatus(status) {
   // Get all items associated with this store
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       itemsQuery + " WHERE status=?",
       [status]
     );
@@ -609,7 +609,7 @@ async function getItemsWithStatus(status) {
 
 async function updateItemStatus(newStatus, itemId) {
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     if (newStatus === "PAID") {
       await conn.query(
         `UPDATE items SET status=?, in_notification=1 WHERE item_id = ?`,
@@ -632,7 +632,7 @@ async function updateItemStatus(newStatus, itemId) {
 async function setItemNotificationFlag(item_id) {
   // Mark single item as needing a notification
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query(
       `UPDATE items SET in_notification=1 where item_id = ?`,
       [item_id]
@@ -647,7 +647,7 @@ async function setItemNotificationFlag(item_id) {
 async function unsetItemsNotificationFlag(item_ids) {
   // Mark all items in item_ids as no longer needing notification (after sending batch email)
   try {
-    let conn = await config.dbInitConnectPromise();
+    const conn = await config.dbInitConnectPromise();
     await conn.query(
       `UPDATE items SET in_notification=0 where item_id IN (?)`,
       [item_ids]
@@ -664,8 +664,8 @@ async function unsetItemsNotificationFlag(item_ids) {
 async function getBeneficiaryRow(beneficiaryId) {
   // Get beneficiary info for 1 beneficiary
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       "SELECT * FROM beneficiaries_view WHERE beneficiary_id = ?",
       [beneficiaryId]
     );
@@ -695,8 +695,8 @@ async function getBeneficiaryObjFromBeneficiaryId(beneficiaryId) {
 async function getBeneficiaryNeeds(beneficiaryId) {
   // Get item needs for 1 beneficiary
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       "SELECT * FROM items_view WHERE beneficiary_id = ?",
       [beneficiaryId]
     );
@@ -710,8 +710,8 @@ async function getBeneficiaryNeeds(beneficiaryId) {
 async function getAllBeneficiaryInfoAndNeeds() {
   // Get beneficiary info and needs for all beneficiaries
   try {
-    let conn = await config.dbInitConnectPromise();
-    let [results, fields] = await conn.query(
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
       "SELECT * FROM beneficiaries_and_items_view"
     );
     return results;

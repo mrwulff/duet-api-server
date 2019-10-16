@@ -4,7 +4,7 @@ import errorHandler from './errorHandler.js';
 // use startsWith instead of ===, because there are multiple item-name-... questions for different categories
 function getAnswerFromQuestionReference(questionReference, answers, type) {
   try {
-    let answer = answers.find(answer => answer.field.ref.startsWith(questionReference));
+    const answer = answers.find(answer => answer.field.ref.startsWith(questionReference));
     if (!answer) {
       // not found
       console.log("questionReference not found: " + questionReference);

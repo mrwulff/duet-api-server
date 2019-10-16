@@ -9,16 +9,16 @@ async function getItems(req, res) {
   try {
     // Get list of items
     if (req.query.item_id && req.query.item_id.length) {
-      let rows = await sqlHelpers.getItemRows(req.query.item_id);
+      const rows = await sqlHelpers.getItemRows(req.query.item_id);
       if (rows.length === 0) {
         return res.send([]);
       }
-      let needs = rows.map(row => itemHelpers.sqlRowToItemObj(row));
+      const needs = rows.map(row => itemHelpers.sqlRowToItemObj(row));
       return res.json(needs);
     }
     // Get single item
     if (req.query.item_id) {
-      let item = await sqlHelpers.getItemRow(req.query.item_id);
+      const item = await sqlHelpers.getItemRow(req.query.item_id);
       if (!item) {
         return res.send([]);
       }
@@ -26,22 +26,22 @@ async function getItems(req, res) {
     }
     // Get items for store
     if (req.query.store_id) {
-      let rows = await sqlHelpers.getItemsForStore(req.query.store_id);
+      const rows = await sqlHelpers.getItemsForStore(req.query.store_id);
       if (rows.length === 0) {
         return res.send([]);
       }
-      let needs = [];
+      const needs = [];
       rows.forEach(function (row) {
         needs.push(itemHelpers.sqlRowToItemObj(row));
       });
       return res.json(needs);
     }
     // Get all items
-    let rows = await sqlHelpers.getAllItems();
+    const rows = await sqlHelpers.getAllItems();
     if (rows.length === 0) {
       return res.send([]);
     }
-    let needs = rows.map(row => itemHelpers.sqlRowToItemObj(row));
+    const needs = rows.map(row => itemHelpers.sqlRowToItemObj(row));
     return res.json(needs);
 
   }
@@ -60,11 +60,11 @@ async function updateItemStatus(req, res) {
         const itemsUnique = itemHelpers.dedupItemsListById(req.body.items);
         await Promise.all(itemsUnique.map(async item => {
           // Update item status in DB
-          let newStatus = itemHelpers.getNextItemStatus(item.status);
+          const newStatus = itemHelpers.getNextItemStatus(item.status);
           await sqlHelpers.updateItemStatus(newStatus, item.itemId);
 
           // Send generic item status updated email
-          let itemResult = await sqlHelpers.getItemRow(item.itemId);
+          const itemResult = await sqlHelpers.getItemRow(item.itemId);
           if (itemResult) {
             sendgridHelpers.sendItemStatusUpdateEmail(itemResult);
           }

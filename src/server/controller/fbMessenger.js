@@ -8,12 +8,12 @@ function fbAuth(req, res) {
   // Adds support for GET requests to our webhook
 
   // Your verify token. Should be a random string.
-  let VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
+  const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
 
   // Parse the query params
-  let mode = req.query['hub.mode'];
-  let token = req.query['hub.verify_token'];
-  let challenge = req.query['hub.challenge'];
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
 
   // Checks if a token and mode is in the query string of the request
   if (mode && token) {
@@ -37,7 +37,7 @@ function processFBMessage(req, res) {
   // See: https://developers.facebook.com/docs/messenger-platform/getting-started/quick-start/
 
   // Parse the request body from the POST
-  let body = req.body;
+  const body = req.body;
 
   // Check the webhook event is from a Page subscription
   if (body.object === 'page') {
@@ -48,10 +48,10 @@ function processFBMessage(req, res) {
       // Get the webhook event. entry.messaging is an array, but 
       // will only ever contain one event, so we get index 0
       if (entry.messaging) {
-        let fb_message = entry.messaging[0];
+        const fb_message = entry.messaging[0];
 
         // Log message in SQL
-        let message = {
+        const message = {
           source: 'fb',
           sender: fb_message.sender.id,
           recipient: fb_message.recipient.id,
@@ -77,7 +77,7 @@ function processFBMessage(req, res) {
 
 
 function sendTestPickupNotification(req, res) {
-  let itemId = req.body.itemId;
+  const itemId = req.body.itemId;
   try {
     fbHelpers.sendPickupNotification(itemId);
     res.status(200).send();

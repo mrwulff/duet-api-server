@@ -8,7 +8,7 @@ async function getNeeds(req, res) {
   try {
     // Specify beneficiary ID --> get info for just that refugee
     if (req.query.beneficiary_id) {
-      let beneficiaryObj = await refugeeHelpers.getSingleBeneficiaryInfoAndNeeds(req.query.beneficiary_id);
+      const beneficiaryObj = await refugeeHelpers.getSingleBeneficiaryInfoAndNeeds(req.query.beneficiary_id);
       if (!beneficiaryObj) {
         return res.json({
           msg: "Beneficiary does not exist"
@@ -17,7 +17,7 @@ async function getNeeds(req, res) {
       return res.json(beneficiaryObj);
     }
     // No beneficiary ID specified --> get all beneficiary info and needs
-    let allBeneficiaryObjs = await refugeeHelpers.getAllBeneficiariesInfoAndNeeds();
+    const allBeneficiaryObjs = await refugeeHelpers.getAllBeneficiariesInfoAndNeeds();
     if (!allBeneficiaryObjs) {
       return res.json({
         msg: "No beneficiaries exist"

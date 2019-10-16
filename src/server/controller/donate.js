@@ -8,7 +8,7 @@ import donationHelpers from "../util/donationHelpers.js";
 
 async function getDonation(req, res) {
   try {
-    let donationObj = await donationHelpers.getDonationObjFromDonationId(req.query.donation_id);
+    const donationObj = await donationHelpers.getDonationObjFromDonationId(req.query.donation_id);
     return res.json(donationObj);
   } catch (err) {
     errorHandler.handleError(err, "donate/getDonation");
@@ -17,7 +17,7 @@ async function getDonation(req, res) {
 }
 
 async function itemPaid(req, res) {
-  let donationInfo = req.body;
+  const donationInfo = req.body;
   console.log(`itemPaid donation info: ${JSON.stringify(donationInfo)}`);
   if (donationInfo.itemIds) {
     try {
@@ -36,7 +36,7 @@ async function itemPaid(req, res) {
 
       await Promise.all(donationInfo.itemIds.map(async itemId => {
         await sqlHelpers.markItemAsDonated(itemId, donationId);
-        let itemResult = await sqlHelpers.getItemRow(itemId);
+        const itemResult = await sqlHelpers.getItemRow(itemId);
         if (itemResult) {
           sendgridHelpers.sendItemStatusUpdateEmail(itemResult);
         }
@@ -44,7 +44,7 @@ async function itemPaid(req, res) {
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
       // Send PayPal payout to stores with payment_method='paypal'
-      let payoutInfo = await sqlHelpers.getPayPalPayoutInfo(donationInfo.itemIds);
+      const payoutInfo = await sqlHelpers.getPayPalPayoutInfo(donationInfo.itemIds);
       await Promise.all(payoutInfo.map(async singleStoreResult => {
         await paypalHelpers.sendPayout(
           singleStoreResult.paypal,

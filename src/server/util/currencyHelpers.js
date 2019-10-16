@@ -7,7 +7,7 @@ let currencyRates;
 // Get currency rates in openexchangerates format
 async function updateCurrencyRates() {
   try {
-    let options = {
+    const options = {
       uri: "https://openexchangerates.org/api/latest.json?app_id=7f0785f2b1bc4741b374c04b20d229a6",
       json: true
     }

@@ -42,7 +42,7 @@ function weightedRandSelection(idToWeight) {
 }
 
 function shuffle(array) {
-  let shuffled = array.concat();
+  const shuffled = array.concat();
   shuffled.sort(() => Math.random() - 0.5);
   return shuffled;
 }
@@ -65,7 +65,7 @@ function getOverallScoreForBeneficiary(beneficiaryObj) {
 
 function normalizeScores(beneficiaryScores) {
   // make scores sum to 1, return new score assignments
-  let beneficiaryScoresNormalized = beneficiaryScores;
+  const beneficiaryScoresNormalized = beneficiaryScores;
   const totalScore = getTotalWeight(beneficiaryScores);
   for (const beneficiaryId in beneficiaryScores) {
     if (beneficiaryScores.hasOwnProperty(beneficiaryId)) {

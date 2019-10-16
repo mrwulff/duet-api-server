@@ -4,7 +4,7 @@ import itemHelpers from '../util/itemHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 
 function sqlRowToDonationObj(donationRow, donorObj, itemObjs) {
-  let donationObj = {
+  const donationObj = {
     donationId: Number(donationRow.donation_id),
     donationTimestamp: donationRow.donation_timestamp,
     donationAmtUsd: donationRow.donation_amt_usd,
@@ -17,13 +17,13 @@ function sqlRowToDonationObj(donationRow, donorObj, itemObjs) {
 async function getDonationObjFromDonationId(donationId) {
   try {
     // get donation (and donor) info
-    let donationResult = await sqlHelpers.getDonationRow(donationId);
-    let donor = donorHelpers.sqlRowToDonorObj(donationResult);
+    const donationResult = await sqlHelpers.getDonationRow(donationId);
+    const donor = donorHelpers.sqlRowToDonorObj(donationResult);
     // get items associated with donation
     let items = await sqlHelpers.getItemsForDonation(donationId);
     items = items.map(item => itemHelpers.sqlRowToItemObj(item));
     // create and return donation object
-    let donationObj = sqlRowToDonationObj(donationResult, donor, items);
+    const donationObj = sqlRowToDonationObj(donationResult, donor, items);
     return donationObj;
   } catch (err) {
     errorHandler.handleError(err, "donationHelpers/getDonationObjFromDonationId");

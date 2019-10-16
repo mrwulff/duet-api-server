@@ -1,9 +1,10 @@
 import sqlHelpers from '../util/sqlHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 
+
 function sqlRowToItemObj(row) {
   // SQL row to item object
-  let itemObj = {
+  const itemObj = {
     itemId: row.item_id,
     image: row.item_photo_link,
     name: row.item_name,
@@ -29,7 +30,7 @@ function sqlRowToItemObj(row) {
 
 function generatePickupCode(itemId) {
   let code = "DUET-";
-  let pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   // append 2 random letters to code
   for (let i = 0; i < 2; i++) {
     code += pool.charAt(Math.floor(Math.random() * pool.length));
@@ -48,7 +49,7 @@ function itemIdsListToString(itemIdsList) {
 function dedupItemsListById(items) {
   // Remove duplicates from "items". If 2 items have the same itemId, pick the first one
   const itemIds = items.map(item => item.itemId);
-  let uniqueIds = [...new Set(itemIds)];
+  const uniqueIds = [...new Set(itemIds)];
   return uniqueIds.map(id => items.find(item => item.itemId === id));
 }
 
@@ -71,7 +72,7 @@ function getNextItemStatus(oldStatus) {
 
 async function listRequestedItemsAndSetNotificiationFlags() {
   try {
-    let requestedItems = await sqlHelpers.getItemsWithStatus('REQUESTED');
+    const requestedItems = await sqlHelpers.getItemsWithStatus('REQUESTED');
     await Promise.all(requestedItems.map(async item => {
       await sqlHelpers.setItemNotificationFlag(item.item_id);
       await sqlHelpers.setSingleStoreNotificationFlag(item.store_id);

@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "itemId": 143,
+      "status": "READY_FOR_PICKUP"
+    },
+    {
+      "itemId": 143,
+      "status": "READY_FOR_PICKUP"
+    },
+    {
+      "itemId": 155,
+      "status": "PAID"
+    }
+  ]
+}

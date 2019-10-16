@@ -22,8 +22,8 @@ function deleteThumbnailFromExif(imageBuffer) {
 
 async function uploadItemImageToS3(itemId, imageUrl) {
   try {
-    let extension = path.extname(imageUrl);
-    let contentType = mime.contentType(extension);
+    const extension = path.extname(imageUrl);
+    const contentType = mime.contentType(extension);
     let imageBuffer = await rp({
       uri: imageUrl,
       encoding: null
@@ -42,14 +42,14 @@ async function uploadItemImageToS3(itemId, imageUrl) {
       console.log("jpeg-autorotate error: " + err);
     }
     console.log("Uploading image to s3...");
-    let data = await s3.upload({
+    const data = await s3.upload({
       Body: imageBuffer,
       Key: process.env.AWS_S3_IMAGE_FOLDER + '/item-' + itemId + extension,
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       ACL: "public-read",
       ContentType: contentType
     }).promise();
-    let s3PhotoUrl = data.Location;
+    const s3PhotoUrl = data.Location;
     console.log("Success uploading image to s3: " + s3PhotoUrl);
     return s3PhotoUrl;
   } catch (err) {

@@ -1,0 +1,14 @@
+{
+  "itemIds": [
+    143,
+    155
+  ],
+  "firstName": "Lucas",
+  "lastName": "Hu",
+  "email": "lucashu1998@gmail.com",
+  "phoneNumber": "8582274815",
+  "amount": 4,
+  "bankTransferFee": 2,
+  "serviceFee": 1,
+  "country": "US"
+}

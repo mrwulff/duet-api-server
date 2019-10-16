@@ -4,7 +4,7 @@ require("dotenv").config();
 let connPromise;
 async function dbInitConnectPromise() {
   if (!connPromise) {
-    let mysqlPromise = require('mysql2/promise');
+    const mysqlPromise = require('mysql2/promise');
     connPromise = await mysqlPromise.createPool({
       host: process.env.DATABASE_HOST,
       port: process.env.DATABASE_PORT,

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "ava",
+    "test-verbose": "ava --verbose",
     "start": "npm run build && node dist/index.js",
     "dev": "NODE_ENV=development babel-node src/server/index.js",
     "start-on-windows": "set NODE_ENV=development && babel-node src/server/index.js",

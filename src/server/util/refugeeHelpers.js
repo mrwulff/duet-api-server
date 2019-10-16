@@ -5,7 +5,7 @@ import matchingHelpers from "../util/matchingHelpers.js";
 
 function sqlRowToBeneficiaryObj(row) {
   // SQL row to beneficiary object
-  let beneficiaryObj = {
+  const beneficiaryObj = {
     beneficiaryId: Number(row.beneficiary_id),
     firstName: row.beneficiary_first,
     lastName: row.beneficiary_last,
@@ -41,18 +41,18 @@ function getDonatableBeneficiaries(beneficiaryObjs) {
 
 async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
   // Get beneficiary info
-  let row = await sqlHelpers.getBeneficiaryRow(beneficiaryId);
+  const row = await sqlHelpers.getBeneficiaryRow(beneficiaryId);
   if (!row) {
     return null;
   }
   // Convert beneficiary object fields
-  let beneficiaryObj = sqlRowToBeneficiaryObj(row);
+  const beneficiaryObj = sqlRowToBeneficiaryObj(row);
   // Get beneficiary needs in SQL format
-  let beneficiaryNeeds = await sqlHelpers.getBeneficiaryNeeds(beneficiaryId);
+  const beneficiaryNeeds = await sqlHelpers.getBeneficiaryNeeds(beneficiaryId);
   if (beneficiaryNeeds.length === 0) {
     console.log("Beneficiary has no item needs!");
   }
-  let needs = [];
+  const needs = [];
   // Convert to format that the front-end code expects
   beneficiaryNeeds.forEach(row => {
     needs.push(itemHelpers.sqlRowToItemObj(row));
@@ -64,7 +64,7 @@ async function getSingleBeneficiaryInfoAndNeeds(beneficiaryId) {
 function getBeneficiaryObjsFromSQLRows(rows) {
   let currentBeneficiaryId = -1;
   let beneficiaryObj;
-  let allBeneficiaryObjs = [];
+  const allBeneficiaryObjs = [];
   // Convert to format that the front-end code expects
   rows.forEach(row => {
     // New beneficiary
@@ -95,7 +95,7 @@ function getBeneficiaryObjsFromSQLRows(rows) {
 }
 
 async function getAllBeneficiariesInfoAndNeeds() {
-  let rows = await sqlHelpers.getAllBeneficiaryInfoAndNeeds(); // get beneficiary info in SQL format
+  const rows = await sqlHelpers.getAllBeneficiaryInfoAndNeeds(); // get beneficiary info in SQL format
   if (rows.length === 0) {
     console.log("No beneficiaries");
     return null;
