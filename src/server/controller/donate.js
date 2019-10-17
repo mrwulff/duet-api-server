@@ -48,7 +48,7 @@ async function itemPaid(req, res) {
       await Promise.all(payoutInfo.map(async singleStoreResult => {
         await paypalHelpers.sendPayout(
           singleStoreResult.paypal,
-          singleStoreResult.payment_amount,
+          singleStoreResult.payment_amount.toFixed(2),
           "EUR",
           singleStoreResult.item_ids
         );
