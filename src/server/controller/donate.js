@@ -52,7 +52,7 @@ async function itemPaid(req, res) {
           "EUR",
           singleStoreResult.item_ids
         );
-        console.log("Successfully sent payout(s) for item IDs: " + donationInfo.itemIds);
+        console.log("Successfully sent payout(s) for item IDs: " + singleStoreResult.item_ids);
         // send "incoming payment" email to store
         sendgridHelpers.sendStorePaymentEmail({
           storeEmail: singleStoreResult.store_email,
