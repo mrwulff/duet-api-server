@@ -15,6 +15,7 @@ import currencyRoutes from "./routes/currency";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { passport } from './util/auth.js';
+import morgan from 'morgan';
 
 require('dotenv').config();
 
@@ -22,6 +23,10 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
 
 // enable CORS
 app.use(cors());
