@@ -10,6 +10,11 @@ const sgMail = config.sendgridInit(); // Sendgrid
 
 const unsubGroupId = 11371; // Automated Donation Updates unsub group
 
+function capitalizeAndTrimName(nameStr) {
+  const capitalized = nameStr.charAt(0).toUpperCase() + nameStr.slice(1);
+  return capitalized.trim()
+}
+
 async function sendErrorEmail(err, functionName) {
   try {
     // Send error email to duet.giving@gmail.com
@@ -52,7 +57,11 @@ async function sendDonorThankYouEmailV2(donationId) {
       templateId: emailTemplateId,
       dynamic_template_data: {
         subjectTag: subjectTag,
-        donor: donationObj.donor,
+        donor: {
+          ...donationObj.donor, 
+          donorFirst: capitalizeAndTrimName(donationObj.donor.donorFirst), 
+          donorLast: capitalizeAndTrimName(donationObj.donor.donorLast), 
+        },
         donation: {...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2)},
         beneficiary: beneficiaryObj,
         items: donationObj.items.map(itemObj => ({...itemObj, price: itemObj.price.toFixed(2)})),
@@ -229,7 +238,11 @@ async function sendItemPickedUpEmailV2(itemId) {
       dynamic_template_data: {
         subjectTag: subjectTag,
         item: {...itemObj, price: itemObj.price.toFixed(2)},
-        donor: donorObj,
+        donor: {
+          ...donationObj.donor,
+          donorFirst: capitalizeAndTrimName(donationObj.donor.donorFirst),
+          donorLast: capitalizeAndTrimName(donationObj.donor.donorLast), 
+        },
         beneficiary: beneficiaryObj,
         store: storeObj
       },
