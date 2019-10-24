@@ -1,4 +1,5 @@
 import config from '../util/config.js';
+import errorHandler from "../util/errorHandler.js";
 
 function sqlRowToDonorObj(row) {
   const donationObj = {

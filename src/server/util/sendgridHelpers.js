@@ -239,9 +239,9 @@ async function sendItemPickedUpEmailV2(itemId) {
         subjectTag: subjectTag,
         item: {...itemObj, price: itemObj.price.toFixed(2)},
         donor: {
-          ...donationObj.donor,
-          donorFirst: capitalizeAndTrimName(donationObj.donor.donorFirst),
-          donorLast: capitalizeAndTrimName(donationObj.donor.donorLast), 
+          ...donorObj,
+          donorFirst: capitalizeAndTrimName(donorObj.donorFirst),
+          donorLast: capitalizeAndTrimName(donorObj.donorLast), 
         },
         beneficiary: beneficiaryObj,
         store: storeObj
