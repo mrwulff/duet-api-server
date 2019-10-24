@@ -21,7 +21,7 @@ function sqlRowToItemObj(row) {
     requestedTimestamp: row.requested_timestamp,
     beneficiaryId: row.beneficiary_id,
     beneficiaryFirst: row.beneficiary_first,
-    beneficiarylast: row.beneficiary_last,
+    beneficiaryLast: row.beneficiary_last,
     donorFirst: row.donor_first,
     donorLast: row.donor_last,
     donorEmail: row.donor_email,
