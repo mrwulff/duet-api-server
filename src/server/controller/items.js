@@ -9,20 +9,24 @@ async function getItems(req, res) {
   try {
     // Get list of items
     if (req.query.item_id && req.query.item_id.length) {
-      const itemObjs = itemHelpers.getItemObjsFromItemIds(req.query.item_id);
+      console.log(`getItems: Getting items with itemIds: ${req.query.item_id}`);
+      const itemObjs = await itemHelpers.getItemObjsFromItemIds(req.query.item_id);
       return res.json(itemObjs);
     }
     // Get single item
     if (req.query.item_id) {
+      console.log(`getItems: Getting item with itemId: ${req.query.item_id}`);
       const itemObj = await itemHelpers.getItemObjFromItemId(req.query.item_id);
       return res.json([itemObj]);
     }
     // Get items for store
     if (req.query.store_id) {
+      console.log(`getItems: Getting item for storeId: ${req.query.store_id}`);
       const itemObjs = await storeHelpers.getItemObjsForStoreId(req.query.store_id);
       return res.json(itemObjs);
     }
     // Get all items
+    console.log(`getItems: Getting all items`);
     const itemObjs = await itemHelpers.getAllItemObjs();
     return res.json(itemObjs);
 
