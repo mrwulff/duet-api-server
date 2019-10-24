@@ -15,13 +15,13 @@ npm install -g nodemon
 ```
 To start the server locally using `/src` files:
 ```
-nodemon --exec npm run start-dev
+nodemon --exec npm run dev
 ```
 
 ##### Running server
 In development:
 ```
-npm run start-dev
+npm run dev
 ```
 In production:
 ```
