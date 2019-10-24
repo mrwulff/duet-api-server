@@ -1,9 +1,43 @@
 import config from "../util/config.js";
 import itemHelpers from '../util/itemHelpers.js';
-const paypal = config.paypalInit(); // PayPal
-const paypalNVP = config.paypalNVPInit(); // PayPal NVP (legacy API)
 import sendgridHelpers from '../util/sendgridHelpers.js';
 import errorHandler from './errorHandler.js';
+const paypal = config.paypalInit(); // PayPal
+const paypalNVP = config.paypalNVPInit(); // PayPal NVP (legacy API)
+
+async function getPayPalPayoutInfoForItemIds(itemIds) {
+  // Get stores' Payout info for list of items
+  // Returns a list containing payout info for each store that we have to send a payout to
+  // TODO: create a 'payout' object type?
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
+      "SELECT stores.paypal AS paypal, " +
+      "stores.name AS store_name, " +
+      "stores.email AS store_email, " +
+      "payouts.payment_amount AS payment_amount, " +
+      "payouts.item_ids AS item_ids " +
+      "FROM stores AS stores " +
+      "INNER JOIN (" +
+      "SELECT store_id, " +
+      "SUM(price_euros) AS payment_amount, " +
+      "GROUP_CONCAT(item_id) AS item_ids " +
+      "FROM items_view " +
+      "WHERE item_id IN (?) " +
+      "GROUP BY store_id" +
+      ") AS payouts " +
+      "USING(store_id) " +
+      "WHERE stores.payment_method = 'paypal'",
+      [itemIds]);
+    return rows.map(singleStoreResult => ({
+      ...singleStoreResult,
+      item_ids: itemHelpers.itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids)
+    }));
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/getPayPalPayoutInfo");
+    throw err;
+  }
+}
 
 // Send payout to store, return true if successful
 // sendPayout("lucashu1998@gmail.com", 1.00, "USD", [61, 62, 63])
@@ -84,6 +118,7 @@ async function checkPayPalEuroBalanceAndSendEmailIfLow() {
 }
 
 export default {
+  getPayPalPayoutInfoForItemIds,
   sendPayout,
   checkPayPalEuroBalanceAndSendEmailIfLow
 };

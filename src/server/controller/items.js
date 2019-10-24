@@ -1,48 +1,30 @@
 import fbHelpers from '../util/fbHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
+import storeHelpers from '../util/storeHelpers.js';
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
-import sqlHelpers from "../util/sqlHelpers.js";
 
 async function getItems(req, res) {
   // Get item info
   try {
     // Get list of items
     if (req.query.item_id && req.query.item_id.length) {
-      const rows = await sqlHelpers.getItemRows(req.query.item_id);
-      if (rows.length === 0) {
-        return res.send([]);
-      }
-      const needs = rows.map(row => itemHelpers.sqlRowToItemObj(row));
-      return res.json(needs);
+      const itemObjs = itemHelpers.getItemObjsFromItemIds(req.query.item_id);
+      return res.json(itemObjs);
     }
     // Get single item
     if (req.query.item_id) {
-      const item = await sqlHelpers.getItemRow(req.query.item_id);
-      if (!item) {
-        return res.send([]);
-      }
-      return res.json([sqlRowToItemObj(item)]);
+      const itemObj = await itemHelpers.getItemObjFromItemId(req.query.item_id);
+      return res.json([itemObj]);
     }
     // Get items for store
     if (req.query.store_id) {
-      const rows = await sqlHelpers.getItemsForStore(req.query.store_id);
-      if (rows.length === 0) {
-        return res.send([]);
-      }
-      const needs = [];
-      rows.forEach(function (row) {
-        needs.push(itemHelpers.sqlRowToItemObj(row));
-      });
-      return res.json(needs);
+      const itemObjs = await storeHelpers.getItemObjsForStoreId(req.query.store_id);
+      return res.json(itemObjs);
     }
     // Get all items
-    const rows = await sqlHelpers.getAllItems();
-    if (rows.length === 0) {
-      return res.send([]);
-    }
-    const needs = rows.map(row => itemHelpers.sqlRowToItemObj(row));
-    return res.json(needs);
+    const itemObjs = await itemHelpers.getAllItemObjs();
+    return res.json(itemObjs);
 
   }
   catch (err) {
@@ -61,12 +43,12 @@ async function updateItemStatus(req, res) {
         await Promise.all(itemsUnique.map(async item => {
           // Update item status in DB
           const newStatus = itemHelpers.getNextItemStatus(item.status);
-          await sqlHelpers.updateItemStatus(newStatus, item.itemId);
+          await itemHelpers.updateSingleItemStatus(newStatus, item.itemId);
 
           // Send generic item status updated email
-          const itemResult = await sqlHelpers.getItemRow(item.itemId);
-          if (itemResult) {
-            sendgridHelpers.sendItemStatusUpdateEmail(itemResult);
+          const itemObj = await itemHelpers.getItemObjFromItemId(item.itemId);
+          if (itemObj) {
+            sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
           }
 
           // FB messenger pickup notification
@@ -76,11 +58,7 @@ async function updateItemStatus(req, res) {
 
           // Sendgrid pickup notification
           else if (newStatus === 'PICKED_UP') {
-            const itemObj = await sqlHelpers.getItemObjFromItemId(item.itemId);
-            const beneficiaryObj = await sqlHelpers.getBeneficiaryObjFromBeneficiaryId(itemObj.beneficiaryId);
-            const donorObj = await sqlHelpers.getDonorObjFromDonorEmail(itemObj.donorEmail);
-            const storeObj = await sqlHelpers.getStoreObjFromStoreId(itemObj.storeId);
-            sendgridHelpers.sendItemPickedUpEmailV2(beneficiaryObj, donorObj, itemObj, storeObj);
+            sendgridHelpers.sendItemPickedUpEmailV2(item.itemId);
           }
         }));
       }

@@ -1,5 +1,4 @@
 // Imports
-import refugeeHelpers from "../util/refugeeHelpers.js";
 require('dotenv').config();
 
 // config vars
@@ -87,6 +86,16 @@ function assignScoresToBeneficiaries(beneficiaryObjs) {
   return beneficiaryScores;
 }
 
+function filterActiveBeneficiaries(beneficiaryObjs) {
+  return beneficiaryObjs.filter(
+    beneficiary => (beneficiary.totalItemsDonatable > 0 || beneficiary.totalItemsDonated > 0) && beneficiary.visible
+  );
+}
+
+function filterDonatableBeneficiaries(beneficiaryObjs) {
+  return beneficiaryObjs.filter(beneficiary => beneficiary.totalItemsDonatable > 0 && beneficiary.visible);
+}
+
 function getMatchedBeneficiaryId(donatableBeneficiaries) {
   // return next family, and the new array
   const beneficiaryScores = assignScoresToBeneficiaries(donatableBeneficiaries);
@@ -97,7 +106,7 @@ function getMatchedBeneficiaryId(donatableBeneficiaries) {
 function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBeneficiaries) {
   // get matched beneficiary, and N other additional beneficiaries (or all others, if numAdditionalBeneficiaries DNE)
   let additionalBeneficiaries = [];
-  const donatableBeneficiaries = refugeeHelpers.getDonatableBeneficiaries(beneficiaryObjs);
+  const donatableBeneficiaries = filterDonatableBeneficiaries(beneficiaryObjs);
   // get matched beneficiary
   const selectedBeneficiaryId = getMatchedBeneficiaryId(donatableBeneficiaries);
   const matchedBeneficiary = donatableBeneficiaries.find(beneficiary => beneficiary.beneficiaryId === selectedBeneficiaryId);
@@ -116,5 +125,7 @@ function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBene
 export default {
   getTotalWeight,
   assignScoresToBeneficiaries,
+  filterActiveBeneficiaries,
+  filterDonatableBeneficiaries,
   getMatchedAndAdditionalBeneficiaries
 }

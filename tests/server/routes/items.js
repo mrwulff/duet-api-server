@@ -3,9 +3,9 @@ import app from '../../../src/server/app';
 import request from 'supertest';
 import sinon from 'sinon';
 
-import sqlHelpers from '../../../src/server/util/sqlHelpers.js';
 import sendgridHelpers from '../../../src/server/util/sendgridHelpers.js';
 import fbHelpers from '../../../src/server/util/fbHelpers.js';
+import itemHelpers from '../../../src/server/util/itemHelpers.js';
 
 // /items
 test('get /items: every item has itemId', async (t) => {
@@ -31,10 +31,10 @@ test('/items/updateItemStatus makes correct database, sendgrid calls', async (t)
   const item143 = require('../../../assets/test_fixtures/items/item143.json'); // READY_FOR_PICKUP --> PICKED_UP
   const item155 = require('../../../assets/test_fixtures/items/item155.json'); // PAID --> READY_FOR_PICKUP
 
-  const updateItemStatus = sinon.stub(sqlHelpers, 'updateItemStatus');
-  const getItem = sinon.stub(sqlHelpers, 'getItemRow')
-  const getItem143 = getItem.withArgs(143).resolves(item143);
-  const getItem155 = getItem.withArgs(155).resolves(item155);
+  const updateItemStatus = sinon.stub(itemHelpers, 'updateSingleItemStatus');
+  const getItem = sinon.stub(itemHelpers, 'getItemObjFromItemId')
+  const getItem143 = getItem.withArgs(143).resolves(itemHelpers.sqlRowToItemObj(item143));
+  const getItem155 = getItem.withArgs(155).resolves(itemHelpers.sqlRowToItemObj(item155));
   const sendItemStatusUpdateEmail = sinon.stub(sendgridHelpers, 'sendItemStatusUpdateEmail');
   const sendPickupNotification = sinon.stub(fbHelpers, 'sendPickupNotification');
   const sendItemPickedUpEmail = sinon.stub(sendgridHelpers, 'sendItemPickedUpEmailV2');
@@ -48,11 +48,9 @@ test('/items/updateItemStatus makes correct database, sendgrid calls', async (t)
   t.true(updateItemStatus.calledTwice);
   t.true(updateItemStatus.calledWithExactly("PICKED_UP", 143));
   t.true(updateItemStatus.calledWithExactly("READY_FOR_PICKUP", 155));
-  t.true(getItem143.calledOnce);
-  t.true(getItem155.calledOnce);
   t.true(sendItemStatusUpdateEmail.calledTwice);
   t.true(sendPickupNotification.calledOnceWithExactly(155));
-  t.true(sendItemPickedUpEmail.calledOnce); // TODO: check args
+  t.true(sendItemPickedUpEmail.calledOnceWithExactly(143));
 
   t.true(res.ok);
 

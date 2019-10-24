@@ -1,14 +1,58 @@
 // Imports
 require("dotenv").config();
 import config from '../util/config.js';
-import sqlHelpers from './sqlHelpers.js';
 import errorHandler from './errorHandler.js';
 const messenger = config.fbMessengerInit(); // FB Messenger
+
+// Insert message into database
+async function insertMessageIntoDB(message) {
+  const source = message.source;
+  const sender = message.sender;
+  const recipient = message.recipient;
+  const content = message.content;
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "INSERT INTO messages (source, sender, recipient, message) VALUES (?,?,?,?)",
+      [source, sender, recipient, content]
+    );
+    console.log("Successfully inserted message into database: %j", message);
+  } catch (err) {
+    errorHandler.handleError(err, "fbHelpers/insertMessageIntoDB");
+    throw err;
+  }
+}
+
+// Get all info necessary to send a pickup notification
+// TODO: use item, beneficiary, donor objects instead
+async function getFBMessengerInfoFromItemId(itemId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
+      "SELECT " +
+      "item_name, pickup_code, item_photo_link, " +
+      "fb_psid, beneficiary_first, beneficiary_last, language, " +
+      "store_name, " +
+      "donor_first, donor_last, donor_country " +
+      "FROM items_view " +
+      "WHERE item_id=?",
+      [itemId]
+    );
+    if (rows.length === 0) {
+      console.log("No rows found in getFBMessengerInfoFromItemId! Item ID: " + itemId);
+      return null;
+    }
+    return rows[0];
+  } catch (err) {
+    errorHandler.handleError(err, "fbHelpers/getFBMessengerInfoFromItemId");
+    throw err;
+  }
+}
 
 async function sendPickupNotification(itemId) {
   // Send pickup notification for itemId
   try {
-    const fbMessengerInfo = await sqlHelpers.getFBMessengerInfoFromItemId(itemId);
+    const fbMessengerInfo = await getFBMessengerInfoFromItemId(itemId);
     let message = "";
     // Arabic
     if (fbMessengerInfo.language === 'ar') {
@@ -67,5 +111,6 @@ async function sendPickupNotification(itemId) {
 }
 
 export default {
+  insertMessageIntoDB,
   sendPickupNotification
 }

@@ -1,5 +1,4 @@
 require("dotenv").config();
-import sqlHelpers from "../util/sqlHelpers.js";
 import paypalHelpers from "../util/paypalHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
@@ -22,29 +21,26 @@ async function itemPaid(req, res) {
   if (donationInfo.itemIds) {
     try {
       // Create Donation entry
-      let donationId;
       if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
         console.log("Error: Call to itemPaid() without donor email in live mode!");
         return res.status(500).send("Error: Could not retrieve donor email!");
       }
       if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
         console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");
-        donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
-      } else {
-        donationId = await sqlHelpers.insertDonationIntoDB(donationInfo);
       }
+      const donationId = await donationHelpers.insertDonationIntoDB(donationInfo);
 
       await Promise.all(donationInfo.itemIds.map(async itemId => {
-        await sqlHelpers.markItemAsDonated(itemId, donationId);
-        const itemResult = await sqlHelpers.getItemRow(itemId);
-        if (itemResult) {
-          sendgridHelpers.sendItemStatusUpdateEmail(itemResult);
+        await donationHelpers.markItemAsDonated(itemId, donationId);
+        const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+        if (itemObj) {
+          sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
         }
       }));
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
       // Send PayPal payout to stores with payment_method='paypal'
-      const payoutInfo = await sqlHelpers.getPayPalPayoutInfo(donationInfo.itemIds);
+      const payoutInfo = await paypalHelpers.getPayPalPayoutInfoForItemIds(donationInfo.itemIds);
       await Promise.all(payoutInfo.map(async singleStoreResult => {
         await paypalHelpers.sendPayout(
           singleStoreResult.paypal,
@@ -57,7 +53,7 @@ async function itemPaid(req, res) {
         sendgridHelpers.sendStorePaymentEmail({
           storeEmail: singleStoreResult.store_email,
           storeName: singleStoreResult.store_name,
-          paymentAmountEuros: singleStoreResult.payment_amount,
+          paymentAmountEuros: singleStoreResult.payment_amount.toFixed(2),
           paymentMethod: "PayPal",
           itemIds: itemHelpers.itemIdsListToString(singleStoreResult.item_ids),
         });
@@ -67,12 +63,7 @@ async function itemPaid(req, res) {
 
       // SEND EMAIL TO DONOR
       if (donationInfo.email) {
-        const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
-        const donorObj = await sqlHelpers.getDonorObjFromDonorEmail(donationInfo.email);
-        const itemObjs = await sqlHelpers.getItemObjsFromItemIds(donationInfo.itemIds);
-        const beneficiaryId = itemObjs[0].beneficiaryId; // NOTE: assume all items are from the same beneficiary
-        const beneficiaryObj = await sqlHelpers.getBeneficiaryObjFromBeneficiaryId(beneficiaryId);
-        sendgridHelpers.sendDonorThankYouEmailV2(beneficiaryObj, donationObj, donorObj, itemObjs);
+        sendgridHelpers.sendDonorThankYouEmailV2(donationId);
       }
 
     } catch (err) {

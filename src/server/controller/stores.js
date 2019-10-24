@@ -1,4 +1,4 @@
-import sqlHelpers from "../util/sqlHelpers.js";
+// Imports
 import storeHelpers from '../util/storeHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
 import transferwiseHelpers from '../util/transferwiseHelpers.js';
@@ -13,14 +13,14 @@ new CronJob(process.env.CRON_INTERVAL_STORE_NOTIFICATIONS, async function () {
   console.log('running cron job to move REQUESTED items to LISTED...');
   await itemHelpers.listRequestedItemsAndSetNotificiationFlags();
   console.log('running cron job checking if stores need to be notified...');
-  await storeHelpers.sendNotificationEmailsToStores();
+  await storeHelpers.sendItemVerificationEmailsToStores();
 }, null, true, 'America/Los_Angeles');
 
 // CRON job to send bank transfers to all stores needing payment
 new CronJob(process.env.CRON_INTERVAL_BANK_TRANSFERS, 
   async function () {
     console.log("running cron job to send bank transfers to all stores needing payment...");
-    await storeHelpers.sendBankTransfersToStores();
+    await storeHelpers.sendBankTransfersAndEmailsToStores();
   },
   null, true, 'America/Los_Angeles');
 
@@ -28,15 +28,15 @@ async function login(req, res) {
   try {
     const email = req.body.email;
     if (email) {
-      const storeResult = await sqlHelpers.getStoreInfoFromEmail(email);
-      if (!storeResult) {
+      const storeObj = await storeHelpers.getStoreObjFromStoreEmail(email);
+      if (!storeObj) {
         res.status(400).send({ err: "Store email does not exist" });
       }
       else {
         res.status(200).send({
-          storeId: storeResult.store_id,
-          name: storeResult.name,
-          email: storeResult.email
+          storeId: storeObj.storeId,
+          name: storeObj.storeName,
+          email: storeObj.storeEmail
         });
       }
     } else {

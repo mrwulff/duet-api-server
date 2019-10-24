@@ -1,8 +1,58 @@
 require("dotenv").config();
-const rp = require('request-promise');
-const uuidv4 = require('uuid/v4');
+import config from "../util/config.js";
+import rp from 'request-promise';
+import uuidv4 from 'uuid/v4';
 import sendgridHelpers from "../util/sendgridHelpers.js";
+import itemHelpers from "../util/itemHelpers.js";
 import errorHandler from "../util/errorHandler.js";
+
+async function getStoresNeedingBankTransfer() {
+  // Returns a list containing bank transfer info for each store that we have to send a bank transfer to
+  // TODO: create a 'payout' object type?
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
+      "SELECT stores.name AS store_name, " +
+      "stores.email AS store_email, " +
+      "stores.iban AS iban, " +
+      "payouts.payment_amount AS payment_amount, " +
+      "payouts.item_ids AS item_ids " +
+      "FROM stores " +
+      "INNER JOIN (" +
+      "SELECT store_id, " +
+      "SUM(price_euros) AS payment_amount, " +
+      "GROUP_CONCAT(item_id) AS item_ids " +
+      "FROM items_view " +
+      "WHERE status = 'PAID' AND bank_transfer_sent = 0 " +
+      "GROUP BY store_id" +
+      ") AS payouts " +
+      "USING(store_id) " +
+      "WHERE stores.payment_method = 'transferwise'",
+    );
+    return rows.map(singleStoreResult => ({
+      ...singleStoreResult,
+      item_ids: itemHelpers.itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids)
+    }));
+  } catch (err) {
+    errorHandler.handleError(err, "transferwiseHelpers/getStoresNeedingBankTransfer");
+    throw err;
+  }
+}
+
+async function setBankTransferSentFlagForItemIds(itemIds) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
+      "UPDATE items " +
+      "SET bank_transfer_sent = 1 " +
+      "WHERE item_id IN (?)",
+      [itemIds]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "transferwiseHelpers/setBankTransferSentFlagForItemIds");
+    throw err;
+  }
+}
 
 async function getProfileId() {
   try {
@@ -202,6 +252,8 @@ async function sendTransferwiseEuroBalanceUpdateEmail() {
 }
 
 export default {
+  getStoresNeedingBankTransfer,
+  setBankTransferSentFlagForItemIds,
   sendBankTransfer,
   sendTransferwiseEuroBalanceUpdateEmail
 };

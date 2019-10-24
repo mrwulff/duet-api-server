@@ -5,7 +5,6 @@ import sinon from 'sinon';
 
 import typeformHelpers from '../../../src/server/util/typeformHelpers';
 import matchingHelpers from '../../../src/server/util/matchingHelpers';
-import sqlHelpers from '../../../src/server/util/sqlHelpers.js';
 import sendgridHelpers from '../../../src/server/util/sendgridHelpers.js';
 import itemHelpers from '../../../src/server/util/itemHelpers.js'
 import s3Helpers from '../../../src/server/util/s3Helpers.js';
@@ -56,12 +55,12 @@ test('/refugee/typeformV4 processes Typeform payload', async (t) => {
   const newPhotoUrl = `https://duet-web-assets.s3.us-west-1.amazonaws.com/item-photos/item-${itemId}.jpg`;
 
   // set up stubs
-  const insertItemFromTypeform = sinon.stub(sqlHelpers, 'insertItemFromTypeform').resolves(itemId);
+  const insertItemFromTypeform = sinon.stub(typeformHelpers, 'insertItemFromTypeform').resolves(itemId);
   const sendTypeformErrorEmail = sinon.stub(sendgridHelpers, 'sendTypeformErrorEmail');
   const generatePickupCode = sinon.stub(itemHelpers, 'generatePickupCode').returns(pickupCode);
-  const updateItemPickupCode = sinon.stub(sqlHelpers, 'updateItemPickupCode');
+  const updateItemPickupCode = sinon.stub(typeformHelpers, 'updateItemPickupCode');
   const uploadItemImageToS3 = sinon.stub(s3Helpers, 'uploadItemImageToS3').resolves(newPhotoUrl);
-  const updateItemPhotoLink = sinon.stub(sqlHelpers, 'updateItemPhotoLink');
+  const updateItemPhotoLink = sinon.stub(typeformHelpers, 'updateItemPhotoLink');
   
   // make webhook call
   const res = await request(app)

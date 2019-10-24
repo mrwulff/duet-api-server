@@ -1,4 +1,71 @@
+import config from '../util/config.js';
 import errorHandler from './errorHandler.js';
+
+async function insertItemFromTypeform(itemInfo) {
+  // TODO: clean this up (use item object?)
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,status,store_id,link,in_notification) " +
+      "VALUES (?,?,?,?,?,?,?,?,?,?)",
+      [itemInfo.itemNameEnglish,
+        itemInfo.size,
+        itemInfo.price,
+        itemInfo.beneficiaryId,
+        itemInfo.categoryId,
+        itemInfo.comment,
+        itemInfo.status,
+        itemInfo.storeId,
+        itemInfo.photoUrl,
+        itemInfo.in_notification]
+    );
+    return results.insertId;
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/insertItemFromTypeform");
+    throw err;
+  }
+}
+
+async function updateItemPickupCode(itemId, pickupCode) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET pickup_code=? WHERE item_id=?",
+      [pickupCode, itemId]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/updateItemPickupCode");
+    throw err;
+  }
+}
+
+async function updateItemPhotoLink(itemId, photoUrl) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET link=? WHERE item_id=?",
+      [photoUrl, itemId]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/updateItemPhotoLink");
+    throw err;
+  }
+}
+
+async function getItemNameTranslation(language, itemName) {
+  // Get name_english, category_id from itemName in given language
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [matchedItemNames, fields] = await conn.query(
+      "SELECT name_english, category_id FROM item_types WHERE ?? LIKE ?",
+      ["name_" + language, "%" + itemName + "%"]
+    );
+    return matchedItemNames[0];
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/getItemNameTranslation");
+    throw err;
+  }
+}
 
 // find question from array with a given Typeform question-reference
 // use startsWith instead of ===, because there are multiple item-name-... questions for different categories
@@ -40,6 +107,10 @@ function processPriceInput(origPrice) {
 }
 
 export default {
+  insertItemFromTypeform,
+  updateItemPickupCode,
+  updateItemPhotoLink,
+  getItemNameTranslation,
   getAnswerFromQuestionReference,
   processPriceInput
 }

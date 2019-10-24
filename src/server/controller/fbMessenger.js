@@ -1,6 +1,5 @@
 // Imports
 require("dotenv").config();
-import sqlHelpers from '../util/sqlHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 import fbHelpers from '../util/fbHelpers.js';
 
@@ -59,7 +58,7 @@ function processFBMessage(req, res) {
         }
 
         try {
-          sqlHelpers.insertMessageIntoDB(message);
+          fbHelpers.insertMessageIntoDB(message);
           res.sendStatus(200);
         } catch (err) {
           console.log("Error when inserting message into SQL: " + err);

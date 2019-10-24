@@ -1,4 +1,4 @@
-import sqlHelpers from '../util/sqlHelpers.js';
+import config from '../util/config.js';
 
 function sqlRowToDonorObj(row) {
   const donationObj = {
@@ -10,21 +10,35 @@ function sqlRowToDonorObj(row) {
   return donationObj;
 }
 
-async function donorEmailHasDonated(donorEmail) {
-  // return true if donor has donated before
-  const result = await sqlHelpers.getDonorRowFromDonorEmail(donorEmail);
-  return (!!result); // return true for non-null result
+async function getDonorObjFromDonorEmail(donorEmail) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "SELECT * from donors_view WHERE donor_email=?",
+      [donorEmail]
+    );
+    if (results.length === 0) {
+      throw new Error(`getDonorObjFromDonorEmail: donor not found for email: ${donorEmail}`);
+    }
+    return sqlRowToDonorObj(results[0]);
+  } catch (err) {
+    errorHandler.handleError(err, "donorHelpers/getDonorObjFromDonorEmail");
+    throw err;
+  }
 }
 
-async function donorEmailHasHadPickup(donorEmail) {
-  // return true if donor has had an item be PICKED_UP
-  const result = await sqlHelpers.getDonorRowFromDonorEmail(donorEmail);
-  const numPickups = result.total_items_picked_up;
-  return (numPickups > 0);
+async function donorEmailExists(donorEmail) {
+  // return true if donor has donated before
+  try {
+    await getDonorObjFromDonorEmail(donorEmail);
+    return true;
+  } catch (err) {
+    return false;
+  }
 }
 
 export default {
   sqlRowToDonorObj,
-  donorEmailHasDonated,
-  donorEmailHasHadPickup
+  getDonorObjFromDonorEmail,
+  donorEmailExists,
 }

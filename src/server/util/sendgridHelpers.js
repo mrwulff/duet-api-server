@@ -1,6 +1,11 @@
 require("dotenv").config();
 import config from "../util/config.js";
 import errorHandler from "../util/errorHandler.js";
+import donationHelpers from "../util/donationHelpers.js";
+import donorHelpers from "../util/donorHelpers.js";
+import itemHelpers from "../util/itemHelpers.js";
+import beneficiaryHelpers from "../util/beneficiaryHelpers.js";
+import storeHelpers from "../util/storeHelpers.js";
 const sgMail = config.sendgridInit(); // Sendgrid
 
 const unsubGroupId = 11371; // Automated Donation Updates unsub group
@@ -25,27 +30,7 @@ async function sendErrorEmail(err, functionName) {
   }
 }
 
-async function sendDonorThankYouEmail(donorInfo) {
-  try {
-    // Send donor thank-you email
-    // Takes in donorInfo object with "email", "firstName" fields
-    const msg = {
-      to: (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") ? ["duet.giving@gmail.com", donorInfo.email] : "duet.giving@gmail.com",
-      from: "duet@giveduet.org",
-      templateId: "d-2780c6e3d4f3427ebd0b20bbbf2f8cfc",
-      dynamic_template_data: {
-        name: donorInfo.firstName,
-        subject: (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") ? "Thank you from Duet" : "[SANDBOX] Thank you from Duet"
-      }
-    };
-    await sgMail.sendMultiple(msg);
-    console.log(`Donation confirmation sent ${donorInfo.email} to successfully.`);
-  } catch (err) {
-    errorHandler.handleError(error, "sendgridHelpers/sendDonorThankYouEmail");
-  }
-}
-
-async function sendDonorThankYouEmailV2(beneficiaryObj, donationObj, donorObj, itemObjs) {
+async function sendDonorThankYouEmailV2(donationId) {
   try {
     const emailTemplateId = "d-fb8c05dc69cd4bcbae0bb47f3571ef7d";
     let subjectTag = "";
@@ -56,16 +41,21 @@ async function sendDonorThankYouEmailV2(beneficiaryObj, donationObj, donorObj, i
       recipientList = ["duet.giving@gmail.com"];
       subjectTag = "[SANDBOX] ";
     }
+    // get necessary data
+    const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
+    const beneficiaryId = donationObj.items[0].beneficiaryId; // NOTE: assume all items are from the same beneficiary
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    // create sendgrid message
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
       templateId: emailTemplateId,
       dynamic_template_data: {
         subjectTag: subjectTag,
-        donor: donorObj,
+        donor: donationObj.donor,
         donation: {...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2)},
         beneficiary: beneficiaryObj,
-        items: itemObjs.map(itemObj => ({...itemObj, price: itemObj.price.toFixed(2)})),
+        items: donationObj.items.map(itemObj => ({...itemObj, price: itemObj.price.toFixed(2)})),
       },
       asm: {
         groupId: unsubGroupId
@@ -78,7 +68,7 @@ async function sendDonorThankYouEmailV2(beneficiaryObj, donationObj, donorObj, i
   }
 }
 
-async function sendTypeformErrorEmail(typeformErrorInfo) {
+async function sendTypeformErrorEmail(formTitle, eventId, errMessage) {
   try {
     // Send error email if Typeform response can't get added to DB
     msg = {
@@ -86,9 +76,9 @@ async function sendTypeformErrorEmail(typeformErrorInfo) {
       from: "duet.giving@gmail.com",
       templateId: "d-6ecc5d7df32c4528b8527c248a212552",
       dynamic_template_data: {
-        formTitle: typeformErrorInfo.formTitle,
-        eventId: typeformErrorInfo.eventId,
-        error: typeformErrorInfo.err
+        formTitle: formTitle,
+        eventId: eventId,
+        error: errMessage
       }
     }
     await sgMail.send(msg);
@@ -98,33 +88,32 @@ async function sendTypeformErrorEmail(typeformErrorInfo) {
   }
 }
 
-async function sendStoreNotificationEmail(storeNotificationInfo) {
+async function sendStoreItemVerificationEmail(storeObj, itemObjs) {
   try {
     // Send store notification email
     let subject;
     let recipientList;
     if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'live') {
       subject = "Duet: The following items need your attention!";
-      recipientList = ["duet.giving@gmail.com", storeNotificationInfo.email];
+      recipientList = ["duet.giving@gmail.com", storeObj.storeEmail];
     } else {
       subject = "[SANDBOX] Duet: The following items need your attention!";
       recipientList = ["duet.giving@gmail.com"];
     }
-
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
       templateId: "d-435a092f0be54b07b5135799ac7dfb01",
       dynamic_template_data: {
-        storeName: storeNotificationInfo.name,
-        items: storeNotificationInfo.updatedItems,
+        store: storeObj,
+        items: itemObjs,
         subject: subject
       }
     };
     await sgMail.sendMultiple(msg);
-    console.log(`Store notification email delivered to ${storeNotificationInfo.name} at ${storeNotificationInfo.email} successfully.`);
+    console.log(`Store notification email delivered to ${storeObj.storeName} at ${storeObj.storeEmail} successfully.`);
   } catch (err) {
-    errorHandler.handleError(err, "sendgridHelpers/sendStoreNotificationEmail");
+    errorHandler.handleError(err, "sendgridHelpers/sendStoreItemVerificationEmail");
   }
 }
 
@@ -155,7 +144,7 @@ async function sendStorePaymentEmail(storePaymentInfo) {
     await sgMail.sendMultiple(msg);
     console.log(`Store payment email delivered to ${storePaymentInfo.storeName} at ${storePaymentInfo.storeEmail} successfully.`);
   } catch (err) {
-    errorHandler.handleError(err, "sendgridHelpers/sendStoreNotificationEmail");
+    errorHandler.handleError(err, "sendgridHelpers/sendStorePaymentEmail");
   }
 }
 
@@ -180,7 +169,7 @@ async function sendBalanceUpdateEmail(paymentSite, currency, balance, subjectTag
   }
 }
 
-async function sendItemStatusUpdateEmail(itemResult) {
+async function sendItemStatusUpdateEmail(itemObj) {
   try {
     if (process.env.SEND_ITEM_STATUS_UPDATE_EMAILS === "false") {
       return;
@@ -193,17 +182,17 @@ async function sendItemStatusUpdateEmail(itemResult) {
       templateId: emailTemplateId,
       dynamic_template_data: {
         subject: (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") ? "[PROD] - Item Status Update" : "[SANDBOX] - Item Status Update",
-        status: itemResult.status,
-        itemId: itemResult.item_id,
-        itemName: itemResult.item_name,
-        itemSize: itemResult.size,
-        itemLink: itemResult.item_photo_link,
-        pickupCode: itemResult.pickup_code,
-        refugeeName: `${itemResult.beneficiary_first} ${itemResult.beneficiary_last}`,
-        refugeeId: itemResult.beneficiary_id,
-        storeName: itemResult.store_name,
-        donorName: `${itemResult.donor_first} ${itemResult.donor_last}`,
-        donorEmail: itemResult.donor_email,
+        status: itemObj.status,
+        itemId: itemObj.itemId,
+        itemName: itemObj.name,
+        itemSize: itemObj.size,
+        itemLink: itemObj.image,
+        pickupCode: itemObj.pickupCode,
+        refugeeName: `${itemObj.beneficiaryFirst} ${itemObj.beneficiaryLast}`,
+        refugeeId: itemObj.beneficiaryId,
+        storeName: itemObj.storeName,
+        donorName: `${itemObj.donorFirst} ${itemObj.donorLast}`,
+        donorEmail: itemObj.donorEmail,
       }
     };
     await sgMail.send(msg);
@@ -213,49 +202,7 @@ async function sendItemStatusUpdateEmail(itemResult) {
   }
 }
 
-async function sendItemPickedUpEmail(itemResult) {
-  try {
-    // Error checks
-    if (!itemResult.donor_first) {
-      throw new Error("Missing donor_first!");
-    }
-    if (!itemResult.donor_email) {
-      throw new Error("Missing donor_email!");
-    }
-    // Set subject, recipient list depending on environment
-    const emailTemplateId = 'd-2e5e32e85d614b338e7e27d3eacccac3';
-    let recipientList;
-    let subject;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
-      recipientList = [itemResult.donor_email, "duet.giving@gmail.com"];
-      subject = "You've made a difference";
-    } else {
-      recipientList = ["duet.giving@gmail.com"];
-      subject = "[SANDBOX] You've made a difference";
-    }
-    // Send message
-    const msg = {
-      to: recipientList,
-      from: "duet@giveduet.org",
-      templateId: emailTemplateId,
-      dynamic_template_data: {
-        subject: subject,
-        item_name: itemResult.item_name,
-        item_link: itemResult.item_photo_link,
-        donor_first: itemResult.donor_first,
-        beneficiary_last: itemResult.beneficiary_last,
-        beneficiary_link: (process.env.DUET_BENEFICIARIES_URL + '/' + itemResult.beneficiary_id),
-        // family_image_url: family_image_url
-      }
-    };
-    await sgMail.sendMultiple(msg);
-    console.log(`Item pickup message delivered successfully.`);
-  } catch (err) {
-    errorHandler.handleError(err, "sendgridHelpers/sendItemPickedUpEmail");
-  }
-}
-
-async function sendItemPickedUpEmailV2(beneficiaryObj, donorObj, itemObj, storeObj) {
+async function sendItemPickedUpEmailV2(itemId) {
   try {
     let subjectTag = "";
     let recipientList;
@@ -266,6 +213,15 @@ async function sendItemPickedUpEmailV2(beneficiaryObj, donorObj, itemObj, storeO
       recipientList = ["duet.giving@gmail.com"];
       subjectTag = "[SANDBOX] ";
     }
+    // get necessary objects
+    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+    if (itemObj.status !== 'PICKED_UP') {
+      throw new Error(`Attempted to call sendItemPickedUpEmailV2 on a non-picked up item: ${itemId}`);
+    }
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(itemObj.beneficiaryId);
+    const donorObj = await donorHelpers.getDonorObjFromDonorEmail(itemObj.donorEmail);
+    const storeObj = await storeHelpers.getStoreObjFromStoreId(itemObj.storeId);
+    // create sendgrid email
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
@@ -291,12 +247,10 @@ async function sendItemPickedUpEmailV2(beneficiaryObj, donorObj, itemObj, storeO
 export default {
   sendErrorEmail,
   sendTypeformErrorEmail,
-  sendDonorThankYouEmail,
   sendDonorThankYouEmailV2,
-  sendStoreNotificationEmail,
+  sendStoreItemVerificationEmail,
   sendStorePaymentEmail,
   sendBalanceUpdateEmail,
   sendItemStatusUpdateEmail,
-  sendItemPickedUpEmail,
   sendItemPickedUpEmailV2
 };

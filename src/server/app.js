@@ -6,8 +6,8 @@ if (!global._babelPolyfill) {
 
 import express from "express";
 import routes from "./routes/index";
-import refugeeRoutes from "./routes/refugee";
-import refugeeProtectedRoutes from "./routes/refugeeProtected";
+import beneficiaryRoutes from "./routes/beneficiary";
+import beneficiaryProtectedRoutes from "./routes/beneficiaryProtected";
 import donateRoutes from "./routes/donate";
 import itemsRoutes from "./routes/items";
 import storeRoutes from "./routes/stores";
@@ -36,12 +36,22 @@ app.use(passport.initialize());
 
 app.use("/api", routes);
 
-app.use("/api/refugee", refugeeRoutes);
-app.use("/api/refugee", passport.authenticate('basic', { session: false }), refugeeProtectedRoutes);
+// beneficiary routes
+app.use("/api/beneficiary", beneficiaryRoutes);
+app.use("/api/refugee", beneficiaryRoutes);
+app.use("/api/beneficiary", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
+app.use("/api/refugee", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
+
+// store routes
 app.use("/api/stores", storeRoutes);
-app.use("/api/refugee", refugeeProtectedRoutes);
+
+// donate routes
 app.use("/api/donate", donateRoutes);
+
+// item routes
 app.use("/api/items", itemsRoutes);
+
+// currency routes
 app.use("/api/currency", currencyRoutes);
 
 export default app;

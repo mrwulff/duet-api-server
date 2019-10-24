@@ -1,8 +1,7 @@
 // Imports
-require("dotenv").config();
 import itemHelpers from '../util/itemHelpers.js';
 import s3Helpers from '../util/s3Helpers.js';
-import sqlHelpers from '../util/sqlHelpers.js';
+import storeHelpers from '../util/storeHelpers.js';
 import sendgridHelpers from '../util/sendgridHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 import typeformHelpers from '../util/typeformHelpers.js';
@@ -15,7 +14,6 @@ import typeformHelpers from '../util/typeformHelpers.js';
 //     res.status(500).send({ error: e });
 //   }
 // }
-
 
 async function processTypeformV4(req, res) {
   try {
@@ -60,14 +58,14 @@ async function processTypeformV4(req, res) {
 
     // Translate itemName to English by matching itemName in item_types table
     // And get categoryId while we're at it
-    const itemTranslationResult = await sqlHelpers.getItemNameTranslation(language, itemName);
+    const itemTranslationResult = await typeformHelpers.getItemNameTranslation(language, itemName);
     if (!itemTranslationResult) {
       console.log("Invalid item name");
       throw new Error("Invalid item name! Table: name_" + language + "; itemName: " + itemName);
     }
     const itemNameEnglish = itemTranslationResult.name_english;
     const categoryId = itemTranslationResult.category_id;
-    const storeId = await sqlHelpers.getStoreIdFromName(store);
+    const storeObj = await storeHelpers.getStoreObjFromStoreName(store);
 
     // insert item
     let itemId;
@@ -80,29 +78,25 @@ async function processTypeformV4(req, res) {
         categoryId: categoryId,
         comment: comment,
         status: 'REQUESTED',
-        storeId: storeId,
+        storeId: storeObj.storeId,
         photoUrl: photoUrl,
         in_notification: 0
       };
-      itemId = await sqlHelpers.insertItemFromTypeform(itemInfo);
+      itemId = await typeformHelpers.insertItemFromTypeform(itemInfo);
     } catch (err) {
       // Sendgrid Error message (email)
       console.log("Failed to insert item from typeform into DB. Sending error email...");
-      sendgridHelpers.sendTypeformErrorEmail({
-        formTitle: formTitle,
-        eventId: eventId,
-        err: err.toString()
-      });
+      sendgridHelpers.sendTypeformErrorEmail(formTitle, eventId, err.toString());
       return res.status(500).send();
     }
 
     // get code for item
     const code = itemHelpers.generatePickupCode(itemId);
-    await sqlHelpers.updateItemPickupCode(itemId, code);
+    await typeformHelpers.updateItemPickupCode(itemId, code);
 
     // Rehost image in S3
     const s3PhotoUrl = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
-    await sqlHelpers.updateItemPhotoLink(itemId, s3PhotoUrl);
+    await typeformHelpers.updateItemPhotoLink(itemId, s3PhotoUrl);
 
     console.log("Successfully processed Typeform response");
     return res.status(200).send();
