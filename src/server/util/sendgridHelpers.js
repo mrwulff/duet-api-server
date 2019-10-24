@@ -37,20 +37,20 @@ async function sendErrorEmail(err, functionName) {
 
 async function sendDonorThankYouEmailV2(donationId) {
   try {
-    const emailTemplateId = "d-fb8c05dc69cd4bcbae0bb47f3571ef7d";
-    let subjectTag = "";
-    let recipientList;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
-      recipientList = [donorObj.donorEmail, "duet.giving@gmail.com"];
-    } else {
-      recipientList = ["duet.giving@gmail.com"];
-      subjectTag = "[SANDBOX] ";
-    }
     // get necessary data
     const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
     const beneficiaryId = donationObj.items[0].beneficiaryId; // NOTE: assume all items are from the same beneficiary
     const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
     // create sendgrid message
+    const emailTemplateId = "d-fb8c05dc69cd4bcbae0bb47f3571ef7d";
+    let subjectTag = "";
+    let recipientList;
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
+      recipientList = [donationObj.donor.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
@@ -213,15 +213,6 @@ async function sendItemStatusUpdateEmail(itemObj) {
 
 async function sendItemPickedUpEmailV2(itemId) {
   try {
-    let subjectTag = "";
-    let recipientList;
-    const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
-      recipientList = [donorObj.donorEmail, "duet.giving@gmail.com"];
-    } else {
-      recipientList = ["duet.giving@gmail.com"];
-      subjectTag = "[SANDBOX] ";
-    }
     // get necessary objects
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
     if (itemObj.status !== 'PICKED_UP') {
@@ -231,6 +222,15 @@ async function sendItemPickedUpEmailV2(itemId) {
     const donorObj = await donorHelpers.getDonorObjFromDonorEmail(itemObj.donorEmail);
     const storeObj = await storeHelpers.getStoreObjFromStoreId(itemObj.storeId);
     // create sendgrid email
+    let subjectTag = "";
+    let recipientList;
+    const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
+    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
+      recipientList = [donorObj.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
