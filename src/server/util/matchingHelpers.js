@@ -1,5 +1,7 @@
 // Imports
 require('dotenv').config();
+import config from '../util/config.js';
+import errorHandler from '../util/errorHandler.js';
 
 // config vars
 const totalEurDonatedWeight = Number(process.env.BENEFICIARY_MATCHING_TOTAL_EUR_DONATED_WEIGHT);
@@ -122,10 +124,21 @@ function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBene
   };
 }
 
+async function logBeneficiaryMatchInDB(beneficiaryId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query("INSERT INTO beneficiary_matches (beneficiary_id) VALUES (?)", [beneficiaryId]);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/logBeneficiaryMatchInDB");
+    throw err;
+  }
+}
+
 export default {
   getTotalWeight,
   assignScoresToBeneficiaries,
   filterActiveBeneficiaries,
   filterDonatableBeneficiaries,
-  getMatchedAndAdditionalBeneficiaries
+  getMatchedAndAdditionalBeneficiaries,
+  logBeneficiaryMatchInDB
 }

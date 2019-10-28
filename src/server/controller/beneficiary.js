@@ -1,5 +1,6 @@
 // Imports
 import beneficiaryHelpers from "../util/beneficiaryHelpers.js";
+import matchingHelpers from "../util/matchingHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 
 // Get needs for either 1 or all beneficiaries
@@ -34,6 +35,7 @@ async function getBeneficiaryMatch(req, res) {
   try {
     // note: if req.query.numAdditionalBeneficiaries is undefined, then this will return all additional beneficiaries
     const matchedAndAdditionalBeneficiaries = await beneficiaryHelpers.getMatchedAndAdditionalBeneficiaries(req.query.numAdditionalBeneficiaries);
+    matchingHelpers.logBeneficiaryMatchInDB(matchedAndAdditionalBeneficiaries.matchedBeneficiary.beneficiaryId);
     return res.json(matchedAndAdditionalBeneficiaries);
   } catch (err) {
     errorHandler.handleError(err, "refugee/getBeneficiaryMatch");
