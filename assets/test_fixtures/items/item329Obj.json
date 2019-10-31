@@ -1,0 +1,23 @@
+{
+  "itemId": 329,
+  "image": "https://duet-web-assets.s3.us-west-1.amazonaws.com/item-photos/item-329.jpg",
+  "name": "Boy's Shoes",
+  "size": "26",
+  "price": 14,
+  "comment": null,
+  "storeId": 1,
+  "storeName": "Admiral",
+  "storeMapsLink": "https://goo.gl/maps/upsFQoUn1Pv",
+  "icon": "https://image.flaticon.com/icons/svg/863/863686.svg",
+  "status": "LISTED",
+  "pickupCode": "DUET-HP329",
+  "requestedTimestamp": "2019-09-24T02:14:55.000Z",
+  "beneficiaryId": 309,
+  "beneficiaryFirst": "Sahar",
+  "beneficiaryLast": "Ahmadzay",
+  "donorFirst": "Lucas",
+  "donorLast": "Hu",
+  "donorEmail": "lucashu1998@gmail.com",
+  "donorCountry": "US",
+  "donationTimestamp": "2019-06-27T07:48:13.000Z"
+}

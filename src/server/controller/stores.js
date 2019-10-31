@@ -1,28 +1,7 @@
 // Imports
 import storeHelpers from '../util/storeHelpers.js';
-import itemHelpers from '../util/itemHelpers.js';
 import transferwiseHelpers from '../util/transferwiseHelpers.js';
 import errorHandler from "../util/errorHandler.js";
-
-var CronJob = require('cron').CronJob;
-
-// CRON job to send notification email to storeowner every day at 8:00 AM if there are
-// novel items to that (1) need price approval or (2) need to be picked up.
-// Also moves REQUESTED items to LISTED (and sets notification flags)
-new CronJob(process.env.CRON_INTERVAL_STORE_NOTIFICATIONS, async function () {
-  console.log('running cron job to move REQUESTED items to LISTED...');
-  await itemHelpers.listRequestedItemsAndSetNotificiationFlags();
-  console.log('running cron job checking if stores need to be notified...');
-  await storeHelpers.sendItemVerificationEmailsToStores();
-}, null, true, 'America/Los_Angeles');
-
-// CRON job to send bank transfers to all stores needing payment
-new CronJob(process.env.CRON_INTERVAL_BANK_TRANSFERS, 
-  async function () {
-    console.log("running cron job to send bank transfers to all stores needing payment...");
-    await storeHelpers.sendBankTransfersAndEmailsToStores();
-  },
-  null, true, 'America/Los_Angeles');
 
 async function login(req, res) {
   try {
@@ -64,7 +43,10 @@ async function sendBankTransfer(req, res) {
   }
 }
 
-export default { 
+export default {
+  // routes
   login,
-  sendBankTransfer
+
+  // test routes
+  sendBankTransfer,
 };

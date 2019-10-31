@@ -272,21 +272,6 @@ async function unsetItemsNotificationFlags(itemIds) {
   }
 }
 
-async function listRequestedItemsAndSetNotificiationFlags() {
-  try {
-    const requestedItemObjs = await getItemObjsWithStatus('REQUESTED');
-    await Promise.all(requestedItemObjs.map(async item => {
-      await setSingleItemNotificationFlag(item.itemId);
-      await storeHelpers.setSingleStoreNotificationFlag(item.storeId);
-      await updateSingleItemStatus('LISTED', item.itemId);
-      console.log("Successfully listed and set notification flags for item " + item.itemId);
-    }));
-  } catch (err) {
-    errorHandler.handleError(err, "itemHelpers/listRequestedItemsAndSetNotificiationFlags");
-    throw err;
-  }
-}
-
 export default {
   // data modeling
   sqlRowToItemObj,
@@ -306,11 +291,12 @@ export default {
 
   // notification flags
   unsetItemsNotificationFlags,
-  listRequestedItemsAndSetNotificiationFlags,
+  setSingleItemNotificationFlag,
 
   // utilities
   generatePickupCode,
   itemIdsListToString,
   itemIdsGroupConcatStringToNumberList,
   dedupItemsListById,
+  getNextItemStatus,
 }

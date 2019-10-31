@@ -34,6 +34,9 @@ app.use(cors());
 // enable passport
 app.use(passport.initialize());
 
+// enable cron jobs
+require('./cronJobs/cronJobs')
+
 app.use("/api", routes);
 
 // beneficiary routes

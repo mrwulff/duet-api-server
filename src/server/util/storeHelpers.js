@@ -1,8 +1,6 @@
 // Imports
 import config from '../util/config.js';
 import errorHandler from '../util/errorHandler.js';
-import sendgridHelpers from '../util/sendgridHelpers.js';
-import transferwiseHelpers from '../util/transferwiseHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
 
 function sqlRowToStoreObj(sqlRow) {
@@ -133,79 +131,14 @@ async function unsetSingleStoreNotificationFlag(storeId) {
   }
 }
 
-async function sendBankTransfersAndEmailsToStores() {
-  // 1. check for stores needing payment
-  // 2. send payment
-  // 3. mark items as "bank transfer sent"
-  // 4. send email to store
-  // 5. send Transferwise balance email to duet.giving@gmail.com
-  try {
-    // get all stores needing payment via bank transfer
-    const storesNeedingTransfer = await transferwiseHelpers.getStoresNeedingBankTransfer();
-    await Promise.all(storesNeedingTransfer.map(async result => {
-      // send payment
-      const transferId = await transferwiseHelpers.sendBankTransfer(result.store_name, result.iban, result.payment_amount, "EUR");
-      // set "bank_transfer_sent" flag to avoid duplicate payments
-      await transferwiseHelpers.setBankTransferSentFlagForItemIds(result.item_ids);
-      // send email to store
-      const itemIdsStr = itemHelpers.itemIdsListToString(result.item_ids);
-      await sendgridHelpers.sendStorePaymentEmail({
-        storeEmail: result.store_email,
-        storeName: result.store_name,
-        paymentAmountEuros: result.payment_amount,
-        itemIds: itemIdsStr,
-        paymentMethod: "bank"
-      });
-      console.log(`${result.store_name} bank transfer item_ids: ${itemIdsStr}`);
-    }));
-    // if payment was sent, send balance update email to duet.giving@gmail.com
-    if (storesNeedingTransfer.length) {
-      await transferwiseHelpers.sendTransferwiseEuroBalanceUpdateEmail();
-    }
-  } catch (err) {
-    errorHandler.handleError(err, "storeHelpers/sendBankTransfersAndEmailsToStores");
-  }
-}
-
-async function sendItemVerificationEmailsToStores() {
-  try {
-    // Get stores that need notifying
-    const storeObjs = await getStoreObjsThatNeedNotification();
-
-    if (storeObjs.length < 1) {
-      // no stores need notification
-      console.log('No stores need notification currently');
-      return;
-    }
-
-    // Loop through each of the stores that require a notification
-    await Promise.all(storeObjs.map(async storeObj => {
-      // Get items for store
-      const updatedItemObjs = await getItemObjsForStoreNotificationEmail(storeObj.storeId);
-      if (updatedItemObjs.length === 0) {
-        console.log('No new updates to items');
-        return;
-      }
-      // Send email
-      await sendgridHelpers.sendStoreItemVerificationEmail(storeObj, updatedItemObjs);
-
-      // Reset items' notification flags
-      await itemHelpers.unsetItemsNotificationFlags(updatedItemObjs.map(item => item.itemId));
-      await unsetSingleStoreNotificationFlag(storeObj.storeId);
-    }));
-  } catch (err) {
-    errorHandler.handleError(err, "storeHelpers/sendItemVerificationEmailsToStores");
-    throw err;
-  }
-}
-
 export default {
   sqlRowToStoreObj,
   getStoreObjFromStoreId,
   getStoreObjFromStoreEmail,
   getStoreObjFromStoreName,
   getItemObjsForStoreId,
+  getStoreObjsThatNeedNotification,
+  getItemObjsForStoreNotificationEmail,
   setSingleStoreNotificationFlag,
-  sendBankTransfersAndEmailsToStores,
-  sendItemVerificationEmailsToStores
+  unsetSingleStoreNotificationFlag
 };
