@@ -99,6 +99,16 @@ async function updateSingleItemStatus(newStatus, itemId) {
         `UPDATE items SET status=?, in_notification=1 WHERE item_id = ?`,
         [newStatus, itemId]
       );
+    } else if (newStatus === "READY_FOR_PICKUP") {
+      await conn.query(
+        `UPDATE items SET status=?, ready_for_pickup_timestamp=NOW() WHERE item_id = ?`,
+        [newStatus, itemId]
+      );
+    } else if (newStatus === "PICKED_UP") {
+      await conn.query(
+        `UPDATE items SET status=?, picked_up_timestamp=NOW() WHERE item_id = ?`,
+        [newStatus, itemId]
+      );
     } else {
       await conn.query(
         `UPDATE items SET status=? WHERE item_id = ?`,
