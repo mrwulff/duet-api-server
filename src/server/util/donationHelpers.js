@@ -57,6 +57,13 @@ async function markItemAsDonated(itemId, donationId) {
   // Mark item as donated, note that it requires store notification
   try {
     const conn = await config.dbInitConnectPromise();
+    // ensure donation_id does not yet exist (could signal a race condition)
+    const [results, fields] = await conn.query("SELECT donation_id FROM items WHERE item_id=?", itemId);
+    if (results[0].donation_id) {
+      console.log("markItemAsDonated WARNING: Possible race condition! donation_id is already set. " +
+        `itemId: ${itemId}. donationId: ${results[0].donation_id}`);
+    }
+    // set donation_id
     await conn.query(
       "UPDATE items " +
       "INNER JOIN stores USING(store_id) " +

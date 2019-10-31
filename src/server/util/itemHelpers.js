@@ -112,6 +112,91 @@ async function updateSingleItemStatus(newStatus, itemId) {
   }
 }
 
+async function verifyItemsReadyForTransactionAndSetFlagsIfVerified(itemIds) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    // make sure these items are not in_current_transaction
+    // also make sure they have not already been donated (indicated by status='PAID')
+    const [results, fields] = await conn.query(
+      "SELECT " + 
+      "MAX(in_current_transaction) AS any_item_in_transaction, " + 
+      "SUM(CASE WHEN status != 'VERIFIED' THEN 1 ELSE 0 END) AS num_non_verified " +
+      "FROM items WHERE item_id IN (?)",
+      [itemIds]
+    );
+    if (results[0].any_item_in_transaction || results[0].num_non_verified > 0) {
+      return false;
+    }
+    // set in_current_transaction flags. TODO: handle bad interleaving between these 2 lines
+    await conn.query(
+      "UPDATE items SET in_current_transaction=1, " + 
+      "in_current_transaction_timestamp=CURRENT_TIMESTAMP " +
+      "WHERE item_id in (?)",
+      [itemIds]);
+    // return true for success
+    return true;
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/verifyItemsReadyForTransaction");
+    throw err;
+  }
+}
+
+async function unsetInCurrentTransactionFlagForItemIds(itemIds) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET in_current_transaction=0, " + 
+      "in_current_transaction_timestamp=NULL " + 
+      "WHERE item_id IN (?)",
+      [itemIds]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/unsetInCurrentTransactionFlagForItemIds");
+    throw err;
+  }
+}
+
+async function getItemIdsWithStaleInCurrentTransactionTimestamp() {
+  // get itemIds where in_current_transaction flag has been set for more than 10 minutes
+  try {
+    const staleMinutes = 10;
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "SELECT item_id FROM items " + 
+      "WHERE in_current_transaction=1 " + 
+      "AND in_current_transaction_timestamp >= DATE_SUB(NOW(), INTERVAL ? MINUTE)",
+      [staleMinutes]
+    );
+    return results.map(row => row.item_id);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/getItemIdsWithStaleInCurrentTransactionTimestamp");
+    throw err;
+  }
+}
+
+async function unsetStaleInCurrentTransactionFlags() {
+  // unset in_current_transaction flags that have been set for more than 10 minutes
+  try {
+    const staleInCurrenTransactionItemIds = await getItemIdsWithStaleInCurrentTransactionTimestamp();
+    if (!staleInCurrenTransactionItemIds.length) {
+      console.log("no stale in_current_transaction flags");
+      return;
+    }
+    await unsetInCurrentTransactionFlagForItemIds(staleInCurrenTransactionItemIds);
+    console.log(`unset in_current_transaction flags for itemIds: ${staleInCurrenTransactionItemIds}`);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/unsetStaleInCurrentTransactionFlags");
+    throw err;
+  }
+}
+
+// every minute, check for stale in_current_transaction flags
+const CronJob = require('cron').CronJob;
+new CronJob("* * * * *", async function () {
+  console.log('running cron job to unset stale in_current_transaction flags...');
+  await unsetStaleInCurrentTransactionFlags();
+}, null, true, 'America/Los_Angeles');
+
 function generatePickupCode(itemId) {
   let code = "DUET-";
   const pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -203,17 +288,29 @@ async function listRequestedItemsAndSetNotificiationFlags() {
 }
 
 export default {
+  // data modeling
   sqlRowToItemObj,
   getItemObjFromItemId,
   getItemObjsFromItemIds,
   getAllItemObjs,
+
+  // item status
+  getNextItemStatus,
   getItemObjsWithStatus,
   updateSingleItemStatus,
+
+  // in-current-transaction checks
+  verifyItemsReadyForTransactionAndSetFlagsIfVerified,
+  unsetInCurrentTransactionFlagForItemIds,
+  unsetStaleInCurrentTransactionFlags,
+
+  // notification flags
+  unsetItemsNotificationFlags,
+  listRequestedItemsAndSetNotificiationFlags,
+
+  // utilities
   generatePickupCode,
   itemIdsListToString,
   itemIdsGroupConcatStringToNumberList,
   dedupItemsListById,
-  getNextItemStatus,
-  unsetItemsNotificationFlags,
-  listRequestedItemsAndSetNotificiationFlags
 }

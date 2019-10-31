@@ -11,25 +11,55 @@ async function getDonation(req, res) {
     return res.json(donationObj);
   } catch (err) {
     errorHandler.handleError(err, "donate/getDonation");
-    return res.status(500).send();
+    return res.sendStatus(500);
   }
 }
 
-async function itemPaid(req, res) {
+async function verifyNewTransaction(req, res) {
+  // make sure items are not currently being donated (or have not already been donated)
+  try {
+    console.log(`verifyNewTransaction with itemIds: ${req.body.itemIds}`);
+    const success = await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
+    if (success) {
+      console.log(`verifyNewTransaction succeeded for itemIds: ${req.body.itemIds}`);
+      return res.sendStatus(200);
+    } 
+    console.log(`verifyNewTransaction failed: items are currently in transaction, or have already been donated: ${req.body.itemIds}`);
+    return res.sendStatus(409);
+  } catch (err) {
+    errorHandler.handleError(err, "donate/verifyTransaction");
+    return res.sendStatus(500);
+  }
+}
+
+async function cancelTransaction(req, res) {
+  // onError --> cancel transaction: unset in_current_transaction flags
+  try {
+    console.log(`called cancelTransaction with itemIds: ${req.body.itemIds}`);
+    await itemHelpers.unsetInCurrentTransactionFlagForItemIds(req.body.itemIds);
+    return res.sendStatus(200);
+  } catch (err) {
+    errorHandler.handleError(err, "donate/cancelTransaction");
+    return res.sendStatus(500);
+  }
+}
+
+async function processSuccessfulTransaction(req, res) {
   const donationInfo = req.body;
-  console.log(`itemPaid donation info: ${JSON.stringify(donationInfo)}`);
+  console.log(`processSuccessfulDonation donation info: ${JSON.stringify(donationInfo)}`);
   if (donationInfo.itemIds) {
     try {
       // Create Donation entry
       if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
-        console.log("Error: Call to itemPaid() without donor email in live mode!");
+        console.log("Error: Call to processSuccessfulDonation() without donor email in live mode!");
         return res.status(500).send("Error: Could not retrieve donor email!");
       }
       if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
-        console.log("Warning: Call to itemPaid() without donor email in sandbox mode.");
+        console.log("Warning: Call to processSuccessfulDonation() without donor email in sandbox mode.");
       }
       const donationId = await donationHelpers.insertDonationIntoDB(donationInfo);
 
+      // Mark items as donated; unset in_current_transaction
       await Promise.all(donationInfo.itemIds.map(async itemId => {
         await donationHelpers.markItemAsDonated(itemId, donationId);
         const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
@@ -37,7 +67,13 @@ async function itemPaid(req, res) {
           sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
         }
       }));
+      await itemHelpers.unsetInCurrentTransactionFlagForItemIds(donationInfo.itemIds);
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
+
+      // Send email to donor
+      if (donationInfo.email) {
+        sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+      }
 
       // Send PayPal payout to stores with payment_method='paypal'
       const payoutInfo = await paypalHelpers.getPayPalPayoutInfoForItemIds(donationInfo.itemIds);
@@ -58,26 +94,22 @@ async function itemPaid(req, res) {
           itemIds: itemHelpers.itemIdsListToString(singleStoreResult.item_ids),
         });
       }));
+
       // Check remaining balances
       await paypalHelpers.checkPayPalEuroBalanceAndSendEmailIfLow();
-
-      // SEND EMAIL TO DONOR
-      if (donationInfo.email) {
-        sendgridHelpers.sendDonorThankYouEmailV2(donationId);
-      }
-
     } catch (err) {
-      errorHandler.handleError(err, "donate/itemPaid");
-      return res.status(500).send();
+      errorHandler.handleError(err, "donate/processSuccessfulDonation");
+      return res.sendStatus(500);
     }
-    return res.status(200).send();
+    return res.sendStatus(200);
   } 
   console.log('Item ids not found in request body for item donation');
-  return res.status(200).json();
-  
+  return res.sendStatus(200);
 }
 
 export default {
   getDonation,
-  itemPaid
+  verifyNewTransaction,
+  cancelTransaction,
+  processSuccessfulTransaction
 };
