@@ -2,6 +2,7 @@
 require('dotenv').config();
 const CronJob = require('cron').CronJob;
 import storesCronFunctions from '../cronJobs/storesCronFunctions.js';
+import itemsCronFunctions from '../cronJobs/itemsCronFunctions.js';
 import currencyHelpers from '../util/currencyHelpers.js';
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
@@ -19,9 +20,9 @@ new CronJob(process.env.CRON_INTERVAL_STORE_NOTIFICATIONS,
 
 // CRON job to send bank transfers to all stores needing payment
 new CronJob(process.env.CRON_INTERVAL_BANK_TRANSFERS,
-  async function () {
+  function () {
     console.log("running cron job to send bank transfers to all stores needing payment...");
-    await storesCronFunctions.sendBankTransfersAndEmailsToStores();
+    storesCronFunctions.sendBankTransfersAndEmailsToStores();
   },
   null, true, 'America/Los_Angeles'
 );
@@ -33,4 +34,11 @@ new CronJob(process.env.CRON_INTERVAL_CURRENCY,
     currencyHelpers.updateCurrencyRates();
   },
   null, true, 'America/Los_Angeles'
+);
+
+// CRON job to unset stale in_current_transaction flags
+new CronJob("* * * * *", 
+  function () {
+    itemsCronFunctions.unsetStaleInCurrentTransactionFlags();
+  }, null, true, 'America/Los_Angeles'
 );

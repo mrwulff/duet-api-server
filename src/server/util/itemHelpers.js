@@ -1,6 +1,5 @@
 // Imports
 import config from '../util/config.js';
-import storeHelpers from '../util/storeHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 
 function sqlRowToItemObj(row) {
@@ -184,29 +183,6 @@ async function getItemIdsWithStaleInCurrentTransactionTimestamp() {
   }
 }
 
-async function unsetStaleInCurrentTransactionFlags() {
-  // unset in_current_transaction flags that have been set for more than 10 minutes
-  try {
-    const staleInCurrenTransactionItemIds = await getItemIdsWithStaleInCurrentTransactionTimestamp();
-    if (!staleInCurrenTransactionItemIds.length) {
-      console.log("no stale in_current_transaction flags");
-      return;
-    }
-    await unsetInCurrentTransactionFlagForItemIds(staleInCurrenTransactionItemIds);
-    console.log(`unset in_current_transaction flags for itemIds: ${staleInCurrenTransactionItemIds}`);
-  } catch (err) {
-    errorHandler.handleError(err, "itemHelpers/unsetStaleInCurrentTransactionFlags");
-    throw err;
-  }
-}
-
-// every minute, check for stale in_current_transaction flags
-const CronJob = require('cron').CronJob;
-new CronJob("* * * * *", async function () {
-  console.log('running cron job to unset stale in_current_transaction flags...');
-  await unsetStaleInCurrentTransactionFlags();
-}, null, true, 'America/Los_Angeles');
-
 function generatePickupCode(itemId) {
   let code = "DUET-";
   const pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -297,7 +273,7 @@ export default {
   // in-current-transaction checks
   verifyItemsReadyForTransactionAndSetFlagsIfVerified,
   unsetInCurrentTransactionFlagForItemIds,
-  unsetStaleInCurrentTransactionFlags,
+  getItemIdsWithStaleInCurrentTransactionTimestamp,
 
   // notification flags
   unsetItemsNotificationFlags,
