@@ -101,7 +101,8 @@ function processPriceInput(origPrice) {
   if (price.match(/\+?\d+[€,$][0-9]{2}$/g)) { // matches any number of digits, followed by $ or €, followed by 2 digits
     price = price.replace(/[€,$]/g, "."); // replace currency symbol with "."
   }
-  price = price.replace(",", '.').replace(":", "."); // replace "," or ":" with "."
+  // replace "," ":", "/" with "."
+  price = price.replace(",", '.').replace(":", ".").replace("/", ".");
   price = price.replace(/[^\d.]/g, ''); // remove any remaining non-decimal characters
   return price;
 }
