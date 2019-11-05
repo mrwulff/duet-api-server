@@ -7,8 +7,9 @@ let currencyRates;
 // Get currency rates in openexchangerates format
 async function updateCurrencyRates() {
   try {
+    const openExUri = `https://openexchangerates.org/api/latest.json?app_id=${process.env.OPEN_EXCHANGE_APP_ID}`;
     const options = {
-      uri: "https://openexchangerates.org/api/latest.json?app_id=7f0785f2b1bc4741b374c04b20d229a6",
+      uri: openExUri,
       json: true
     }
     currencyRates = await rp(options);
@@ -22,6 +23,16 @@ async function updateCurrencyRates() {
 // Return latest currency rates
 async function getCurrencyRates() {
   try {
+    if (process.env.NODE_ENV === 'development') {
+      const rates = {
+        "base": "USD",
+        "rates": {
+          "EUR": 0.903514,
+        }
+      }
+      return rates;
+    }
+      
     if (!currencyRates) {
       await updateCurrencyRates();
     }
