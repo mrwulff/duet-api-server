@@ -10,7 +10,7 @@ async function unsetStaleInCurrentTransactionFlags() {
       return;
     }
     await itemHelpers.unsetInCurrentTransactionFlagForItemIds(staleInCurrentTransactionItemIds);
-    console.log(`unset in_current_transaction flags for itemIds: ${staleInCurrentTransactionItemIds}`);
+    console.log(`unset stale in_current_transaction flags for itemIds: ${staleInCurrentTransactionItemIds}`);
   } catch (err) {
     errorHandler.handleError(err, "itemHelpers/unsetStaleInCurrentTransactionFlags");
     throw err;

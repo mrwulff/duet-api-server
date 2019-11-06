@@ -84,7 +84,6 @@ function paypalNVPInit() {
 
 
 export default { 
-  // dbInitConnect, 
   dbInitConnectPromise,
   sendgridInit, 
   s3Init, 

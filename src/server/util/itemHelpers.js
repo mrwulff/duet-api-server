@@ -122,29 +122,34 @@ async function updateSingleItemStatus(newStatus, itemId) {
 }
 
 async function verifyItemsReadyForTransactionAndSetFlagsIfVerified(itemIds) {
+  const connPool = await config.dbInitConnectPromise();
+  const conn = await connPool.getConnection();
   try {
-    const conn = await config.dbInitConnectPromise();
-    // make sure these items are not in_current_transaction
-    // also make sure they have not already been donated (indicated by status='PAID')
+    await conn.beginTransaction();
+    // check in_current_transaction flags, throw error if already set
     const [results, fields] = await conn.query(
-      "SELECT " + 
-      "MAX(in_current_transaction) AS any_item_in_transaction, " + 
+      "SELECT " +
+      "MAX(in_current_transaction) AS any_item_in_transaction, " +
       "SUM(CASE WHEN status != 'VERIFIED' THEN 1 ELSE 0 END) AS num_non_verified " +
       "FROM items WHERE item_id IN (?)",
       [itemIds]
     );
     if (results[0].any_item_in_transaction || results[0].num_non_verified > 0) {
-      return false;
+      throw new Error(`DuetRaceConditionError detected for itemIds: ${itemIds}`);
     }
-    // set in_current_transaction flags. TODO: handle bad interleaving between these 2 lines
+    // set in_current_transaction flags and commit transaction
     await conn.query(
-      "UPDATE items SET in_current_transaction=1, " + 
+      "UPDATE items SET in_current_transaction=1, " +
       "in_current_transaction_timestamp=CURRENT_TIMESTAMP " +
       "WHERE item_id in (?)",
-      [itemIds]);
-    // return true for success
-    return true;
+      [itemIds]
+    );
+    await conn.commit();
+    await conn.release();
   } catch (err) {
+    // rollback, release connection, throw error up the stack
+    await conn.rollback();
+    await conn.release();
     errorHandler.handleError(err, "itemHelpers/verifyItemsReadyForTransaction");
     throw err;
   }
@@ -173,7 +178,7 @@ async function getItemIdsWithStaleInCurrentTransactionTimestamp() {
     const [results, fields] = await conn.query(
       "SELECT item_id FROM items " + 
       "WHERE in_current_transaction=1 " + 
-      "AND in_current_transaction_timestamp >= DATE_SUB(NOW(), INTERVAL ? MINUTE)",
+      "AND in_current_transaction_timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE)",
       [staleMinutes]
     );
     return results.map(row => row.item_id);

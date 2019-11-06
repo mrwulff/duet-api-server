@@ -19,16 +19,13 @@ async function verifyNewTransaction(req, res) {
   // make sure items are not currently being donated (or have not already been donated)
   try {
     console.log(`verifyNewTransaction with itemIds: ${req.body.itemIds}`);
-    const success = await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
-    if (success) {
-      console.log(`verifyNewTransaction succeeded for itemIds: ${req.body.itemIds}`);
-      return res.sendStatus(200);
-    } 
-    console.log(`verifyNewTransaction failed: items are currently in transaction, or have already been donated: ${req.body.itemIds}`);
-    return res.sendStatus(409);
+    await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
+    console.log(`verifyNewTransaction succeeded for itemIds: ${req.body.itemIds}`);
+    return res.sendStatus(200);
   } catch (err) {
-    errorHandler.handleError(err, "donate/verifyTransaction");
-    return res.sendStatus(500);
+    console.log(`verifyNewTransaction failed: items are currently in transaction, or have already been donated: ${req.body.itemIds}`);
+    errorHandler.handleError(err, "donate/verifyTransaction"); // let us know a race condition has occurred
+    return res.sendStatus(409);
   }
 }
 
