@@ -25,7 +25,7 @@ async function getBeneficiaryNeeds(req, res) {
     }
     return res.json(allBeneficiaryObjs);
   } catch (err) {
-    errorHandler.handleError(err, "refugee/getBeneficiaryNeeds");
+    errorHandler.handleError(err, "beneficiary/getBeneficiaryNeeds");
     return res.status(500).send();
   }
 }
@@ -38,7 +38,7 @@ async function getBeneficiaryMatch(req, res) {
     matchingHelpers.logBeneficiaryMatchInDB(matchedAndAdditionalBeneficiaries.matchedBeneficiary.beneficiaryId);
     return res.json(matchedAndAdditionalBeneficiaries);
   } catch (err) {
-    errorHandler.handleError(err, "refugee/getBeneficiaryMatch");
+    errorHandler.handleError(err, "beneficiary/getBeneficiaryMatch");
     return res.status(500).send();
   }
 }
@@ -48,7 +48,7 @@ async function getBeneficiaryScores(req, res) {
     const beneficiaryScores = await beneficiaryHelpers.getBeneficiaryScores();
     return res.json(beneficiaryScores);
   } catch (err) {
-    errorHandler.handleError(err, "refugee/getBeneficiaryScores");
+    errorHandler.handleError(err, "beneficiary/getBeneficiaryScores");
     return res.status(500).send();
   }
 }

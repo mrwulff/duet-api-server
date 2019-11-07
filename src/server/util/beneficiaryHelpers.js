@@ -63,12 +63,20 @@ async function getItemObjsFromBeneficiaryId(beneficiaryId) {
 }
 
 async function getBeneficiaryObjWithNeedsFromBeneficiaryId(beneficiaryId) {
-  // Get beneficiary obj
-  const beneficiaryObj = await getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
-  // Get beneficiary needs in SQL format
-  const beneficiaryNeeds = await getItemObjsFromBeneficiaryId(beneficiaryId);
-  beneficiaryObj.needs = beneficiaryNeeds;
-  return beneficiaryObj;
+  try {
+    // Get beneficiary obj
+    const beneficiaryObj = await getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    if (!beneficiaryObj) {
+      return null;
+    }
+    // Get beneficiary needs in SQL format
+    const beneficiaryNeeds = await getItemObjsFromBeneficiaryId(beneficiaryId);
+    beneficiaryObj.needs = beneficiaryNeeds;
+    return beneficiaryObj;
+  } catch (err) {
+    errorHandler.handleError(err, "beneficiaryHelpers/getBeneficiaryObjWithNeedsFromBeneficiaryId");
+    throw err;
+  }
 }
 
 async function getAllBeneficiaryObjsWithNeeds() {
