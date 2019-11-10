@@ -26,6 +26,8 @@ function sqlRowToItemObj(row) {
     donorEmail: row.donor_email,
     donorCountry: row.donor_country,
     donationTimestamp: row.donation_timestamp,
+    readyForPickupTimestamp: row.ready_for_pickup_timestamp,
+    pickedUpTimestamp: row.picked_up_timestamp
   }
   return itemObj;
 }
