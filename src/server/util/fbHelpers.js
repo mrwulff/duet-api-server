@@ -1,8 +1,11 @@
 // Imports
 require("dotenv").config();
 import config from '../util/config.js';
+import beneficiaryHelpers from '../util/beneficiaryHelpers.js';
+import itemHelpers from '../util/itemHelpers.js';
 import errorHandler from './errorHandler.js';
 const messenger = config.fbMessengerInit(); // FB Messenger
+import format from 'string-template';
 
 // Insert message into database
 async function insertMessageIntoDB(message) {
@@ -110,7 +113,88 @@ async function sendPickupNotification(itemId) {
   }
 }
 
+async function sendOverBudgetItemRequestMessage(beneficiaryId, itemId) {
+  try {
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+    const itemRequestMessages = require('../../../assets/fb_messages/item_request_messages.json');
+    const messageTemplate = itemRequestMessages.overbudgetMessages[beneficiaryObj.language];
+    const eurosRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
+    const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
+    const messageFilled = format(messageTemplate, {
+      itemPhotoLink: itemObj.image,
+      itemPrice: itemObj.price.toFixed(2),
+      totalEurRequestedThisMonth: eurosRequested.toFixed(2),
+      monthlyEurBudget: monthlyBudget.toFixed(2)
+    });
+    messenger.sendTextMessage({
+      id: beneficiaryObj.fbPsid,
+      text: messageFilled,
+      messaging_type: "MESSAGE_TAG",
+      tag: "SHIPPING_UPDATE"
+    });
+  } catch (err) {
+    errorHandler.handleError(err, "fbHelpers/sendOverBudgetItemRequestMessage");
+    throw err;
+  }
+}
+
+async function sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId) {
+  try {
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+    const itemRequestMessages = require('../../../assets/fb_messages/item_request_messages.json');
+    const messageTemplate = itemRequestMessages.successfulMessagesWithBudget[beneficiaryObj.language];
+    const eurosRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
+    const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
+    const messageFilled = format(messageTemplate, {
+      itemPhotoLink: itemObj.image,
+      itemPrice: itemObj.price.toFixed(2),
+      totalEurRequestedThisMonth: eurosRequested.toFixed(2),
+      monthlyEurBudget: monthlyBudget.toFixed(2)
+    });
+    messenger.sendTextMessage({
+      id: beneficiaryObj.fbPsid,
+      text: messageFilled,
+      messaging_type: "MESSAGE_TAG",
+      tag: "SHIPPING_UPDATE"
+    });
+  } catch (err) {
+    errorHandler.handleError(err, "fbHelpers/sendSuccessfulItemRequestMessage");
+    throw err;
+  }
+}
+
+async function sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId) {
+  try {
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+    const itemRequestMessages = require('../../../assets/fb_messages/item_request_messages.json');
+    const messageTemplate = itemRequestMessages.successfulMessagesNoBudget[beneficiaryObj.language];
+    const messageFilled = format(messageTemplate, {
+      itemPhotoLink: itemObj.image,
+      itemPrice: itemObj.price.toFixed(2),
+    });
+    messenger.sendTextMessage({
+      id: beneficiaryObj.fbPsid,
+      text: messageFilled,
+      messaging_type: "MESSAGE_TAG",
+      tag: "SHIPPING_UPDATE"
+    });
+  } catch (err) {
+    errorHandler.handleError(err, "fbHelpers/sendSuccessfulItemRequestMessageNoBudget");
+    throw err;
+  }
+}
+
 export default {
   insertMessageIntoDB,
+
+  // Item requests
+  sendSuccessfulItemRequestMessageWithBudget,
+  sendOverBudgetItemRequestMessage,
+  sendSuccessfulItemRequestMessageNoBudget,
+
+  // Pickup notifications
   sendPickupNotification
 }

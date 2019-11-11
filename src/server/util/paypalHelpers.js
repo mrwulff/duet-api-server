@@ -107,7 +107,7 @@ async function getPayPalEuroBalance() {
 async function checkPayPalEuroBalanceAndSendEmailIfLow() {
   try {
     const paypalEuroBalance = await getPayPalEuroBalance();
-    if (paypalEuroBalance <= process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
+    if (paypalEuroBalance < process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
       console.log("WARNING: Low PayPal Euro balance! Sending warning email to duet.giving@gmail.com");
       await sendgridHelpers.sendBalanceUpdateEmail("PayPal", "EUR", paypalEuroBalance, "WARNING");
     }

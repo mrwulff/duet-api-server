@@ -1,0 +1,17 @@
+{
+  "successfulMessagesNoBudget": {
+    "en": "We have received your item request!\nPhoto: {itemPhotoLink}\nPrice: {itemPrice}€\nAfter the store owner verifies the price of the item, we will add this item to the website.",
+    "fa": "ما درخواست مورد شما را دریافت کردیم!\nعکس: {itemPhotoLink}\nقیمت: {itemPrice} €\nبعد از بررسی قیمت ، این مورد را به وب سایت اضافه خواهیم کرد.",
+    "ar": "لقد تلقينا طلب البند الخاص بك!\nالصورة: {itemPhotoLink}\nالسعر: {itemPrice} €\nسنضيف هذا العنصر إلى الموقع الإلكتروني بعد أن يتحقق المتجر من السعر."
+  },
+  "successfulMessagesWithBudget": {
+    "en": "We have received your item request!\nPhoto: {itemPhotoLink}\nPrice: {itemPrice}€\nAfter the store owner verifies the price of the item, we will add this item to the website.\nYou have now used {totalEurRequestedThisMonth}€ of your monthly budget of {monthlyEurBudget}€.",
+    "fa": "ما درخواست مورد شما را دریافت کردیم!\nعکس: {itemPhotoLink}\nقیمت: {itemPrice} €\nبعد از بررسی قیمت ، این مورد را به وب سایت اضافه خواهیم کرد.\nاکنون از {totalEurRequestedThisMonth} € بودجه ماهانه خود {monthlyEurBudget} € استفاده کرده اید.",
+    "ar": "لقد تلقينا طلب البند الخاص بك!\nالصورة: {itemPhotoLink}\nالسعر: {itemPrice} €\nسنضيف هذا العنصر إلى الموقع الإلكتروني بعد أن يتحقق المتجر من السعر.\nلقد استخدمت الآن {totalEurRequestedThisMonth} يورو من ميزانيتك الشهرية البالغة {monthlyEurBudget} يورو."
+  },
+  "overbudgetMessages": {
+    "en": "We have received your item request!\nPhoto: {itemPhotoLink}\nPrice: {itemPrice}€\nYou have now exceeded your monthly budget of {monthlyEurBudget}€, so we cannot add this item to our website this month.\nPlease message us if you have any questions!",
+    "fa": "ما درخواست مورد شما را دریافت کردیم!\nعکس: {itemPhotoLink}\nقیمت: {itemPrice} €\nاکنون از بودجه ماهانه خود از {monthlyEurBudget} € فراتر رفته اید ، بنابراین ما نمیتوانیم اضافه کنیم این وسیله راتووب سایت مان دراین ماه.\nلطفا در صورت هر گونه سؤال به ما پیام دهید!",
+    "ar": "لقد تلقينا طلب البند الخاص بك!\nالصورة: {itemPhotoLink}\nالسعر: {itemPrice} €\nلقد تجاوزت الآن ميزانيتك الشهرية البالغة {monthlyEurBudget} يورو ، لذلك لا يمكننا إضافة هذا العنصر إلى موقعنا على الإنترنت هذا الشهر. يرجى رسالة لنا إذا كان لديك أي أسئلة!"
+  }
+}

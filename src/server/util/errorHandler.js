@@ -5,13 +5,13 @@ require("dotenv").config();
 function handleError(err, functionName = false) {
   try {
     if (functionName) {
-      console.log("Error in " + functionName + ": " + err.toString());
+      console.log("Error in " + functionName + ": " + err.stack);
       if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
         sendgridHelpers.sendErrorEmail(err.toString(), functionName);
       }
     }
     else {
-      console.log("Error in unknown function: " + err.toString());
+      console.log("Error in unknown function: " + err.stack);
       if (process.env.SEND_ERROR_EMAILS && process.env.SEND_ERROR_EMAILS === 'true') {
         sendgridHelpers.sendErrorEmail(err.toString(), "unknownFunction");
       }

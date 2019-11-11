@@ -12,6 +12,7 @@ function sqlRowToBeneficiaryObj(row) {
     lastName: row.beneficiary_last,
     story: row.story,
     language: row.language,
+    fbPsid: row.fb_psid,
     numFamilyMembers: Number(row.num_family_members),
     originCity: row.origin_city,
     originCountry: row.origin_country,
@@ -121,6 +122,45 @@ async function getAllBeneficiaryObjsWithNeeds() {
   }
 }
 
+async function getMonthlyEurBudget(beneficiaryId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
+      "SELECT monthly_budget_eur FROM beneficiaries " +
+      "WHERE beneficiary_id = ?",
+      [beneficiaryId]
+    );
+    if (rows.length === 0) {
+      console.log(`beneficiaryHelpers.getMonthlyEurBudget(): beneficiaryId not found: ${beneficiaryId}`);
+      return null;
+    }
+    return rows[0].monthly_budget_eur;
+  } catch (err) {
+    errorHandler.handleError(err, "beneficiaryHelpers/getMonthlyEurBudget");
+    throw err;
+  }
+}
+
+async function getTotalEurRequestedThisMonth(beneficiaryId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
+      "SELECT SUM(price_euros) as total_eur_requested_this_month " +
+      "FROM beneficiaries_and_items_view " +
+      "WHERE MONTH(requested_timestamp) = MONTH(CURRENT_TIMESTAMP) " +
+      "AND beneficiary_id = ?",
+      [beneficiaryId]
+    );
+    if (rows.length === 0) {
+      return 0;
+    }
+    return rows[0].total_eur_requested_this_month;
+  } catch (err) {
+    errorHandler.handleError(err, "beneficiaryHelpers/getTotalEurRequestedThisMonth");
+    throw err;
+  }
+}
+
 async function getBeneficiaryScores() {
   const allBeneficiaryObjs = await getAllBeneficiaryObjsWithNeeds();
   const donatableBeneficiaries = matchingHelpers.filterDonatableBeneficiaries(allBeneficiaryObjs);
@@ -146,5 +186,9 @@ export default {
 
   // Matching
   getBeneficiaryScores,
-  getMatchedAndAdditionalBeneficiaries
+  getMatchedAndAdditionalBeneficiaries,
+
+  // Budgeting
+  getMonthlyEurBudget,
+  getTotalEurRequestedThisMonth
 }

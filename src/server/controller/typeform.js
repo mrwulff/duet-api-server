@@ -2,9 +2,11 @@
 import itemHelpers from '../util/itemHelpers.js';
 import s3Helpers from '../util/s3Helpers.js';
 import storeHelpers from '../util/storeHelpers.js';
+import beneficiaryHelpers from '../util/beneficiaryHelpers.js';
 import sendgridHelpers from '../util/sendgridHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 import typeformHelpers from '../util/typeformHelpers.js';
+import fbHelpers from '../util/fbHelpers.js';
 
 // function testUploadItemImageToS3(req, res) {
 //   try {
@@ -97,6 +99,23 @@ async function processTypeformV4(req, res) {
     // Rehost image in S3
     const s3PhotoUrl = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
     await typeformHelpers.updateItemPhotoLink(itemId, s3PhotoUrl);
+
+    // Confirmation message
+    const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
+    if (monthlyBudget) {
+      // check if overbudget
+      const eurRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
+      if (eurRequested > monthlyBudget) {
+        await itemHelpers.updateSingleItemStatus("GRAVEYARD", itemId);
+        await fbHelpers.sendOverBudgetItemRequestMessage(beneficiaryId, itemId);
+      } else {
+        await fbHelpers.sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId);
+      }
+    } else {
+      // no budget
+      await fbHelpers.sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId);
+    }
+    
 
     console.log("Successfully processed Typeform response");
     return res.status(200).send();
