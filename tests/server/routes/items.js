@@ -27,9 +27,9 @@ test('get /items with storeId returns items only from that store', async (t) => 
 
 // /items/updateItemStatus
 test('/items/updateItemStatus makes correct database, sendgrid calls', async (t) => {
-  const updateItemStatusBody = require('../../../src/assets/test_fixtures/items/updateItemStatusBody.json');
-  const item143 = require('../../../src/assets/test_fixtures/items/item143.json'); // READY_FOR_PICKUP --> PICKED_UP
-  const item155 = require('../../../src/assets/test_fixtures/items/item155.json'); // PAID --> READY_FOR_PICKUP
+  const updateItemStatusBody = require('../../../test_fixtures/items/updateItemStatusBody.json');
+  const item143 = require('../../../test_fixtures/items/item143.json'); // READY_FOR_PICKUP --> PICKED_UP
+  const item155 = require('../../../test_fixtures/items/item155.json'); // PAID --> READY_FOR_PICKUP
 
   const updateItemStatus = sinon.stub(itemHelpers, 'updateSingleItemStatus');
   const getItem = sinon.stub(itemHelpers, 'getItemObjFromItemId')

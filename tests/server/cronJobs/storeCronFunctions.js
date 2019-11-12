@@ -9,7 +9,7 @@ import transferwiseHelpers from '../../../src/server/util/transferwiseHelpers.js
 
 test('storeCronFunctions.listRequestedItemsAndSetNotificiationFlags() makes correct calls', async (t) => {
   // set up fixtures
-  const item329 = require('../../../src/assets/test_fixtures/items/item329Obj.json');
+  const item329 = require('../../../test_fixtures/items/item329Obj.json');
 
   // set up stubs
   const getItemObjsWithStatus = sinon.stub(itemHelpers, 'getItemObjsWithStatus');
@@ -32,7 +32,7 @@ test('storeCronFunctions.listRequestedItemsAndSetNotificiationFlags() makes corr
 
 test('storeCronFunctions.sendBankTransfersAndEmailsToStores() makes correct calls', async (t) => {
   // set up fixtures
-  const storesNeedingBankTransferResult = require('../../../src/assets/test_fixtures/stores/storesNeedingTransferResult.json');
+  const storesNeedingBankTransferResult = require('../../../test_fixtures/stores/storesNeedingTransferResult.json');
   const singleStoreResult = storesNeedingBankTransferResult[0];
 
   // set up stubs
@@ -64,8 +64,8 @@ test('storeCronFunctions.sendBankTransfersAndEmailsToStores() makes correct call
 
 test('storeCronFunctions.sendItemVerificationEmailsToStores() makes correct calls', async (t) => {
   // set up fixtures
-  const store1 = require('../../../src/assets/test_fixtures/stores/store1Obj.json');
-  const item329 = require('../../../src/assets/test_fixtures/items/item329Obj.json');
+  const store1 = require('../../../test_fixtures/stores/store1Obj.json');
+  const item329 = require('../../../test_fixtures/items/item329Obj.json');
 
   // set up stubs
   const getStoreObjsThatNeedNotification = sinon.stub(storeHelpers, 'getStoreObjsThatNeedNotification').resolves([store1]);

@@ -46,8 +46,8 @@ test('get /refugee/needs: every beneficiary has beneficiaryId', async (t) => {
 
 // /refugee/typeformV4
 test('/refugee/typeformV4 processes Typeform payload', async (t) => {
-  const typeformPayload = require('../../../src/assets/test_fixtures/typeform/typeformFarsiV4Payload.json');
-  const expectedItemInfo = require('../../../src/assets/test_fixtures/typeform/typeformV4ExpectedItemInfo.json');
+  const typeformPayload = require('../../../test_fixtures/typeform/typeformFarsiV4Payload.json');
+  const expectedItemInfo = require('../../../test_fixtures/typeform/typeformV4ExpectedItemInfo.json');
 
   const itemId = 243;
   const pickupCode = 'DUET-AX390';
