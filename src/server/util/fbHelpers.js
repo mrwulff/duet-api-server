@@ -117,7 +117,7 @@ async function sendOverBudgetItemRequestMessage(beneficiaryId, itemId) {
   try {
     const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
-    const itemRequestMessages = require('../../../assets/fb_messages/item_request_messages.json');
+    const itemRequestMessages = require('../../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.overbudgetMessages[beneficiaryObj.language];
     const eurosRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
     const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
@@ -143,7 +143,7 @@ async function sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId)
   try {
     const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
-    const itemRequestMessages = require('../../../assets/fb_messages/item_request_messages.json');
+    const itemRequestMessages = require('../../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.successfulMessagesWithBudget[beneficiaryObj.language];
     const eurosRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
     const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
@@ -169,7 +169,7 @@ async function sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId) {
   try {
     const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
-    const itemRequestMessages = require('../../../assets/fb_messages/item_request_messages.json');
+    const itemRequestMessages = require('../../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.successfulMessagesNoBudget[beneficiaryObj.language];
     const messageFilled = format(messageTemplate, {
       itemPhotoLink: itemObj.image,

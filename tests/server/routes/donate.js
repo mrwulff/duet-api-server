@@ -9,11 +9,11 @@ import paypalHelpers from '../../../src/server/util/paypalHelpers.js';
 import itemHelpers from '../../../src/server/util/itemHelpers.js';
 
 test('/donate/paid route processes donation correctly', async (t) => {
-  const donationInfo = require('../../../assets/test_fixtures/donate/paidPayload.json');
+  const donationInfo = require('../../../src/assets/test_fixtures/donate/paidPayload.json');
   const donationId = 15;
-  const item143 = require('../../../assets/test_fixtures/items/item143.json');
-  const item155 = require('../../../assets/test_fixtures/items/item155.json');
-  const payoutInfo = require('../../../assets/test_fixtures/donate/payoutInfo.json');
+  const item143 = require('../../../src/assets/test_fixtures/items/item143.json');
+  const item155 = require('../../../src/assets/test_fixtures/items/item155.json');
+  const payoutInfo = require('../../../src/assets/test_fixtures/donate/payoutInfo.json');
 
   const insertDonationIntoDB = sinon.stub(donationHelpers, 'insertDonationIntoDB').resolves(donationId);
   const markItemAsDonated = sinon.stub(donationHelpers, 'markItemAsDonated');
