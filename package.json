@@ -10,8 +10,8 @@
     "dev": "NODE_ENV=development babel-node src/server/index.js",
     "start-on-windows": "set NODE_ENV=development && babel-node src/server/index.js",
     "build": "babel ./src/server/ --retain-lines -d ./dist --copy-files",
-    "lint": "eslint src/server/* tests/**/*",
-    "lint-fix": "eslint --fix src/server/* tests/**/*"
+    "lint": "eslint 'src/server/*' 'tests/**/*'",
+    "lint-fix": "eslint --fix 'src/server/*' 'tests/**/*'"
   },
   "keywords": [],
   "author": "",
