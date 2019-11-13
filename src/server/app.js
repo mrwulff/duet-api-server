@@ -24,7 +24,7 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'staging') {
   app.use(morgan('dev'));
 }
 

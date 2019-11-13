@@ -23,7 +23,7 @@ async function updateCurrencyRates() {
 // Return latest currency rates
 async function getCurrencyRates() {
   try {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'staging') {
       const rates = {
         "base": "USD",
         "rates": {
