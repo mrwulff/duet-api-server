@@ -97,8 +97,10 @@ async function processTypeformV4(req, res) {
     await typeformHelpers.updateItemPickupCode(itemId, code);
 
     // Rehost image in S3
-    const s3PhotoUrl = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
-    await typeformHelpers.updateItemPhotoLink(itemId, s3PhotoUrl);
+    const imageLink = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
+    
+    // update photo link on website
+    await typeformHelpers.updateItemPhotoLink(itemId, imageLink);
 
     // Confirmation message
     const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);

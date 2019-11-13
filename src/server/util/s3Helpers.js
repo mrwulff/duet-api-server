@@ -51,7 +51,11 @@ async function uploadItemImageToS3(itemId, imageUrl) {
     }).promise();
     const s3PhotoUrl = data.Location;
     console.log("Success uploading image to s3: " + s3PhotoUrl);
-    return s3PhotoUrl;
+
+    // return image link hosted on AWS CDN (connected to S3 bucket)
+    const imageCDNLink = `${process.env.AWS_CDN}/${process.env.AWS_S3_IMAGE_FOLDER}/item-${itemId}${extension}`; 
+    return imageCDNLink;
+
   } catch (err) {
     errorHandler.handleError(err, "s3Helpers/uploadItemImageToS3");
     throw err;
