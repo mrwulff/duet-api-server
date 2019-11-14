@@ -4,6 +4,7 @@ import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 import itemHelpers from "../util/itemHelpers.js";
 import donationHelpers from "../util/donationHelpers.js";
+import subscriptionHelpers from "../util/subscriptionHelpers.js";
 
 async function getDonation(req, res) {
   try {
@@ -54,7 +55,11 @@ async function processSuccessfulTransaction(req, res) {
       if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
         console.log("Warning: Call to processSuccessfulDonation() without donor email in sandbox mode.");
       }
-      const donationId = await donationHelpers.insertDonationIntoDB(donationInfo);
+      const donationId = await donationHelpers.insertDonationIntoDB(
+        donationInfo.email, donationInfo.firstName, donationInfo.lastName,
+        donationInfo.amount, donationInfo.bankTransferFee, donationInfo.serviceFee,
+        donationInfo.country, donationInfo.paypalOrderId
+      );
 
       // Mark items as donated; unset in_current_transaction
       await Promise.all(donationInfo.itemIds.map(async itemId => {
@@ -104,9 +109,52 @@ async function processSuccessfulTransaction(req, res) {
   return res.sendStatus(200);
 }
 
+async function createSubscription(req, res) {
+  try {
+    const planId = await subscriptionHelpers.getPlanIdForAmountUsd(req.body.amount_usd);
+    return res.json({ 'plan_id': planId });
+  } catch (err) {
+    errorHandler.handleError(err, "donate/getSubscriptionPlanId");
+    return res.sendStatus(500);
+  }
+}
+
+async function processSuccessfulSubscription(req, res) {
+  try {
+    // TODO: WIP
+    const subscriptionInfo = req.body;
+    console.log(`donate/processSuccessfulSubscription subscriptionInfo: ${JSON.stringify(subscriptionInfo)}`);
+    // Add subscription to DB
+    const donationId = await subscriptionHelpers.insertSubscriptionIntoDB(
+      subscriptionInfo.email,
+      subscriptionInfo.firstName,
+      subscriptionInfo.lastName,
+      subscriptionInfo.amount,
+      subscriptionInfo.bankTransferFee,
+      subscriptionInfo.serviceFee,
+      subscriptionInfo.country,
+      subscriptionInfo.paypalSubscriptionId
+    );
+    console.log(`donate/processSuccessfulSubscription donationId: ${donationId}`);
+    // Send thank-you email to donor
+    sendgridHelpers.sendSubscriptionThankYouEmail(donationId);
+    res.sendStatus(200);
+  } catch (err) {
+    errorHandler.handleError(err, "donate/processSuccessfulSubscription");
+    return res.sendStatus(500);
+  }
+}
+
 export default {
+  // data models
   getDonation,
+
+  // one-time donations
   verifyNewTransaction,
   cancelTransaction,
-  processSuccessfulTransaction
+  processSuccessfulTransaction,
+
+  // subscriptions
+  createSubscription,
+  processSuccessfulSubscription
 };

@@ -33,7 +33,11 @@ test('/donate/paid route processes donation correctly', async (t) => {
     .expect(200);
 
   // database updates
-  t.true(insertDonationIntoDB.calledOnceWithExactly(donationInfo));
+  t.true(insertDonationIntoDB.calledOnceWithExactly(
+    donationInfo.email, donationInfo.firstName, donationInfo.lastName,
+    donationInfo.amount, donationInfo.bankTransferFee, donationInfo.serviceFee,
+    donationInfo.country, donationInfo.paypalOrderId)
+  );
   t.is(markItemAsDonated.callCount, donationInfo.itemIds.length);
   donationInfo.itemIds.forEach(itemId => t.true(markItemAsDonated.calledWith(itemId)));
   // Item status update emails

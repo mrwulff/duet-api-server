@@ -59,6 +59,14 @@ async function sendDonorThankYouEmailV2(donationId) {
   }
 }
 
+async function sendSubscriptionThankYouEmail(donationId) {
+  try {
+    // TODO
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendDonorThankYouEmailV2");
+  }
+}
+
 async function sendTypeformErrorEmail(formTitle, eventId, errMessage) {
   try {
     // Send error email if Typeform response can't get added to DB
@@ -241,10 +249,15 @@ async function sendItemPickedUpEmailV2(itemId) {
 
 export default {
   sendTypeformErrorEmail,
-  sendDonorThankYouEmailV2,
-  sendStoreItemVerificationEmail,
-  sendStorePaymentEmail,
-  sendBalanceUpdateEmail,
   sendItemStatusUpdateEmail,
-  sendItemPickedUpEmailV2
+  sendBalanceUpdateEmail,
+
+  // To donors
+  sendDonorThankYouEmailV2,
+  sendSubscriptionThankYouEmail,
+  sendItemPickedUpEmailV2,
+
+  // To stores
+  sendStoreItemVerificationEmail,
+  sendStorePaymentEmail
 };

@@ -155,7 +155,7 @@ async function getTotalEurRequestedThisMonth(beneficiaryId) {
     if (rows.length === 0) {
       return 0;
     }
-    return rows[0].total_eur_requested_this_month;
+    return Number(rows[0].total_eur_requested_this_month);
   } catch (err) {
     errorHandler.handleError(err, "beneficiaryHelpers/getTotalEurRequestedThisMonth");
     throw err;

@@ -31,7 +31,8 @@ async function getPayPalPayoutInfoForItemIds(itemIds) {
       [itemIds]);
     return rows.map(singleStoreResult => ({
       ...singleStoreResult,
-      item_ids: itemHelpers.itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids)
+      item_ids: itemHelpers.itemIdsGroupConcatStringToNumberList(singleStoreResult.item_ids),
+      payment_amount: Number(payment_amount)
     }));
   } catch (err) {
     errorHandler.handleError(err, "paypalHelpers/getPayPalPayoutInfo");

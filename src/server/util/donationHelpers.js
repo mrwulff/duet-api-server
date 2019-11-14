@@ -7,7 +7,8 @@ function sqlRowToDonationObj(donationRow, donorObj, itemObjs) {
   const donationObj = {
     donationId: Number(donationRow.donation_id),
     donationTimestamp: donationRow.donation_timestamp,
-    donationAmtUsd: donationRow.donation_amt_usd,
+    donationAmtUsd: Number(donationRow.donation_amt_usd),
+    isSubscription: donationRow.is_subscription,
     donor: donorObj,
     items: itemObjs
   };
@@ -79,40 +80,28 @@ async function markItemAsDonated(itemId, donationId) {
   }
 }
 
-async function insertDonationIntoDB(donationInfo) {
-  // TODO: clean this up
+async function insertDonationIntoDB(email, firstName, lastName, amount, bankTransferFee, serviceFee, country, paypalOrderId) {
   // Insert donation info into DB, return insert ID
-  let insertDonationQuery = "";
-  let insertDonationValues = [];
   try {
     const conn = await config.dbInitConnectPromise();
-    if (donationInfo.email) {
-      insertDonationQuery = "INSERT INTO donations (timestamp,donor_fname,donor_lname,donor_email,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
-        " VALUES (NOW(),?,?,?,?,?,?,?)";
-      insertDonationValues = [
-        donationInfo.firstName,
-        donationInfo.lastName,
-        donationInfo.email,
-        donationInfo.amount,
-        donationInfo.bankTransferFee,
-        donationInfo.serviceFee,
-        donationInfo.country
+    const [results, fields] = await conn.query(
+      "INSERT INTO donations (timestamp,donor_email,donor_fname,donor_lname,donation_amt_usd," +
+      "bank_transfer_fee_usd,service_fee_usd,donor_country,paypal_order_id) " +
+      "VALUES (NOW(),?,?,?,?,?,?,?,?)",
+      [
+        email,
+        firstName,
+        lastName,
+        amount,
+        bankTransferFee,
+        serviceFee,
+        country,
+        paypalOrderId
       ]
-    } else {
-      insertDonationQuery = "INSERT INTO donations (timestamp,donor_fname,donor_lname,donation_amt_usd,bank_transfer_fee_usd,service_fee_usd,donor_country) " +
-        " VALUES (NOW(),?,?,?,?,?,?)";
-      insertDonationValues = [
-        donationInfo.firstName,
-        donationInfo.lastName,
-        donationInfo.amount,
-        donationInfo.bankTransferFee,
-        donationInfo.serviceFee,
-        donationInfo.country
-      ]
-    }
-    const [results, fields] = await conn.execute(insertDonationQuery, insertDonationValues);
-    console.log("Successfully entered donation into DB: %j", donationInfo);
-    return results.insertId;
+      );
+    const donationId = results.insertId;
+    console.log(`Successfully entered donation into DB: donationId: ${donationId}`);
+    return donationId;
   } catch (err) {
     errorHandler.handleError(err, "donationHelpers/insertDonationIntoDB");
     throw err;
@@ -120,8 +109,13 @@ async function insertDonationIntoDB(donationInfo) {
 }
 
 export default {
+  // data modeling
   sqlRowToDonationObj,
   getDonationObjFromDonationId,
-  markItemAsDonated,
+
+  // insert donation
   insertDonationIntoDB,
-}
+
+  // other helpers
+  markItemAsDonated,
+};
