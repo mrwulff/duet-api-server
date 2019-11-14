@@ -108,13 +108,16 @@ async function processTypeformV4(req, res) {
       // check if overbudget
       const eurRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
       if (eurRequested > monthlyBudget) {
+        console.log("Item is overbudget! Calling sendOverBudgetItemRequestMessage");
         await itemHelpers.updateSingleItemStatus("GRAVEYARD", itemId);
         await fbHelpers.sendOverBudgetItemRequestMessage(beneficiaryId, itemId);
       } else {
+        console.log("Item is within budget: calling sendSuccessfulItemRequestMessageWithBudget");
         await fbHelpers.sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId);
       }
     } else {
       // no budget
+      console.log("Beneficiary has no budget: calling sendSuccessfulItemRequestMessageNoBudget")
       await fbHelpers.sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId);
     }
     
