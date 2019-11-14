@@ -15,26 +15,6 @@ function capitalizeAndTrimName(nameStr) {
   return capitalized.trim()
 }
 
-async function sendErrorEmail(err, functionName) {
-  try {
-    // Send error email to duet.giving@gmail.com
-    const msg = {
-      to: "duet.giving@gmail.com",
-      from: "duet.giving@gmail.com",
-      templateId: "d-baf6edabb26741189b2835f0f3c7258e",
-      dynamic_template_data: {
-        environment: (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") ? "PROD" : "SANDBOX",
-        functionName: functionName,
-        error: err
-      }
-    }
-    await sgMail.send(msg);
-    console.log(`Error message sent to duet.giving@gmail.com`);
-  } catch(err) {
-    console.log("Error when sending error email (lol): " + err);
-  }
-}
-
 async function sendDonorThankYouEmailV2(donationId) {
   try {
     // get necessary data
@@ -65,6 +45,7 @@ async function sendDonorThankYouEmailV2(donationId) {
         donation: {...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2)},
         beneficiary: beneficiaryObj,
         items: donationObj.items.map(itemObj => ({...itemObj, price: itemObj.price.toFixed(2)})),
+        donationTrackerUrl: `${process.env.DUET_WEBSITE}/donation?donationId=${donationObj.donationId}`
       },
       asm: {
         groupId: unsubGroupId
@@ -258,7 +239,6 @@ async function sendItemPickedUpEmailV2(itemId) {
 }
 
 export default {
-  sendErrorEmail,
   sendTypeformErrorEmail,
   sendDonorThankYouEmailV2,
   sendStoreItemVerificationEmail,
