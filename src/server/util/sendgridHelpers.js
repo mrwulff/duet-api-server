@@ -31,6 +31,7 @@ async function sendDonorThankYouEmailV2(donationId) {
       recipientList = ["duet.giving@gmail.com"];
       subjectTag = "[SANDBOX] ";
     }
+    const donationTrackerUrl = `${process.env.DUET_WEBSITE}/donation?donationId=${donationObj.donationId}`
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
@@ -45,14 +46,14 @@ async function sendDonorThankYouEmailV2(donationId) {
         donation: {...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2)},
         beneficiary: beneficiaryObj,
         items: donationObj.items.map(itemObj => ({...itemObj, price: itemObj.price.toFixed(2)})),
-        donationTrackerUrl: `${process.env.DUET_WEBSITE}/donation?donationId=${donationObj.donationId}`
+        donationTrackerUrl: donationTrackerUrl
       },
       asm: {
         groupId: unsubGroupId
       }
     };
     await sgMail.sendMultiple(msg);
-    console.log(`Donation thank you v2 message delivered successfully to ${recipientList}`);
+    console.log(`Donation thank you v2 message delivered successfully to ${recipientList}. donationTrackerUrl: ${donationTrackerUrl}`);
   } catch (err) {
     errorHandler.handleError(err, "sendgridHelpers/sendDonorThankYouEmailV2");
   }
