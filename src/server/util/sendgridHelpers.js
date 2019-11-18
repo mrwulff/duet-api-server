@@ -25,7 +25,7 @@ async function sendDonorThankYouEmailV2(donationId) {
     const emailTemplateId = "d-fb8c05dc69cd4bcbae0bb47f3571ef7d";
     let subjectTag = "";
     let recipientList;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
+    if (process.env.NODE_ENV === "production") {
       recipientList = [donationObj.donor.donorEmail, "duet.giving@gmail.com"];
     } else {
       recipientList = ["duet.giving@gmail.com"];
@@ -92,7 +92,7 @@ async function sendStoreItemVerificationEmail(storeObj, itemObjs) {
     // Send store notification email
     let subject;
     let recipientList;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'live') {
+    if (process.env.NODE_ENV === 'production') {
       subject = "Duet: The following items need your attention!";
       recipientList = ["duet.giving@gmail.com", storeObj.storeEmail];
     } else {
@@ -121,7 +121,7 @@ async function sendStorePaymentEmail(storePaymentInfo) {
   try {
     let subject;
     let recipientList;
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === 'live') {
+    if (process.env.NODE_ENV === 'production') {
       subject = "Duet: You have an incoming payment!";
       recipientList = ["duet.giving@gmail.com", storePaymentInfo.storeEmail];
     } else {
@@ -149,7 +149,7 @@ async function sendStorePaymentEmail(storePaymentInfo) {
 
 async function sendBalanceUpdateEmail(paymentSite, currency, balance, subjectTag) {
   try {
-    const env = (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live" ? "PROD" : "SANDBOX");
+    const env = (process.env.NODE_ENV === "production" ? "PROD" : "SANDBOX");
     const msg = {
       to: "duet.giving@gmail.com",
       from: "duet@giveduet.org",
@@ -170,7 +170,7 @@ async function sendBalanceUpdateEmail(paymentSite, currency, balance, subjectTag
 
 async function sendItemStatusUpdateEmail(itemObj) {
   try {
-    if (process.env.SEND_ITEM_STATUS_UPDATE_EMAILS === "false") {
+    if (process.env.NODE_ENV !== "staging" && process.env.NODE_ENV !== "production") {
       return;
     }
     // Send item status update email
@@ -180,7 +180,7 @@ async function sendItemStatusUpdateEmail(itemObj) {
       from: "duet.giving@gmail.com",
       templateId: emailTemplateId,
       dynamic_template_data: {
-        subject: (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") ? "[PROD] - Item Status Update" : "[SANDBOX] - Item Status Update",
+        subject: (process.env.NODE_ENV === "production") ? "[PROD] - Item Status Update" : "[SANDBOX] - Item Status Update",
         status: itemObj.status,
         itemId: itemObj.itemId,
         itemName: itemObj.name,
@@ -215,7 +215,7 @@ async function sendItemPickedUpEmailV2(itemId) {
     let subjectTag = "";
     let recipientList;
     const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
-    if (process.env.SENDGRID_NOTIFICATION_BEHAVIOR === "live") {
+    if (process.env.NODE_ENV === "production") {
       recipientList = [donorObj.donorEmail, "duet.giving@gmail.com"];
     } else {
       recipientList = ["duet.giving@gmail.com"];
