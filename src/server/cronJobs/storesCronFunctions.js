@@ -66,6 +66,8 @@ async function sendBankTransfersAndEmailsToStores() {
       const transferId = await transferwiseHelpers.sendBankTransfer(result.store_name, result.iban, result.payment_amount, "EUR");
       // set "bank_transfer_sent" flag to avoid duplicate payments
       await transferwiseHelpers.setBankTransferSentFlagForItemIds(result.item_ids);
+      // set transferwise_transfer_id for later tracking
+      await transferwiseHelpers.setTransferwiseTransferIdForItemIds(transferId, result.item_ids);
       // send email to store
       const itemIdsStr = itemHelpers.itemIdsListToString(result.item_ids);
       await sendgridHelpers.sendStorePaymentEmail({

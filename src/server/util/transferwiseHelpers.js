@@ -251,9 +251,24 @@ async function sendTransferwiseEuroBalanceUpdateEmail() {
   }
 }
 
+async function setTransferwiseTransferIdForItemIds(transferId, itemIds) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET transferwise_transfer_id=? WHERE item_id IN (?)",
+      [transferId, itemIds]
+    );
+    console.log(`Successfully set transferwise_transfer_id to ${transferId} for itemIds: ${itemIds}`);
+  } catch (err) {
+    errorHandler.handleError(err, "transferwiseHelpers/setTransferwiseTransferIdForItemIds");
+    throw err;
+  }
+}
+
 export default {
   getStoresNeedingBankTransfer,
   setBankTransferSentFlagForItemIds,
   sendBankTransfer,
-  sendTransferwiseEuroBalanceUpdateEmail
+  sendTransferwiseEuroBalanceUpdateEmail,
+  setTransferwiseTransferIdForItemIds
 };
