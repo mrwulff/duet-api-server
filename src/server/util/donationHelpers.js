@@ -6,8 +6,10 @@ import errorHandler from '../util/errorHandler.js';
 function sqlRowToDonationObj(donationRow, donorObj, itemObjs) {
   const donationObj = {
     donationId: Number(donationRow.donation_id),
-    donationTimestamp: donationRow.donation_timestamp,
+    donationTimestamp: donationRow.timestamp,
     donationAmtUsd: Number(donationRow.donation_amt_usd),
+    bankTransferFeeUsd: Number(donationRow.bank_transfer_fee_usd),
+    serviceFeeUsd: Number(donationRow.service_fee_usd),
     isSubscription: donationRow.is_subscription,
     donor: donorObj,
     items: itemObjs
