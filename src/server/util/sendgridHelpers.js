@@ -61,9 +61,43 @@ async function sendDonorThankYouEmailV2(donationId) {
 
 async function sendSubscriptionThankYouEmail(donationId) {
   try {
-    // TODO
+    // get necessary data
+    const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
+    // create sendgrid message
+    const emailTemplateId = "d-c2a1309bf95244d7834f3d25ba3d1f88";
+    let subjectTag = "";
+    let recipientList;
+    if (process.env.NODE_ENV === "production") {
+      recipientList = [donationObj.donor.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
+    // e.g. 2019-11-19
+    const donationDate = donationObj.donationTimestamp.getFullYear() + "-" + 
+      donationObj.donationTimestamp.getMonth() + 1 + "-" + donationObj.donationTimestamp.getDate();
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: emailTemplateId,
+      dynamic_template_data: {
+        subjectTag: subjectTag,
+        donation: { 
+          ...donationObj, 
+          donationAmtUsd: donationObj.donationAmtUsd.toFixed(2),
+          bankTransferFeeUsd: donationObj.bankTransferFeeUsd.toFixed(2),
+          serviceFeeUsd: donationObj.serviceFeeUsd.toFixed(2),
+          donationTimestamp: donationDate
+        },
+      },
+      asm: {
+        groupId: unsubGroupId
+      }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Subscription thank you message delivered successfully to ${recipientList}. donationId: ${donationId}`);
   } catch (err) {
-    errorHandler.handleError(err, "sendgridHelpers/sendDonorThankYouEmailV2");
+    errorHandler.handleError(err, "sendgridHelpers/sendSubscriptionThankYouEmail");
   }
 }
 
