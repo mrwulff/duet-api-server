@@ -82,14 +82,14 @@ async function markItemAsDonated(itemId, donationId) {
   }
 }
 
-async function insertDonationIntoDB(email, firstName, lastName, amount, bankTransferFee, serviceFee, country, paypalOrderId) {
+async function insertDonationIntoDB(email, firstName, lastName, amount, bankTransferFee, serviceFee, country, paypalOrderId, stripeOrderId, paymentMethod) {
   // Insert donation info into DB, return insert ID
   try {
     const conn = await config.dbInitConnectPromise();
     const [results, fields] = await conn.query(
       "INSERT INTO donations (timestamp,donor_email,donor_fname,donor_lname,donation_amt_usd," +
-      "bank_transfer_fee_usd,service_fee_usd,donor_country,paypal_order_id) " +
-      "VALUES (NOW(),?,?,?,?,?,?,?,?)",
+      "bank_transfer_fee_usd,service_fee_usd,donor_country,paypal_order_id,stripe_order_id,payment_method) " +
+      "VALUES (NOW(),?,?,?,?,?,?,?,?,?,?)",
       [
         email,
         firstName,
@@ -98,9 +98,11 @@ async function insertDonationIntoDB(email, firstName, lastName, amount, bankTran
         bankTransferFee,
         serviceFee,
         country,
-        paypalOrderId
+        paypalOrderId,
+        stripeOrderId,
+        paymentMethod
       ]
-      );
+    );
     const donationId = results.insertId;
     console.log(`Successfully entered donation into DB: donationId: ${donationId}`);
     return donationId;

@@ -6,6 +6,8 @@ import itemHelpers from "../util/itemHelpers.js";
 import donationHelpers from "../util/donationHelpers.js";
 import subscriptionHelpers from "../util/subscriptionHelpers.js";
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 async function getDonation(req, res) {
   try {
     const donationObj = await donationHelpers.getDonationObjFromDonationId(req.query.donation_id);
@@ -42,23 +44,64 @@ async function cancelTransaction(req, res) {
   }
 }
 
+async function chargeTransaction(req, res) {
+  const chargeObj = req.body;
+  console.log(`Attempting to charge transaction object: ${JSON.stringify(chargeObj)}`);
+
+  if (chargeObj.paymentMethod === 'stripe') {
+    const amount = parseFloat(chargeObj.amount) * 100 // stripe needs amount to be in cents
+
+    try {
+      const { payment_method_details, status, id } = await stripe.charges.create({
+        amount,
+        currency: 'usd',
+        description: `Donation for item ids: ${chargeObj.itemIds}`,
+        source: chargeObj.token,
+      });
+
+      return res.status(200).send({id, status, donorCountry: payment_method_details.card.country });
+    } catch (err) {
+      let message = '';
+      switch( err.type ) {
+        case 'StripeCardError':
+          message = `Whoops! There was an error. ${err.message}`; // Declined card error, send back user friendly message
+          break;
+        default:
+          message = 'Whoops! Stripe experienced an error. Please go back and try again in a few minutes. If the problem persists, please reach out to hello@giveduet.org to help us help you!'; 
+      }
+      console.log(`Error processing payment on stripe: ${err}`);
+      return res.status(500).send({message});
+    }
+  }
+  return res.sendStatus(500);
+}
+
 async function processSuccessfulTransaction(req, res) {
   const donationInfo = req.body;
   console.log(`processSuccessfulDonation donation info: ${JSON.stringify(donationInfo)}`);
+
+  let donationId;
   if (donationInfo.itemIds) {
     try {
-      // Create Donation entry
-      if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
-        console.log("Error: Call to processSuccessfulDonation() without donor email in live mode!");
-        return res.status(500).send("Error: Could not retrieve donor email!");
+      // Using Paypal to process payment
+      if (donationInfo.paymentMethod === 'paypal') {
+        if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
+          console.log("Error: Call to processSuccessfulDonation() without donor email in live mode!");
+          return res.status(500).send("Error: Could not retrieve donor email!");
+        }
+        if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
+          console.log("Warning: Call to processSuccessfulDonation() without donor email in sandbox mode.");
+        }
       }
-      if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
-        console.log("Warning: Call to processSuccessfulDonation() without donor email in sandbox mode.");
-      }
-      const donationId = await donationHelpers.insertDonationIntoDB(
+      
+      const paypalOrderId = donationInfo.paypalOrderId ? donationInfo.paypalOrderId : null;
+      const stripeOrderId = donationInfo.stripeId ? donationInfo.stripeId : null;
+      const paymentMethod = donationInfo.paymentMethod ? donationInfo.paymentMethod : null;
+
+      donationId = await donationHelpers.insertDonationIntoDB(
         donationInfo.email, donationInfo.firstName, donationInfo.lastName,
         donationInfo.amount, donationInfo.bankTransferFee, donationInfo.serviceFee,
-        donationInfo.country, donationInfo.paypalOrderId
+        donationInfo.country, paypalOrderId, stripeOrderId, paymentMethod
       );
 
       // Mark items as donated; unset in_current_transaction
@@ -69,6 +112,7 @@ async function processSuccessfulTransaction(req, res) {
           sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
         }
       }));
+
       await itemHelpers.unsetInCurrentTransactionFlagForItemIds(donationInfo.itemIds);
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
@@ -152,6 +196,7 @@ export default {
   // one-time donations
   verifyNewTransaction,
   cancelTransaction,
+  chargeTransaction,
   processSuccessfulTransaction,
 
   // subscriptions
