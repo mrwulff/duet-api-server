@@ -62,6 +62,34 @@ async function uploadItemImageToS3(itemId, imageUrl) {
   }
 }
 
+async function uploadPriceTagImageToS3(itemId, priceTagImageUrl) {
+  try {
+    const extension = path.extname(priceTagImageUrl);
+    const contentType = mime.contentType(extension);
+    let imageBuffer = await rp({
+      uri: priceTagImageUrl,
+      encoding: null
+    });
+    console.log("Uploading price-tag image to s3...");
+    const data = await s3.upload({
+      Body: imageBuffer,
+      Key: process.env.AWS_S3_IMAGE_FOLDER + '/item-' + itemId + '-price-tag' + extension,
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      ACL: "public-read",
+      ContentType: contentType
+    }).promise();
+    const s3PhotoUrl = data.Location;
+    console.log("Success uploading price-tag image to s3: " + s3PhotoUrl);
+    // return image link hosted on AWS CDN (connected to S3 bucket)
+    const imageCDNLink = `${process.env.AWS_CDN}/${process.env.AWS_S3_IMAGE_FOLDER}/item-${itemId}-price-tag${extension}`;
+    return imageCDNLink;
+  } catch (err) {
+    errorHandler.handleError(err, "s3Helpers/uploadPriceTagImageToS3");
+    throw err;
+  }
+}
+
 export default { 
-  uploadItemImageToS3 
+  uploadItemImageToS3,
+  uploadPriceTagImageToS3
 };

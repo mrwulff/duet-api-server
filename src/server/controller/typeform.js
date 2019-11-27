@@ -41,8 +41,11 @@ async function processTypeformV4(req, res) {
     // Get responses
     const beneficiaryId = typeformHelpers.getAnswerFromQuestionReference("beneficiary-code", answers, 'text');
     const phoneNum = typeformHelpers.getAnswerFromQuestionReference("phone-num", answers, 'phone_number');
-    const origPhotoUrl = typeformHelpers.getAnswerFromQuestionReference("item-photo", answers, 'file');
-    const photoUrl = encodeURI(origPhotoUrl);
+    const photoUrl = encodeURI(typeformHelpers.getAnswerFromQuestionReference("item-photo", answers, 'file'));
+    let priceTagPhotoUrl = typeformHelpers.getAnswerFromQuestionReference("price-tag-photo", answers, 'file');
+    if (priceTagPhotoUrl) {
+      priceTagPhotoUrl = encodeURI(priceTagPhotoUrl);
+    }
     const itemName = typeformHelpers.getAnswerFromQuestionReference("item-name", answers, 'choice');
     const origPrice = typeformHelpers.getAnswerFromQuestionReference("item-price", answers, 'text');
     console.log("Original price: " + origPrice);
@@ -82,6 +85,7 @@ async function processTypeformV4(req, res) {
         status: 'REQUESTED',
         storeId: storeObj.storeId,
         photoUrl: photoUrl,
+        priceTagPhotoUrl: priceTagPhotoUrl,
         in_notification: 0
       };
       itemId = await typeformHelpers.insertItemFromTypeform(itemInfo);
@@ -96,11 +100,14 @@ async function processTypeformV4(req, res) {
     const code = itemHelpers.generatePickupCode(itemId);
     await typeformHelpers.updateItemPickupCode(itemId, code);
 
-    // Rehost image in S3
+    // Rehost item photo in S3; update photo link in DB
     const imageLink = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
-    
-    // update photo link on website
     await typeformHelpers.updateItemPhotoLink(itemId, imageLink);
+    // Rehost price-tag image in S3; update link in DB
+    if (priceTagPhotoUrl) {
+      const priceTagImageLink = await s3Helpers.uploadPriceTagImageToS3(itemId, priceTagPhotoUrl);
+      await typeformHelpers.updatePriceTagPhotoLink(itemId, priceTagImageLink);
+    }
 
     // Confirmation message
     const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);

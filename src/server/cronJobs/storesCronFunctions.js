@@ -61,6 +61,10 @@ async function sendBankTransfersAndEmailsToStores() {
   try {
     // get all stores needing payment via bank transfer
     const storesNeedingTransfer = await transferwiseHelpers.getStoresNeedingBankTransfer();
+    if (!storesNeedingTransfer.length) {
+      console.log("No stores need bank transfer");
+      return;
+    }
     await Promise.all(storesNeedingTransfer.map(async result => {
       // send payment
       const transferId = await transferwiseHelpers.sendBankTransfer(result.store_name, result.iban, result.payment_amount, "EUR");
@@ -81,9 +85,7 @@ async function sendBankTransfersAndEmailsToStores() {
       console.log(`${result.store_name} bank transfer item_ids: ${itemIdsStr}`);
     }));
     // if payment was sent, send balance update email to duet.giving@gmail.com
-    if (storesNeedingTransfer.length) {
-      await transferwiseHelpers.sendTransferwiseEuroBalanceUpdateEmail();
-    }
+    await transferwiseHelpers.sendTransferwiseEuroBalanceUpdateEmail();
   } catch (err) {
     errorHandler.handleError(err, "storesCronFunctions/sendBankTransfersAndEmailsToStores");
   }

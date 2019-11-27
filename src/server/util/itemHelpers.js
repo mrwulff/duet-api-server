@@ -7,6 +7,7 @@ function sqlRowToItemObj(row) {
   const itemObj = {
     itemId: row.item_id,
     image: row.item_photo_link,
+    priceTagImage: row.price_tag_photo_link,
     name: row.item_name,
     size: row.size,
     price: Number(row.price_euros),
@@ -17,6 +18,7 @@ function sqlRowToItemObj(row) {
     icon: row.icon_url,
     status: row.status,
     pickupCode: row.pickup_code,
+    bankTransferSent: row.bank_transfer_sent,
     beneficiaryId: row.beneficiary_id,
     beneficiaryFirst: row.beneficiary_first,
     beneficiaryLast: row.beneficiary_last,

@@ -6,8 +6,8 @@ async function insertItemFromTypeform(itemInfo) {
   try {
     const conn = await config.dbInitConnectPromise();
     const [results, fields] = await conn.query(
-      "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,status,store_id,link,in_notification) " +
-      "VALUES (?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO items (name,size,price_euros,beneficiary_id,category_id,comment,status,store_id,link,price_tag_photo_link,in_notification) " +
+      "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
       [itemInfo.itemNameEnglish,
         itemInfo.size,
         itemInfo.price,
@@ -17,6 +17,7 @@ async function insertItemFromTypeform(itemInfo) {
         itemInfo.status,
         itemInfo.storeId,
         itemInfo.photoUrl,
+        itemInfo.priceTagPhotoUrl,
         itemInfo.in_notification]
     );
     return results.insertId;
@@ -48,6 +49,19 @@ async function updateItemPhotoLink(itemId, photoUrl) {
     );
   } catch (err) {
     errorHandler.handleError(err, "typeformHelpers/updateItemPhotoLink");
+    throw err;
+  }
+}
+
+async function updatePriceTagPhotoLink(itemId, priceTagPhotoUrl) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET price_tag_photo_link=? WHERE item_id=?",
+      [priceTagPhotoUrl, itemId]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/updatePriceTagPhotoLink");
     throw err;
   }
 }
@@ -111,6 +125,7 @@ export default {
   insertItemFromTypeform,
   updateItemPickupCode,
   updateItemPhotoLink,
+  updatePriceTagPhotoLink,
   getItemNameTranslation,
   getAnswerFromQuestionReference,
   processPriceInput
