@@ -27,6 +27,7 @@ function sqlRowToItemObj(row) {
     donorCountry: row.donor_country,
     requestedTimestamp: row.requested_timestamp,
     donationTimestamp: row.donation_timestamp,
+    storePaymentInitiatedTimestamp: row.store_payment_initiated_timestamp,
     readyForPickupTimestamp: row.ready_for_pickup_timestamp,
     pickedUpTimestamp: row.picked_up_timestamp
   }
@@ -120,6 +121,20 @@ async function updateSingleItemStatus(newStatus, itemId) {
     console.log("Successfully updated item status to " + newStatus + " for item " + itemId);
   } catch (err) {
     errorHandler.handleError(err, "itemHelpers/updateSingleItemStatus");
+    throw err;
+  }
+}
+
+async function setStorePaymentInitiatedTimestampForItemIds(itemIds) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items set store_payment_initiated_timestamp=NOW() WHERE item_id IN (?)",
+      [itemIds]
+      );
+    console.log(`Successfully set store_payment_initiated_timestamp for itemIds: ${itemIds}`);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/setStorePaymentInitiatedTimestampForItemIds");
     throw err;
   }
 }
@@ -277,6 +292,7 @@ export default {
   getNextItemStatus,
   getItemObjsWithStatus,
   updateSingleItemStatus,
+  setStorePaymentInitiatedTimestampForItemIds,
 
   // in-current-transaction checks
   verifyItemsReadyForTransactionAndSetFlagsIfVerified,

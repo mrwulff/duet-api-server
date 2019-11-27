@@ -131,6 +131,7 @@ async function processSuccessfulTransaction(req, res) {
           singleStoreResult.item_ids
         );
         console.log("Successfully sent payout(s) for item IDs: " + singleStoreResult.item_ids);
+        await itemHelpers.setStorePaymentInitiatedTimestampForItemIds(singleStoreResult.item_ids);
         // send "incoming payment" email to store
         sendgridHelpers.sendStorePaymentEmail({
           storeEmail: singleStoreResult.store_email,
