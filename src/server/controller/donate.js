@@ -49,7 +49,7 @@ async function chargeTransaction(req, res) {
   console.log(`Attempting to charge transaction object: ${JSON.stringify(chargeObj)}`);
 
   if (chargeObj.paymentMethod === 'stripe') {
-    const amount = parseFloat(chargeObj.amount) * 100 // stripe needs amount to be in cents
+    const amount = Math.ceil(parseFloat(chargeObj.amount) * 100) // stripe needs amount to be in cents
 
     try {
       const { payment_method_details, status, id } = await stripe.charges.create({
