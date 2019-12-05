@@ -64,7 +64,7 @@ async function chargeTransaction(req, res) {
       let message = '';
       switch( err.type ) {
         case 'StripeCardError':
-          message = `Whoops! There was an error. ${err.message}`; // Declined card error, send back user friendly message
+          message = `Whoops! There was an error. ${err.message} If the error persists, try using PayPal instead!`; // Declined card error, send back user friendly message
           break;
         default:
           message = 'Whoops! Stripe experienced an error. Please go back and try again in a few minutes. If the problem persists, please reach out to hello@giveduet.org to help us help you!'; 
