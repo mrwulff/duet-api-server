@@ -9,6 +9,7 @@ import routes from "./routes/index";
 import beneficiaryRoutes from "./routes/beneficiary";
 import beneficiaryProtectedRoutes from "./routes/beneficiaryProtected";
 import donateRoutes from "./routes/donate";
+import donateProtectedRoutes from "./routes/donateProtected";
 import itemsRoutes from "./routes/items";
 import storeRoutes from "./routes/stores";
 import currencyRoutes from "./routes/currency";
@@ -50,6 +51,7 @@ app.use("/api/stores", storeRoutes);
 
 // donate routes
 app.use("/api/donate", donateRoutes);
+app.use("/api/donate", passport.authenticate('basic', { session: false }), donateProtectedRoutes);
 
 // item routes
 app.use("/api/items", itemsRoutes);

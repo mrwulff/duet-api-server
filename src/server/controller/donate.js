@@ -183,9 +183,20 @@ async function processSuccessfulSubscription(req, res) {
     console.log(`donate/processSuccessfulSubscription donationId: ${donationId}`);
     // Send thank-you email to donor
     sendgridHelpers.sendSubscriptionThankYouEmail(donationId);
-    res.sendStatus(200);
+    return res.sendStatus(200);
   } catch (err) {
     errorHandler.handleError(err, "donate/processSuccessfulSubscription");
+    return res.sendStatus(500);
+  }
+}
+
+async function sendDonationConfirmationEmail(req, res) {
+  try {
+    const donationId = req.body.donationId;
+    await sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+    return res.sendStatus(200);
+  } catch (err) {
+    errorHandler.handleError(err, "donate/sendDonationConfirmationEmail");
     return res.sendStatus(500);
   }
 }
@@ -202,5 +213,8 @@ export default {
 
   // subscriptions
   createSubscription,
-  processSuccessfulSubscription
+  processSuccessfulSubscription,
+
+  // emails
+  sendDonationConfirmationEmail
 };
