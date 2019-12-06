@@ -143,7 +143,7 @@ async function processSuccessfulTransaction(req, res) {
       }));
 
       // Check remaining balances
-      await paypalHelpers.checkPayPalEuroBalanceAndSendEmailIfLow();
+      await paypalHelpers.checkPayPalUsdBalanceAndSendEmailIfLow();
     } catch (err) {
       errorHandler.handleError(err, "donate/processSuccessfulDonation");
       return res.sendStatus(500);

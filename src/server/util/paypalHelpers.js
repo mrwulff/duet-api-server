@@ -81,23 +81,32 @@ async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   }
 }
 
-async function getPayPalEuroBalance() {
+async function getPayPalBalance(currencyCode) {
   try {
     const result = await paypalNVP.request('GetBalance', {
       RETURNALLCURRENCIES: 1
     });
     // console.log(result);
-    let paypalEuroBalance;
+    let paypalBalance;
     // use paypal's stupid legacy conventions to get the EUR balance
     // see: https://developer.paypal.com/docs/classic/api/merchant/GetBalance-API-Operation-NVP/
     // e.g. L_CURRENCYCODE0 = USD, L_AMT0 = 100.00, L_CURRENCYCODE1 = EUR, L_AMT1 = 99.00
     for (const key of Object.keys(result)) {
-      if (key.startsWith("L_CURRENCYCODE") && result[key] === "EUR") {
+      if (key.startsWith("L_CURRENCYCODE") && result[key] === currencyCode) {
         const currencyNum = parseInt(key.substring("L_CURRENCYCODE".length), 10);
-        paypalEuroBalance = result[`L_AMT${currencyNum}`];
+        paypalBalance = result[`L_AMT${currencyNum}`];
       }
     }
-    console.log("PayPal Euro balance: " + paypalEuroBalance);
+    return paypalBalance;
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/getPayPalBalance");
+    throw err;
+  }
+}
+
+async function getPayPalEuroBalance() {
+  try {
+    const paypalEuroBalance = await getPayPalBalance("EUR");
     return paypalEuroBalance;
   } catch (err) {
     errorHandler.handleError(err, "paypalHelpers/getPayPalEuroBalance");
@@ -105,9 +114,20 @@ async function getPayPalEuroBalance() {
   }
 }
 
+async function getPayPalUsdBalance() {
+  try {
+    const paypalUsdBalance = await getPayPalBalance("USD");
+    return paypalUsdBalance;
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/paypalUsdBalance");
+    throw err;
+  }
+}
+
 async function checkPayPalEuroBalanceAndSendEmailIfLow() {
   try {
     const paypalEuroBalance = await getPayPalEuroBalance();
+    console.log("Current PayPal EUR balance: ", paypalEuroBalance);
     if (paypalEuroBalance < process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
       console.log("WARNING: Low PayPal Euro balance! Sending warning email to duet.giving@gmail.com");
       await sendgridHelpers.sendBalanceUpdateEmail("PayPal", "EUR", paypalEuroBalance, "WARNING");
@@ -118,8 +138,23 @@ async function checkPayPalEuroBalanceAndSendEmailIfLow() {
   }
 }
 
+async function checkPayPalUsdBalanceAndSendEmailIfLow() {
+  try {
+    const paypalUsdBalance = await getPayPalUsdBalance();
+    console.log("Current PayPal USD balance: ", paypalUsdBalance);
+    if (paypalUsdBalance < process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
+      console.log("WARNING: Low PayPal USD balance! Sending warning email to duet.giving@gmail.com");
+      await sendgridHelpers.sendBalanceUpdateEmail("PayPal", "USD", paypalUsdBalance, "WARNING");
+    }
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/checkPayPalUsdBalanceAndSendEmailIfLow");
+    throw err;
+  }
+}
+
 export default {
   getPayPalPayoutInfoForItemIds,
   sendPayout,
-  checkPayPalEuroBalanceAndSendEmailIfLow
+  checkPayPalEuroBalanceAndSendEmailIfLow,
+  checkPayPalUsdBalanceAndSendEmailIfLow
 };
