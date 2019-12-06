@@ -98,7 +98,7 @@ async function sendPickupNotification(itemId) {
       message += "After you pick up the item, please remember to send us another photo.";
     }
 
-    messenger.sendTextMessage({
+    await messenger.sendTextMessage({
       id: fbMessengerInfo.fb_psid,
       text: message,
       messaging_type: "MESSAGE_TAG",
@@ -120,14 +120,13 @@ async function sendOverBudgetItemRequestMessage(beneficiaryId, itemId) {
     const itemRequestMessages = require('../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.overbudgetMessages[beneficiaryObj.language];
     const eurosRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
-    const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
     const messageFilled = format(messageTemplate, {
       itemPhotoLink: itemObj.image,
       itemPrice: itemObj.price.toFixed(2),
       totalEurRequestedThisMonth: eurosRequested.toFixed(2),
-      monthlyEurBudget: monthlyBudget.toFixed(2)
+      monthlyEurBudget: beneficiaryObj.monthlyBudgetEur.toFixed(2)
     });
-    messenger.sendTextMessage({
+    await messenger.sendTextMessage({
       id: beneficiaryObj.fbPsid,
       text: messageFilled,
       messaging_type: "MESSAGE_TAG",
@@ -153,7 +152,7 @@ async function sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId)
       totalEurRequestedThisMonth: eurosRequested.toFixed(2),
       monthlyEurBudget: monthlyBudget.toFixed(2)
     });
-    messenger.sendTextMessage({
+    await messenger.sendTextMessage({
       id: beneficiaryObj.fbPsid,
       text: messageFilled,
       messaging_type: "MESSAGE_TAG",
@@ -175,7 +174,7 @@ async function sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId) {
       itemPhotoLink: itemObj.image,
       itemPrice: itemObj.price.toFixed(2),
     });
-    messenger.sendTextMessage({
+    await messenger.sendTextMessage({
       id: beneficiaryObj.fbPsid,
       text: messageFilled,
       messaging_type: "MESSAGE_TAG",
@@ -187,7 +186,31 @@ async function sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId) {
   }
 }
 
+async function sendFBMessageToAllVisibleBeneficiaries(messageTemplates) {
+  // messageTemplates: message templates for each language ('en', 'fa', 'ar')
+  try {
+    const allBeneficiaryObjs = await beneficiaryHelpers.getAllBeneficiaryObjsWithoutNeeds();
+    const visibleBeneficiaryObjs = allBeneficiaryObjs.filter(beneficiaryObj => beneficiaryObj.visible);
+    await Promise.all(visibleBeneficiaryObjs.map(async beneficiaryObj => {
+      // fill in message template using beneficiaryObj fields
+      const messageTemplate = messageTemplates[beneficiaryObj.language];
+      const messageFilled = format(messageTemplate, beneficiaryObj);
+      // send message
+      await messenger.sendTextMessage({
+        id: beneficiaryObj.fbPsid,
+        text: messageFilled,
+        messaging_type: "MESSAGE_TAG",
+        tag: "SHIPPING_UPDATE"
+      });
+    }));
+  } catch (err) {
+    errorHandler.handleError(err, "fbHelpers/sendFBMessageToAllVisibleBeneficiaries");
+    throw err;
+  }
+}
+
 export default {
+  // Data modeling
   insertMessageIntoDB,
 
   // Item requests
@@ -196,5 +219,8 @@ export default {
   sendSuccessfulItemRequestMessageNoBudget,
 
   // Pickup notifications
-  sendPickupNotification
+  sendPickupNotification,
+
+  // Announcements
+  sendFBMessageToAllVisibleBeneficiaries
 }

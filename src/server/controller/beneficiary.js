@@ -1,6 +1,7 @@
 // Imports
 import beneficiaryHelpers from "../util/beneficiaryHelpers.js";
 import matchingHelpers from "../util/matchingHelpers.js";
+import fbHelpers from "../util/fbHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 
 // Get needs for either 1 or all beneficiaries
@@ -53,8 +54,26 @@ async function getBeneficiaryScores(req, res) {
   }
 }
 
+async function makeFBAnnouncementToVisibleBeneficiaries(req, res) {
+  try {
+    const { messageTemplates } = req.body;
+    // check to make sure all languages are accounted for
+    if (!messageTemplates.en || !messageTemplates.fa || !messageTemplates.ar) {
+      console.log(`Tried to make FB announcement, but not all languages were included! messageTemplates: ${JSON.stringify(messageTemplates)}`);
+      return res.sendStatus(400);
+    }
+    await fbHelpers.sendFBMessageToAllVisibleBeneficiaries(messageTemplates);
+    console.log(`Successfully made FB announcement using messageTemplates: ${JSON.stringify(messageTemplates)}`);
+    return res.sendStatus(200);
+  } catch (err) {
+    errorHandler.handleError(err, "beneficiary/makeFBAnnouncementToVisibleBeneficiaries");
+    return res.sendStatus(500);
+  }
+}
+
 export default { 
   getBeneficiaryNeeds,
   getBeneficiaryMatch,
-  getBeneficiaryScores
+  getBeneficiaryScores,
+  makeFBAnnouncementToVisibleBeneficiaries
 };

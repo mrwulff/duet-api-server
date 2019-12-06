@@ -21,6 +21,7 @@ function sqlRowToBeneficiaryObj(row) {
     familyImage: row.family_image_url,
     hasFamilyPhoto: Number(row.has_family_photo),
     visible: Number(row.beneficiary_is_visible),
+    monthlyBudgetEur: row.monthly_budget_eur,
     totalEurDonated: Number(row.total_eur_donated),
     totalItemsDonated: Number(row.total_items_donated),
     eurDonatedLastThirtyDays: Number(row.eur_donated_last_thirty_days),
@@ -44,6 +45,19 @@ async function getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId) {
     return sqlRowToBeneficiaryObj(results[0]);
   } catch (err) {
     errorHandler.handleError(err, "beneficiaryHelpers/getBeneficiaryObjWithoutNeedsFromBeneficiaryId");
+    throw err;
+  }
+}
+
+async function getAllBeneficiaryObjsWithoutNeeds() {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [rows, fields] = await conn.query(
+      "SELECT * FROM beneficiaries_view"
+    );
+    return rows.map(sqlRowToBeneficiaryObj);
+  } catch (err) {
+    errorHandler.handleError(err, "beneficiaryHelpers/getAllBeneficiaryObjsWithoutNeeds");
     throw err;
   }
 }
@@ -180,6 +194,7 @@ export default {
   // Data model
   sqlRowToBeneficiaryObj,
   getBeneficiaryObjWithoutNeedsFromBeneficiaryId,
+  getAllBeneficiaryObjsWithoutNeeds,
 
   // Needs
   getBeneficiaryObjWithNeedsFromBeneficiaryId,
