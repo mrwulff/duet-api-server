@@ -12,7 +12,11 @@ function sqlRowToDonationObj(donationRow, donorObj, itemObjs) {
     serviceFeeUsd: Number(donationRow.service_fee_usd),
     isSubscription: donationRow.is_subscription,
     donor: donorObj,
-    items: itemObjs
+    items: itemObjs,
+    onBehalfOfEmail: donationRow.on_behalf_of_email,
+    onBehalfOfFirst: donorHelpers.capitalizeAndTrimName(donationRow.on_behalf_of_fname),
+    onBehalfOfLast: donorHelpers.capitalizeAndTrimName(donationRow.on_behalf_of_lname),
+    onBehalfOfMessage: donationRow.on_behalf_of_message
   };
   return donationObj;
 }
@@ -82,14 +86,20 @@ async function markItemAsDonated(itemId, donationId) {
   }
 }
 
-async function insertDonationIntoDB(email, firstName, lastName, amount, bankTransferFee, serviceFee, country, paypalOrderId, stripeOrderId, paymentMethod) {
+async function insertDonationIntoDB(
+    email, firstName, lastName, 
+    amount, bankTransferFee, serviceFee, 
+    country, paypalOrderId, stripeOrderId, paymentMethod,
+    onBehalfOfEmail, onBehalfOfFirst, onBehalfOfLast, onBehalfOfMessage
+  ) {
   // Insert donation info into DB, return insert ID
   try {
     const conn = await config.dbInitConnectPromise();
     const [results, fields] = await conn.query(
       "INSERT INTO donations (timestamp,donor_email,donor_fname,donor_lname,donation_amt_usd," +
-      "bank_transfer_fee_usd,service_fee_usd,donor_country,paypal_order_id,stripe_order_id,payment_method) " +
-      "VALUES (NOW(),?,?,?,?,?,?,?,?,?,?)",
+      "bank_transfer_fee_usd,service_fee_usd,donor_country,paypal_order_id,stripe_order_id,payment_method," +
+      "on_behalf_of_email,on_behalf_of_fname,on_behalf_of_lname,on_behalf_of_message) " +
+      "VALUES (NOW(),?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
       [
         email,
         firstName,
@@ -100,7 +110,11 @@ async function insertDonationIntoDB(email, firstName, lastName, amount, bankTran
         country,
         paypalOrderId,
         stripeOrderId,
-        paymentMethod
+        paymentMethod,
+        onBehalfOfEmail,
+        onBehalfOfFirst,
+        onBehalfOfLast,
+        onBehalfOfMessage
       ]
     );
     const donationId = results.insertId;

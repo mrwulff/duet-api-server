@@ -11,9 +11,7 @@ router.post("/paid", controller.processSuccessfulTransaction); //TODO: phase thi
 router.post("/chargeTransaction", controller.chargeTransaction);
 router.post("/processTransaction", controller.processSuccessfulTransaction);
 
-
-
-router.post("/createSubscription", controller.createSubscription);
-router.post("/subscribe", controller.processSuccessfulSubscription);
+router.post("/createSubscription", controller.createSubscription); // TODO: WIP
+router.post("/subscribe", controller.processSuccessfulSubscription); // TODO: WIP
 
 export default router;

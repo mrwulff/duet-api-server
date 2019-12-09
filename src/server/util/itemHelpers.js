@@ -23,6 +23,7 @@ function sqlRowToItemObj(row) {
     beneficiaryFirst: row.beneficiary_first,
     beneficiaryLast: row.beneficiary_last,
     beneficiaryIsVisible: row.beneficiary_is_visible,
+    donationId: row.donation_id,
     donorFirst: row.donor_first,
     donorLast: row.donor_last,
     donorEmail: row.donor_email,

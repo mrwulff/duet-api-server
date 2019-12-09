@@ -101,7 +101,8 @@ async function processSuccessfulTransaction(req, res) {
       donationId = await donationHelpers.insertDonationIntoDB(
         donationInfo.email, donationInfo.firstName, donationInfo.lastName,
         donationInfo.amount, donationInfo.bankTransferFee, donationInfo.serviceFee,
-        donationInfo.country, paypalOrderId, stripeOrderId, paymentMethod
+        donationInfo.country, paypalOrderId, stripeOrderId, paymentMethod,
+        donationInfo.onBehalfOfEmail, donationInfo.onBehalfOfFirst, donationInfo.onBehalfOfLast, donationInfo.onBehalfOfMessage
       );
 
       // Mark items as donated; unset in_current_transaction
@@ -116,7 +117,7 @@ async function processSuccessfulTransaction(req, res) {
       await itemHelpers.unsetInCurrentTransactionFlagForItemIds(donationInfo.itemIds);
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 
-      // Send email to donor
+      // Send email to donor (and "on behalf of" email, if applicable)
       if (donationInfo.email) {
         sendgridHelpers.sendDonorThankYouEmailV2(donationId);
       }

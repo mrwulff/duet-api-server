@@ -10,11 +10,6 @@ const sgMail = config.sendgridInit(); // Sendgrid
 
 const unsubGroupId = 11371; // Automated Donation Updates unsub group
 
-function capitalizeAndTrimName(nameStr) {
-  const capitalized = nameStr.charAt(0).toUpperCase() + nameStr.slice(1);
-  return capitalized.trim()
-}
-
 async function sendDonorThankYouEmailV2(donationId) {
   try {
     // get necessary data
@@ -31,22 +26,20 @@ async function sendDonorThankYouEmailV2(donationId) {
       recipientList = ["duet.giving@gmail.com"];
       subjectTag = "[SANDBOX] ";
     }
-    const donationTrackerUrl = `${process.env.DUET_WEBSITE}/donation?donationId=${donationObj.donationId}`
+    const donationTrackerUrl = `${process.env.DUET_WEBSITE}/donation?donationId=${donationObj.donationId}`;
+    const beneficiaryPageUrl = `${process.env.DUET_WEBSITE}/give/${beneficiaryObj.beneficiaryId}`;
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
       templateId: emailTemplateId,
       dynamic_template_data: {
+        isToOnBehalfOfEmail: false,
         subjectTag: subjectTag,
-        donor: {
-          ...donationObj.donor, 
-          donorFirst: capitalizeAndTrimName(donationObj.donor.donorFirst), 
-          donorLast: capitalizeAndTrimName(donationObj.donor.donorLast), 
-        },
         donation: {...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2)},
         beneficiary: beneficiaryObj,
         items: donationObj.items.map(itemObj => ({...itemObj, price: itemObj.price.toFixed(2)})),
-        donationTrackerUrl: donationTrackerUrl
+        beneficiaryPageUrl: beneficiaryPageUrl,
+        donationTrackerUrl: donationTrackerUrl,
       },
       asm: {
         groupId: unsubGroupId
@@ -54,6 +47,37 @@ async function sendDonorThankYouEmailV2(donationId) {
     };
     await sgMail.sendMultiple(msg);
     console.log(`Donation thank you v2 message delivered successfully to ${recipientList}. donationTrackerUrl: ${donationTrackerUrl}`);
+    
+    // send email to person that the donation was made on behalf of
+    if (donationObj.onBehalfOfEmail) {
+      let subjectTag = "";
+      let recipientList;
+      if (process.env.NODE_ENV === "production") {
+        recipientList = [donationObj.onBehalfOfEmail, "duet.giving@gmail.com"];
+      } else {
+        recipientList = ["duet.giving@gmail.com"];
+        subjectTag = "[SANDBOX] ";
+      }
+      const msg = {
+        to: recipientList,
+        from: "duet@giveduet.org",
+        templateId: emailTemplateId,
+        dynamic_template_data: {
+          isToOnBehalfOfEmail: true,
+          subjectTag: subjectTag,
+          donation: { ...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2) },
+          beneficiary: beneficiaryObj,
+          items: donationObj.items.map(itemObj => ({ ...itemObj, price: itemObj.price.toFixed(2) })),
+          beneficiaryPageUrl: beneficiaryPageUrl,
+          donationTrackerUrl: donationTrackerUrl,
+        },
+        asm: {
+          groupId: unsubGroupId
+        }
+      };
+      await sgMail.sendMultiple(msg);
+      console.log(`Donation thank you v2 ("on behalf of") message delivered successfully to ${recipientList}. donationTrackerUrl: ${donationTrackerUrl}`);
+    }
   } catch (err) {
     errorHandler.handleError(err, "sendgridHelpers/sendDonorThankYouEmailV2");
   }
@@ -101,23 +125,80 @@ async function sendSubscriptionThankYouEmail(donationId) {
   }
 }
 
-async function sendTypeformErrorEmail(formTitle, eventId, errMessage) {
+async function sendItemPickedUpEmailV2(itemId) {
   try {
-    // Send error email if Typeform response can't get added to DB
-    msg = {
-      to: "duet.giving@gmail.com",
-      from: "duet.giving@gmail.com",
-      templateId: "d-6ecc5d7df32c4528b8527c248a212552",
-      dynamic_template_data: {
-        formTitle: formTitle,
-        eventId: eventId,
-        error: errMessage
-      }
+    // get necessary objects
+    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+    if (itemObj.status !== 'PICKED_UP') {
+      throw new Error(`Attempted to call sendItemPickedUpEmailV2 on a non-picked up item: ${itemId}`);
     }
-    await sgMail.send(msg);
-    console.log("Sendgrid error message delived successfully.");
+    const donationObj = await donationHelpers.getDonationObjFromDonationId(itemObj.donationId);
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(itemObj.beneficiaryId);
+    const storeObj = await storeHelpers.getStoreObjFromStoreId(itemObj.storeId);
+    // create sendgrid email
+    let subjectTag = "";
+    let recipientList;
+    const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
+    if (process.env.NODE_ENV === "production") {
+      recipientList = [donationObj.donor.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: emailTemplateId,
+      dynamic_template_data: {
+        subjectTag: subjectTag,
+        item: { ...itemObj, price: itemObj.price.toFixed(2) },
+        donor: donationObj.donor,
+        beneficiary: beneficiaryObj,
+        store: storeObj
+      },
+      asm: {
+        groupId: unsubGroupId
+      }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Item pickup message V2 delivered successfully to ${recipientList}`);
+
+    // If donation was made on behalf of someone else, then send the email to them too
+    if (donationObj.onBehalfOfEmail) {
+      // create sendgrid email
+      let subjectTag = "";
+      let recipientList;
+      const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
+      if (process.env.NODE_ENV === "production") {
+        recipientList = [donationObj.onBehalfOfEmail, "duet.giving@gmail.com"];
+      } else {
+        recipientList = ["duet.giving@gmail.com"];
+        subjectTag = "[SANDBOX] ";
+      }
+      const msg = {
+        to: recipientList,
+        from: "duet@giveduet.org",
+        templateId: emailTemplateId,
+        dynamic_template_data: {
+          subjectTag: subjectTag,
+          item: { ...itemObj, price: itemObj.price.toFixed(2) },
+          donor: {
+            donorFirst: donationObj.onBehalfOfFirst,
+            donorLast: donationObj.onBehalfOfLast,
+            donorEmail: donationObj.onBehalfOfEmail
+          },
+          beneficiary: beneficiaryObj,
+          store: storeObj
+        },
+        asm: {
+          groupId: unsubGroupId
+        }
+      };
+      await sgMail.sendMultiple(msg);
+      console.log(`Item pickup message V2 ("on behalf of") delivered successfully to ${recipientList}`);
+    }
   } catch (err) {
-    errorHandler.handleError(err, "sendgridHelpers/sendTypeformErrorEmail");
+    errorHandler.handleError(err, "sendgridHelpers/sendItemPickedUpEmailV2");
   }
 }
 
@@ -235,57 +316,27 @@ async function sendItemStatusUpdateEmail(itemObj) {
   }
 }
 
-async function sendItemPickedUpEmailV2(itemId) {
+async function sendTypeformErrorEmail(formTitle, eventId, errMessage) {
   try {
-    // get necessary objects
-    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
-    if (itemObj.status !== 'PICKED_UP') {
-      throw new Error(`Attempted to call sendItemPickedUpEmailV2 on a non-picked up item: ${itemId}`);
-    }
-    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(itemObj.beneficiaryId);
-    const donorObj = await donorHelpers.getDonorObjFromDonorEmail(itemObj.donorEmail);
-    const storeObj = await storeHelpers.getStoreObjFromStoreId(itemObj.storeId);
-    // create sendgrid email
-    let subjectTag = "";
-    let recipientList;
-    const emailTemplateId = "d-aa4552b94fd24480b073164e984c0483";
-    if (process.env.NODE_ENV === "production") {
-      recipientList = [donorObj.donorEmail, "duet.giving@gmail.com"];
-    } else {
-      recipientList = ["duet.giving@gmail.com"];
-      subjectTag = "[SANDBOX] ";
-    }
-    const msg = {
-      to: recipientList,
-      from: "duet@giveduet.org",
-      templateId: emailTemplateId,
+    // Send error email if Typeform response can't get added to DB
+    msg = {
+      to: "duet.giving@gmail.com",
+      from: "duet.giving@gmail.com",
+      templateId: "d-6ecc5d7df32c4528b8527c248a212552",
       dynamic_template_data: {
-        subjectTag: subjectTag,
-        item: {...itemObj, price: itemObj.price.toFixed(2)},
-        donor: {
-          ...donorObj,
-          donorFirst: capitalizeAndTrimName(donorObj.donorFirst),
-          donorLast: capitalizeAndTrimName(donorObj.donorLast), 
-        },
-        beneficiary: beneficiaryObj,
-        store: storeObj
-      },
-      asm: {
-        groupId: unsubGroupId
+        formTitle: formTitle,
+        eventId: eventId,
+        error: errMessage
       }
-    };
-    await sgMail.sendMultiple(msg);
-    console.log(`Item pickup message V2 delivered successfully to ${recipientList}`);
+    }
+    await sgMail.send(msg);
+    console.log("Sendgrid error message delived successfully.");
   } catch (err) {
-    errorHandler.handleError(err, "sendgridHelpers/sendItemPickedUpEmailV2");
+    errorHandler.handleError(err, "sendgridHelpers/sendTypeformErrorEmail");
   }
 }
 
 export default {
-  sendTypeformErrorEmail,
-  sendItemStatusUpdateEmail,
-  sendBalanceUpdateEmail,
-
   // To donors
   sendDonorThankYouEmailV2,
   sendSubscriptionThankYouEmail,
@@ -293,5 +344,10 @@ export default {
 
   // To stores
   sendStoreItemVerificationEmail,
-  sendStorePaymentEmail
+  sendStorePaymentEmail,
+
+  // Internal
+  sendTypeformErrorEmail,
+  sendItemStatusUpdateEmail,
+  sendBalanceUpdateEmail,
 };

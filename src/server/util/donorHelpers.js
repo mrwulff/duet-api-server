@@ -1,11 +1,19 @@
 import config from '../util/config.js';
 import errorHandler from "../util/errorHandler.js";
 
+function capitalizeAndTrimName(nameStr) {
+  if (!nameStr) {
+    return null;
+  }
+  const capitalized = nameStr.charAt(0).toUpperCase() + nameStr.slice(1);
+  return capitalized.trim();
+}
+
 function sqlRowToDonorObj(row) {
   const donationObj = {
     donorEmail: row.donor_email,
-    donorFirst: row.donor_fname,
-    donorLast: row.donor_lname,
+    donorFirst: capitalizeAndTrimName(row.donor_fname),
+    donorLast: capitalizeAndTrimName(row.donor_lname),
     donorCountry: row.donor_country
   }
   return donationObj;
@@ -39,6 +47,7 @@ async function donorEmailExists(donorEmail) {
 }
 
 export default {
+  capitalizeAndTrimName,
   sqlRowToDonorObj,
   getDonorObjFromDonorEmail,
   donorEmailExists,
