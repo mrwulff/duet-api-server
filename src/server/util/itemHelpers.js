@@ -12,6 +12,7 @@ function sqlRowToItemObj(row) {
     size: row.size,
     price: Number(row.price_euros),
     comment: row.comment,
+    tooltipDescription: row.tooltip_description,
     storeId: row.store_id,
     storeName: row.store_name,
     storeMapsLink: row.store_maps_link,
