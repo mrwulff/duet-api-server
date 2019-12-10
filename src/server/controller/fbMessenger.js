@@ -31,46 +31,39 @@ function fbAuth(req, res) {
   }
 };
 
-function processFBMessage(req, res) {
+async function processFBMessage(req, res) {
   // Handles FB message events
   // See: https://developers.facebook.com/docs/messenger-platform/getting-started/quick-start/
-
   // Parse the request body from the POST
   const body = req.body;
-
   // Check the webhook event is from a Page subscription
   if (body.object === 'page') {
-
     // Iterate over each entry - there may be multiple if batched
-    body.entry.forEach(function (entry) {
-
+    await Promise.all(body.entry.map(async entry => {
       // Get the webhook event. entry.messaging is an array, but 
       // will only ever contain one event, so we get index 0
       if (entry.messaging) {
         const fb_message = entry.messaging[0];
-
         // Log message in SQL
         const message = {
           source: 'fb',
           sender: fb_message.sender.id,
           recipient: fb_message.recipient.id,
-          content: fb_message.message.text
-        }
-
+          content: fb_message.message.text,
+          attachments: fb_message.message.attachments
+        };
         try {
-          fbHelpers.insertMessageIntoDB(message);
-          res.sendStatus(200);
+          await fbHelpers.insertMessageIntoDB(message);
         } catch (err) {
           console.log("Error when inserting message into SQL: " + err);
-          res.sendStatus(500);
+          return res.sendStatus(500);
         }
-
       }
-    });
-
+    }));
+    return res.sendStatus(200);
   } else {
     // Return a '404 Not Found' if event is not from a page subscription
-    res.sendStatus(404);
+    return res.sendStatus(404);
   }
 }
 

@@ -13,13 +13,23 @@ async function insertMessageIntoDB(message) {
   const sender = message.sender;
   const recipient = message.recipient;
   const content = message.content;
+  const attachments = message.attachments;
   try {
     const conn = await config.dbInitConnectPromise();
-    await conn.query(
+    // insert message
+    const [results, fields] = await conn.query(
       "INSERT INTO messages (source, sender, recipient, message) VALUES (?,?,?,?)",
       [source, sender, recipient, content]
     );
-    console.log("Successfully inserted message into database: %j", message);
+    const messageId = results.insertId;
+    // insert attachments
+    if (attachments) {
+      await Promise.all(attachments.map(async attachment => {
+        await conn.query("INSERT INTO message_attachments (message_id, attachment_type, attachment_url) VALUES (?,?,?)",
+          [messageId, attachment.type, attachment.payload.url]);
+      }));
+    }
+    console.log(`Successfully inserted messageId ${messageId} into database: ${JSON.stringify(message)}`);
   } catch (err) {
     errorHandler.handleError(err, "fbHelpers/insertMessageIntoDB");
     throw err;
