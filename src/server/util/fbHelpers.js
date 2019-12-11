@@ -23,10 +23,13 @@ async function insertMessageIntoDB(message) {
     );
     const messageId = results.insertId;
     // insert attachments
-    if (attachments) {
+    if (attachments && attachments.length) {
       await Promise.all(attachments.map(async attachment => {
-        await conn.query("INSERT INTO message_attachments (message_id, attachment_type, attachment_url) VALUES (?,?,?)",
-          [messageId, attachment.type, attachment.payload.url]);
+        if (attachment.payload && attachment.payload.url) {
+          await conn.query("INSERT INTO message_attachments (message_id, attachment_type, attachment_url) VALUES (?,?,?)",
+            [messageId, attachment.type, attachment.payload.url]
+            );
+        }
       }));
     }
     console.log(`Successfully inserted messageId ${messageId} into database: ${JSON.stringify(message)}`);
