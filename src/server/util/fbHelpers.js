@@ -6,6 +6,8 @@ import itemHelpers from '../util/itemHelpers.js';
 import errorHandler from './errorHandler.js';
 const messenger = config.fbMessengerInit(); // FB Messenger
 import format from 'string-template';
+const Url = require('url');
+const Path = require('path');
 
 // Insert message into database
 async function insertMessageIntoDB(message) {
@@ -25,10 +27,18 @@ async function insertMessageIntoDB(message) {
     // insert attachments
     if (attachments && attachments.length) {
       await Promise.all(attachments.map(async attachment => {
+        // make sure attachment URL exists
         if (attachment.payload && attachment.payload.url) {
-          await conn.query("INSERT INTO message_attachments (message_id, attachment_type, attachment_url) VALUES (?,?,?)",
-            [messageId, attachment.type, attachment.payload.url]
+          // only store in DB if this is a jpg file (to keep only photos and ignore stickers, etc.)
+          const ext = Path.extname(Url.parse(attachment.payload.url).pathname);
+          if (ext === '.jpg' || ext === '.jpeg') {
+            await conn.query("INSERT INTO message_attachments (message_id, attachment_type, attachment_url) VALUES (?,?,?)",
+              [messageId, attachment.type, attachment.payload.url]
             );
+            console.log(`Inserted attachment_url ${attachment.payload.url} into database`);
+          } else {
+            console.log(`attachment_url ${attachment.payload.url} is not of type jpg: ignoring attachment`);
+          }
         }
       }));
     }
