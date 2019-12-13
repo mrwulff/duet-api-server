@@ -57,6 +57,7 @@ async function chargeTransaction(req, res) {
         currency: 'usd',
         description: `Donation for item ids: ${chargeObj.itemIds}`,
         source: chargeObj.token,
+        receipt_email: chargeObj.email
       });
 
       return res.status(200).send({id, status, donorCountry: payment_method_details.card.country });
