@@ -8,29 +8,37 @@ import errorHandler from "../util/errorHandler.js";
 async function getItems(req, res) {
   // Get item info
   try {
-    // Get list of items
+    // Get single item: e.g. /api/items/123
+    if (req.params && req.params.itemId) {
+      console.log(`getItems: Getting single item with itemId: ${req.params.itemId}`);
+      const itemObj = await itemHelpers.getItemObjFromItemId(req.params.itemId);
+      if (!itemObj) {
+        return res.sendStatus(404);
+      }
+      return res.json(itemObj);
+    }
+    // Get list of items: e.g. /api/items?item_id=123&item_id=124
     if (req.query.item_id && req.query.item_id.length) {
       console.log(`getItems: Getting items with itemIds: ${req.query.item_id}`);
       const itemObjs = await itemHelpers.getItemObjsFromItemIds(req.query.item_id);
       return res.json(itemObjs);
     }
-    // Get single item
+    // Get single item (in a list): e.g. /api/items?item_id=123
     if (req.query.item_id) {
       console.log(`getItems: Getting item with itemId: ${req.query.item_id}`);
       const itemObj = await itemHelpers.getItemObjFromItemId(req.query.item_id);
       return res.json([itemObj]);
     }
-    // Get items for store
+    // Get items for store: e.g. /api/items?store_id=15
     if (req.query.store_id) {
       console.log(`getItems: Getting item for storeId: ${req.query.store_id}`);
       const itemObjs = await storeHelpers.getItemObjsForStoreId(req.query.store_id);
       return res.json(itemObjs);
     }
-    // Get all items
+    // Get all items: e.g. /api/items
     console.log(`getItems: Getting all items`);
     const itemObjs = await itemHelpers.getAllItemObjs();
     return res.json(itemObjs);
-
   }
   catch (err) {
     errorHandler.handleError(err, "items/getItems");

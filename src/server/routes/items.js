@@ -7,4 +7,6 @@ router.get("/", controller.getItems);
 
 router.post("/updateItemStatus", controller.updateItemStatus);
 
+router.get("/:itemId", controller.getItems);
+
 export default router;

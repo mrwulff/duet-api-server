@@ -41,8 +41,10 @@ require('./cronJobs/cronJobs')
 app.use("/api", routes);
 
 // beneficiary routes
+app.use("/api/beneficiaries", beneficiaryRoutes);
 app.use("/api/beneficiary", beneficiaryRoutes);
 app.use("/api/refugee", beneficiaryRoutes);
+app.use("/api/beneficiaries", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
 app.use("/api/beneficiary", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
 app.use("/api/refugee", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
 

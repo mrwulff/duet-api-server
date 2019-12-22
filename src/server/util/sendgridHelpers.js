@@ -15,7 +15,7 @@ async function sendDonorThankYouEmailV2(donationId) {
     // get necessary data
     const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
     const beneficiaryId = donationObj.items[0].beneficiaryId; // NOTE: assume all items are from the same beneficiary
-    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryById(beneficiaryId, {withNeeds: false});
     // create sendgrid message
     const emailTemplateId = "d-fb8c05dc69cd4bcbae0bb47f3571ef7d";
     let subjectTag = "";
@@ -27,7 +27,7 @@ async function sendDonorThankYouEmailV2(donationId) {
       subjectTag = "[SANDBOX] ";
     }
     const donationTrackerUrl = `${process.env.DUET_WEBSITE}/donation?donationId=${donationObj.donationId}`;
-    const beneficiaryPageUrl = `${process.env.DUET_WEBSITE}/give/${beneficiaryObj.beneficiaryId}`;
+    const beneficiaryPageUrl = `${process.env.DUET_WEBSITE}/give/${beneficiaryObj.username}`;
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
@@ -133,7 +133,7 @@ async function sendItemPickedUpEmailV2(itemId) {
       throw new Error(`Attempted to call sendItemPickedUpEmailV2 on a non-picked up item: ${itemId}`);
     }
     const donationObj = await donationHelpers.getDonationObjFromDonationId(itemObj.donationId);
-    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(itemObj.beneficiaryId);
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryById(itemObj.beneficiaryId, {withNeeds: false});
     const storeObj = await storeHelpers.getStoreObjFromStoreId(itemObj.storeId);
     // create sendgrid email
     let subjectTag = "";

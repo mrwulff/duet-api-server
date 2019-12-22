@@ -138,7 +138,7 @@ async function sendPickupNotification(itemId) {
 
 async function sendOverBudgetItemRequestMessage(beneficiaryId, itemId) {
   try {
-    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryById(beneficiaryId, {withNeeds: false});
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
     const itemRequestMessages = require('../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.overbudgetMessages[beneficiaryObj.language];
@@ -163,7 +163,7 @@ async function sendOverBudgetItemRequestMessage(beneficiaryId, itemId) {
 
 async function sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId) {
   try {
-    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryById(beneficiaryId, {withNeeds: false});
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
     const itemRequestMessages = require('../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.successfulMessagesWithBudget[beneficiaryObj.language];
@@ -189,7 +189,7 @@ async function sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId)
 
 async function sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId) {
   try {
-    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
+    const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryById(beneficiaryId, {withNeeds: false});
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
     const itemRequestMessages = require('../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.successfulMessagesNoBudget[beneficiaryObj.language];
@@ -212,7 +212,7 @@ async function sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId) {
 async function sendFBMessageToAllVisibleBeneficiaries(messageTemplates) {
   // messageTemplates: message templates for each language ('en', 'fa', 'ar')
   try {
-    const allBeneficiaryObjs = await beneficiaryHelpers.getAllBeneficiaryObjsWithoutNeeds();
+    const allBeneficiaryObjs = await beneficiaryHelpers.getAllBeneficiaries({withNeeds: false});
     const visibleBeneficiaryObjs = allBeneficiaryObjs.filter(beneficiaryObj => beneficiaryObj.visible);
     await Promise.all(visibleBeneficiaryObjs.map(async beneficiaryObj => {
       // fill in message template using beneficiaryObj fields

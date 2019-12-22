@@ -8,6 +8,7 @@ function sqlRowToBeneficiaryObj(row) {
   // SQL row to beneficiary object
   const beneficiaryObj = {
     beneficiaryId: Number(row.beneficiary_id),
+    username: row.beneficiary_username,
     firstName: row.beneficiary_first,
     lastName: row.beneficiary_last,
     story: row.story,
@@ -32,32 +33,19 @@ function sqlRowToBeneficiaryObj(row) {
   return beneficiaryObj;
 }
 
-async function getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId) {
+async function getBeneficiaryIdFromPasscode(passcode) {
   try {
     const conn = await config.dbInitConnectPromise();
     const [results, fields] = await conn.query(
-      "SELECT * FROM beneficiaries_view WHERE beneficiary_id = ?",
-      [beneficiaryId]
+      "SELECT beneficiary_id from beneficiaries WHERE passcode = ?",
+      [passcode]
     );
     if (results.length === 0) {
       return null;
     }
-    return sqlRowToBeneficiaryObj(results[0]);
+    return results[0].beneficiary_id;
   } catch (err) {
-    errorHandler.handleError(err, "beneficiaryHelpers/getBeneficiaryObjWithoutNeedsFromBeneficiaryId");
-    throw err;
-  }
-}
-
-async function getAllBeneficiaryObjsWithoutNeeds() {
-  try {
-    const conn = await config.dbInitConnectPromise();
-    const [rows, fields] = await conn.query(
-      "SELECT * FROM beneficiaries_view"
-    );
-    return rows.map(sqlRowToBeneficiaryObj);
-  } catch (err) {
-    errorHandler.handleError(err, "beneficiaryHelpers/getAllBeneficiaryObjsWithoutNeeds");
+    errorHandler.handleError(err, "beneficiaryHelpers/getBeneficiaryIdFromPasscode");
     throw err;
   }
 }
@@ -77,26 +65,63 @@ async function getItemObjsFromBeneficiaryId(beneficiaryId) {
   }
 }
 
-async function getBeneficiaryObjWithNeedsFromBeneficiaryId(beneficiaryId) {
+async function getBeneficiaryById(beneficiaryId, {withNeeds=true}) {
   try {
-    // Get beneficiary obj
-    const beneficiaryObj = await getBeneficiaryObjWithoutNeedsFromBeneficiaryId(beneficiaryId);
-    if (!beneficiaryObj) {
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "SELECT * FROM beneficiaries_view WHERE beneficiary_id = ?",
+      [beneficiaryId]
+    );
+    if (results.length === 0) {
       return null;
     }
-    // Get beneficiary needs in SQL format
-    const beneficiaryNeeds = await getItemObjsFromBeneficiaryId(beneficiaryId);
-    beneficiaryObj.needs = beneficiaryNeeds;
+    const beneficiaryObj = sqlRowToBeneficiaryObj(results[0]);
+    if (withNeeds) {
+      // get itemObjs for this beneficiary
+      const beneficiaryNeeds = await getItemObjsFromBeneficiaryId(beneficiaryId);
+      beneficiaryObj.needs = beneficiaryNeeds;
+    }
     return beneficiaryObj;
   } catch (err) {
-    errorHandler.handleError(err, "beneficiaryHelpers/getBeneficiaryObjWithNeedsFromBeneficiaryId");
+    errorHandler.handleError(err, "beneficiaryHelpers/getBeneficiaryById");
     throw err;
   }
 }
 
-async function getAllBeneficiaryObjsWithNeeds() {
+async function getBeneficiaryByUsername(username, {withNeeds=true}) {
   try {
     const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "SELECT * FROM beneficiaries_view WHERE beneficiary_username = ?",
+      [username]
+    );
+    if (results.length === 0) {
+      return null;
+    }
+    const beneficiaryObj = sqlRowToBeneficiaryObj(results[0]);
+    if (withNeeds) {
+      // get itemObjs for this beneficiary
+      const beneficiaryNeeds = await getItemObjsFromBeneficiaryId(beneficiaryObj.beneficiaryId);
+      beneficiaryObj.needs = beneficiaryNeeds;
+    }
+    return beneficiaryObj;
+  } catch (err) {
+    errorHandler.handleError(err, "beneficiaryHelpers/getBeneficiaryByUsername");
+    throw err;
+  }
+}
+
+async function getAllBeneficiaries({withNeeds=true}) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    // without needs
+    if (!withNeeds) {
+      const [rows, fields] = await conn.query(
+        "SELECT * FROM beneficiaries_view"
+      );
+      return rows.map(sqlRowToBeneficiaryObj);
+    }
+    // with needs
     const [rows, fields] = await conn.query(
       "SELECT * FROM beneficiaries_and_items_view"
     );
@@ -131,7 +156,7 @@ async function getAllBeneficiaryObjsWithNeeds() {
     allBeneficiaryObjs.push(beneficiaryObj);
     return allBeneficiaryObjs;
   } catch (err) {
-    errorHandler.handleError(err, "beneficiaryHelpers/getAllBeneficiaryObjsWithNeeds");
+    errorHandler.handleError(err, "beneficiaryHelpers/getAllBeneficiaries");
     throw err;
   }
 }
@@ -177,7 +202,7 @@ async function getTotalEurRequestedThisMonth(beneficiaryId) {
 }
 
 async function getBeneficiaryScores() {
-  const allBeneficiaryObjs = await getAllBeneficiaryObjsWithNeeds();
+  const allBeneficiaryObjs = await getAllBeneficiaries({withNeeds: true});
   const donatableBeneficiaries = matchingHelpers.filterDonatableBeneficiaries(allBeneficiaryObjs);
   const beneficiaryScores = matchingHelpers.assignScoresToBeneficiaries(donatableBeneficiaries);
   return beneficiaryScores;
@@ -185,7 +210,7 @@ async function getBeneficiaryScores() {
 
 async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) {
   // get matched beneficiary, and N other additional beneficiaries
-  const allBeneficiaryObjs = await getAllBeneficiaryObjsWithNeeds();
+  const allBeneficiaryObjs = await getAllBeneficiaries({withNeeds: true});
   const matchedAndAdditionalBeneficiaries = matchingHelpers.getMatchedAndAdditionalBeneficiaries(allBeneficiaryObjs, numAdditionalBeneficiaries);
   return matchedAndAdditionalBeneficiaries;
 }
@@ -193,12 +218,14 @@ async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) 
 export default {
   // Data model
   sqlRowToBeneficiaryObj,
-  getBeneficiaryObjWithoutNeedsFromBeneficiaryId,
-  getAllBeneficiaryObjsWithoutNeeds,
 
-  // Needs
-  getBeneficiaryObjWithNeedsFromBeneficiaryId,
-  getAllBeneficiaryObjsWithNeeds,
+  // Identification
+  getBeneficiaryIdFromPasscode,
+
+  // Retrieval
+  getBeneficiaryById,
+  getBeneficiaryByUsername,
+  getAllBeneficiaries,
 
   // Matching
   getBeneficiaryScores,

@@ -2,9 +2,9 @@ require("dotenv").config();
 const rp = require('request-promise');
 
 // Standard error handler: console log, and send us a slack message
-async function handleError(err, functionName = false) {
+async function handleError(err, functionName = 'unknownFunction') {
   try {
-    console.log(err.stack);
+    console.log(functionName + ': ' + err.stack);
 
     // if in development, don't send a message
     if (process.env.NODE_ENV === 'development') {
@@ -19,7 +19,7 @@ async function handleError(err, functionName = false) {
         'Content-Type': 'application/json',
       },
       body: {
-        text: err.stack
+        text: (functionName + ': ' + err.stack)
       },
       json: true
     });

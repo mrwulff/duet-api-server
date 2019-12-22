@@ -39,7 +39,7 @@ async function processTypeformV4(req, res) {
     }
 
     // Get responses
-    const beneficiaryId = typeformHelpers.getAnswerFromQuestionReference("beneficiary-code", answers, 'text');
+    const passcode = typeformHelpers.getAnswerFromQuestionReference("beneficiary-code", answers, 'text');
     const phoneNum = typeformHelpers.getAnswerFromQuestionReference("phone-num", answers, 'phone_number');
     const photoUrl = encodeURI(typeformHelpers.getAnswerFromQuestionReference("item-photo", answers, 'file'));
     let priceTagPhotoUrl = typeformHelpers.getAnswerFromQuestionReference("price-tag-photo", answers, 'file');
@@ -70,6 +70,12 @@ async function processTypeformV4(req, res) {
     }
     const itemNameEnglish = itemTranslationResult.name_english;
     const categoryId = itemTranslationResult.category_id;
+
+    // Get store, beneficiary info
+    const beneficiaryId = await beneficiaryHelpers.getBeneficiaryIdFromPasscode(passcode);
+    if (!beneficiaryId) {
+      return res.sendStatus(404);
+    }
     const storeObj = await storeHelpers.getStoreObjFromStoreName(store);
 
     // insert item
@@ -93,7 +99,7 @@ async function processTypeformV4(req, res) {
       // Sendgrid Error message (email)
       console.log("Failed to insert item from typeform into DB. Sending error email...");
       sendgridHelpers.sendTypeformErrorEmail(formTitle, eventId, err.toString());
-      return res.status(500).send();
+      return res.sendStatus(500);
     }
 
     // get code for item
@@ -130,10 +136,10 @@ async function processTypeformV4(req, res) {
     
 
     console.log("Successfully processed Typeform response");
-    return res.status(200).send();
+    return res.sendStatus(200);
   } catch (err) {
     errorHandler.handleError(err, "typeform/processTypeformV4");
-    return res.status(500).send();
+    return res.sendStatus(500);
   }
 }
 

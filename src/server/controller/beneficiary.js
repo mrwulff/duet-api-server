@@ -5,20 +5,32 @@ import fbHelpers from "../util/fbHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 
 // Get needs for either 1 or all beneficiaries
-async function getBeneficiaryNeeds(req, res) {
+async function getBeneficiary(req, res) {
   try {
-    // Specify beneficiary ID --> get info for just that refugee
-    if (req.query.beneficiary_id) {
-      const beneficiaryObj = await beneficiaryHelpers.getBeneficiaryObjWithNeedsFromBeneficiaryId(req.query.beneficiary_id);
+    // Specify ID or username
+    // e.g. /api/beneficiaries/123, or /api/beneficiaries/user123
+    if (req.params && req.params.idOrUsername) {
+      let beneficiaryObj;
+      const isId = /^\d+$/.test(req.params.idOrUsername); // contains only digits --> must be an ID
+      if (isId) {
+        console.log(`getBeneficiaryNeeds: getting beneficiary by ID: ${req.params.idOrUsername}`);
+        beneficiaryObj = await beneficiaryHelpers.getBeneficiaryById(req.params.idOrUsername, {withNeeds: true});
+      }
+      else {
+        console.log(`getBeneficiaryNeeds: getting beneficiary by username: ${req.params.idOrUsername}`);
+        beneficiaryObj = await beneficiaryHelpers.getBeneficiaryByUsername(req.params.idOrUsername, {withNeeds: true});
+      }
       if (!beneficiaryObj) {
-        return res.json({
+        return res.status(404).json({
           msg: "Beneficiary does not exist"
         });
       }
       return res.json(beneficiaryObj);
     }
     // No beneficiary ID specified --> get all beneficiary info and needs
-    const allBeneficiaryObjs = await beneficiaryHelpers.getAllBeneficiaryObjsWithNeeds();
+    // e.g. /api/beneficiary
+    console.log(`getBeneficiaryNeeds: getting all beneficiaries`);
+    const allBeneficiaryObjs = await beneficiaryHelpers.getAllBeneficiaries({withNeeds: true});
     if (!allBeneficiaryObjs) {
       return res.json({
         msg: "No beneficiaries exist"
@@ -72,7 +84,7 @@ async function makeFBAnnouncementToVisibleBeneficiaries(req, res) {
 }
 
 export default { 
-  getBeneficiaryNeeds,
+  getBeneficiary,
   getBeneficiaryMatch,
   getBeneficiaryScores,
   makeFBAnnouncementToVisibleBeneficiaries
