@@ -99,7 +99,8 @@ async function sendSubscriptionThankYouEmail(donationId) {
     }
     // e.g. 2019-11-19
     const donationDate = donationObj.donationTimestamp.getFullYear() + "-" + 
-      donationObj.donationTimestamp.getMonth() + 1 + "-" + donationObj.donationTimestamp.getDate();
+      (donationObj.donationTimestamp.getMonth() + 1) + "-" + 
+      donationObj.donationTimestamp.getDate();
     const msg = {
       to: recipientList,
       from: "duet@giveduet.org",
