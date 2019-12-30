@@ -41,19 +41,19 @@ require('./cronJobs/cronJobs')
 app.use("/api", routes);
 
 // beneficiary routes
-app.use("/api/beneficiaries", beneficiaryRoutes);
-app.use("/api/beneficiary", beneficiaryRoutes);
-app.use("/api/refugee", beneficiaryRoutes);
 app.use("/api/beneficiaries", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
 app.use("/api/beneficiary", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
 app.use("/api/refugee", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
+app.use("/api/beneficiaries", beneficiaryRoutes);
+app.use("/api/beneficiary", beneficiaryRoutes);
+app.use("/api/refugee", beneficiaryRoutes);
 
 // store routes
 app.use("/api/stores", storeRoutes);
 
 // donate routes
-app.use("/api/donate", donateRoutes);
 app.use("/api/donate", passport.authenticate('basic', { session: false }), donateProtectedRoutes);
+app.use("/api/donate", donateRoutes);
 
 // item routes
 app.use("/api/items", itemsRoutes);
