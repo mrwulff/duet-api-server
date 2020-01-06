@@ -29,6 +29,32 @@ async function handleError(err, functionName = 'unknownFunction') {
   }
 };
 
+// Standard warning handler: console.warn, and send us a slack message
+async function raiseWarning(warningMsg) {
+  try {
+    console.warn(warningMsg);
+    // if in development, don't send a message
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+    // send slack message (either STAGING or PROD)
+    await rp({
+      method: 'POST',
+      uri: process.env.SLACK_ERROR_WEBHOOK,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: {
+        text: warningMsg
+      },
+      json: true
+    });
+  } catch (err) {
+    console.log("Error in errorHandler/handleWarning: " + err.toString());
+  }
+}
+
 export default {
-  handleError
+  handleError,
+  raiseWarning
 };

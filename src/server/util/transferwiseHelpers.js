@@ -242,7 +242,13 @@ async function sendTransferwiseEuroBalanceUpdateEmail() {
     const profileId = await getProfileId();
     const eurBalanceInfo = await getEuroBalanceInfo(profileId);
     const availableEur = eurBalanceInfo.amount.value;
-    const subjectTag = (availableEur <= process.env.TRANSFERWISE_LOW_BALANCE_THRESHOLD ? "WARNING" : "INFO");
+    let subjectTag;
+    if (availableEur <= process.env.TRANSFERWISE_LOW_BALANCE_THRESHOLD) {
+      subjectTag = "WARNING";
+      errorHandler.raiseWarning(`WARNING - sendTransferwiseEuroBalanceUpdateEmail: Low Transferwise EUR balance of ${availableEur}€!`);
+    } else {
+      subjectTag = "INFO";
+    }
     sendgridHelpers.sendBalanceUpdateEmail("Transferwise", "EUR", availableEur, subjectTag);
   }
   catch (err) {

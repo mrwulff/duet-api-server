@@ -130,7 +130,8 @@ async function checkPayPalEuroBalanceAndSendEmailIfLow() {
     console.log("Current PayPal EUR balance: ", paypalEuroBalance);
     if (paypalEuroBalance < process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
       console.log("WARNING: Low PayPal Euro balance! Sending warning email to duet.giving@gmail.com");
-      await sendgridHelpers.sendBalanceUpdateEmail("PayPal", "EUR", paypalEuroBalance, "WARNING");
+      sendgridHelpers.sendBalanceUpdateEmail("PayPal", "EUR", paypalEuroBalance, "WARNING");
+      errorHandler.raiseWarning(`WARNING - checkPayPalEuroBalanceAndSendEmailIfLow: Low PayPal Euro balance of ${paypalEuroBalance}€!`);
     }
   } catch (err) {
     errorHandler.handleError(err, "paypalHelpers/checkPayPalEuroBalanceAndSendEmailIfLow");
@@ -144,7 +145,8 @@ async function checkPayPalUsdBalanceAndSendEmailIfLow() {
     console.log("Current PayPal USD balance: ", paypalUsdBalance);
     if (paypalUsdBalance < process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
       console.log("WARNING: Low PayPal USD balance! Sending warning email to duet.giving@gmail.com");
-      await sendgridHelpers.sendBalanceUpdateEmail("PayPal", "USD", paypalUsdBalance, "WARNING");
+      sendgridHelpers.sendBalanceUpdateEmail("PayPal", "USD", paypalUsdBalance, "WARNING");
+      errorHandler.raiseWarning(`WARNING - checkPayPalUsdBalanceAndSendEmailIfLow: Low PayPal USD balance of $${paypalUsdBalance}!`);
     }
   } catch (err) {
     errorHandler.handleError(err, "paypalHelpers/checkPayPalUsdBalanceAndSendEmailIfLow");
