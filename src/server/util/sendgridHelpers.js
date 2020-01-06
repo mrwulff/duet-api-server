@@ -151,6 +151,7 @@ async function sendItemPickedUpEmailV2(itemId) {
       from: "duet@giveduet.org",
       templateId: emailTemplateId,
       dynamic_template_data: {
+        isToOnBehalfOfEmail: false,
         subjectTag: subjectTag,
         item: { ...itemObj, price: itemObj.price.toFixed(2) },
         donor: donationObj.donor,
@@ -181,6 +182,7 @@ async function sendItemPickedUpEmailV2(itemId) {
         from: "duet@giveduet.org",
         templateId: emailTemplateId,
         dynamic_template_data: {
+          isToOnBehalfOfEmail: true,
           subjectTag: subjectTag,
           item: { ...itemObj, price: itemObj.price.toFixed(2) },
           donor: {
