@@ -1,5 +1,6 @@
 import express from "express";
 import controller from "./../controller/donate";
+import { passport } from './../util/auth.js';
 
 const router = express.Router();
 
@@ -13,5 +14,8 @@ router.post("/processTransaction", controller.processSuccessfulTransaction);
 
 router.post("/createSubscription", controller.createSubscription); // TODO: WIP
 router.post("/subscribe", controller.processSuccessfulSubscription); // TODO: WIP
+
+// protected routes
+router.post("/sendDonationConfirmationEmail", passport.authenticate('basic', { session: false }), controller.sendDonationConfirmationEmail);
 
 export default router;

@@ -7,9 +7,7 @@ if (!global._babelPolyfill) {
 import express from "express";
 import routes from "./routes/index";
 import beneficiaryRoutes from "./routes/beneficiary";
-import beneficiaryProtectedRoutes from "./routes/beneficiaryProtected";
 import donateRoutes from "./routes/donate";
-import donateProtectedRoutes from "./routes/donateProtected";
 import itemsRoutes from "./routes/items";
 import storeRoutes from "./routes/stores";
 import currencyRoutes from "./routes/currency";
@@ -44,16 +42,12 @@ app.use("/api", routes);
 app.use("/api/beneficiaries", beneficiaryRoutes);
 app.use("/api/beneficiary", beneficiaryRoutes);
 app.use("/api/refugee", beneficiaryRoutes);
-app.use("/api/beneficiaries", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
-app.use("/api/beneficiary", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
-app.use("/api/refugee", passport.authenticate('basic', { session: false }), beneficiaryProtectedRoutes);
 
 // store routes
 app.use("/api/stores", storeRoutes);
 
 // donate routes
 app.use("/api/donate", donateRoutes);
-app.use("/api/donate", passport.authenticate('basic', { session: false }), donateProtectedRoutes);
 
 // item routes
 app.use("/api/items", itemsRoutes);
