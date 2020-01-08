@@ -126,13 +126,45 @@ async function insertDonationIntoDB(
   }
 }
 
+async function insertSubscriptionIntoDB(email, firstName, lastName, amount, bankTransferFee, serviceFee, country, 
+  paypalSubscriptionId, stripeSubscriptionId, paymentMethod) {
+  // Insert subscription info into DB, return insert ID
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "INSERT INTO donations (timestamp,donor_email,donor_fname,donor_lname,donation_amt_usd," +
+      "bank_transfer_fee_usd,service_fee_usd,donor_country,paypal_subscription_id,stripe_subscription_id,payment_method,is_subscription) " +
+      "VALUES (NOW(),?,?,?,?,?,?,?,?,?,?,1)",
+      [
+        email,
+        firstName,
+        lastName,
+        amount,
+        bankTransferFee,
+        serviceFee,
+        country,
+        paypalSubscriptionId,
+        stripeSubscriptionId,
+        paymentMethod
+      ]
+    );
+    const subscriptionId = results.insertId;
+    console.log(`Successfully entered subscription into DB. subscriptionId: ${subscriptionId}`);
+    return subscriptionId;
+  } catch (err) {
+    errorHandler.handleError(err, "subscriptionHelpers/insertSubscriptionIntoDB");
+    throw err;
+  }
+}
+
 export default {
   // data modeling
   sqlRowToDonationObj,
   getDonationObjFromDonationId,
 
-  // insert donation
+  // insert donation/subscription
   insertDonationIntoDB,
+  insertSubscriptionIntoDB,
 
   // other helpers
   markItemAsDonated,

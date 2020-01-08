@@ -1,10 +1,11 @@
+// imports
 require("dotenv").config();
 import paypalHelpers from "../util/paypalHelpers.js";
+import stripeHelpers from "../util/stripeHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 import itemHelpers from "../util/itemHelpers.js";
 import donationHelpers from "../util/donationHelpers.js";
-import subscriptionHelpers from "../util/subscriptionHelpers.js";
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
@@ -49,16 +50,9 @@ async function chargeTransaction(req, res) {
   console.log(`Attempting to charge transaction object: ${JSON.stringify(chargeObj)}`);
 
   if (chargeObj.paymentMethod === 'stripe') {
-    const amount = Math.ceil(parseFloat(chargeObj.amount) * 100) // stripe needs amount to be in cents
-
     try {
-      const { payment_method_details, status, id } = await stripe.charges.create({
-        amount,
-        currency: 'usd',
-        description: `Donation for item ids: ${chargeObj.itemIds}`,
-        source: chargeObj.token,
-      });
-
+      const description = `Donation for item ids: ${chargeObj.itemIds}`;
+      const { payment_method_details, status, id } = await stripeHelpers.createStripeChargeForAmountUsd(chargeObj.amount, description, chargeObj.token);
       return res.status(200).send({id, status, donorCountry: payment_method_details.card.country });
     } catch (err) {
       let message = '';
@@ -78,7 +72,7 @@ async function chargeTransaction(req, res) {
 
 async function processSuccessfulTransaction(req, res) {
   const donationInfo = req.body;
-  console.log(`processSuccessfulDonation donation info: ${JSON.stringify(donationInfo)}`);
+  console.log(`processSuccessfulTransaction donation info: ${JSON.stringify(donationInfo)}`);
 
   let donationId;
   if (donationInfo.itemIds) {
@@ -86,11 +80,11 @@ async function processSuccessfulTransaction(req, res) {
       // Using Paypal to process payment
       if (donationInfo.paymentMethod === 'paypal') {
         if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
-          console.log("Error: Call to processSuccessfulDonation() without donor email in live mode!");
+          console.log("Error: Call to processSuccessfulTransaction() without donor email in live mode!");
           return res.status(500).send("Error: Could not retrieve donor email!");
         }
         if (process.env.PAYPAL_MODE === "sandbox" && !donationInfo.email) {
-          console.log("Warning: Call to processSuccessfulDonation() without donor email in sandbox mode.");
+          console.log("Warning: Call to processSuccessfulTransaction() without donor email in sandbox mode.");
         }
       }
       
@@ -146,7 +140,7 @@ async function processSuccessfulTransaction(req, res) {
       // Check remaining balances
       await paypalHelpers.checkPayPalUsdBalanceAndSendEmailIfLow();
     } catch (err) {
-      errorHandler.handleError(err, "donate/processSuccessfulDonation");
+      errorHandler.handleError(err, "donate/processSuccessfulTransaction");
       return res.sendStatus(500);
     }
     return res.sendStatus(200);
@@ -155,38 +149,69 @@ async function processSuccessfulTransaction(req, res) {
   return res.sendStatus(200);
 }
 
-async function createSubscription(req, res) {
+async function createPayPalSubscription(req, res) {
+  // return planId for a given amountUsd
   try {
-    const planId = await subscriptionHelpers.getPlanIdForAmountUsd(req.body.amount_usd);
-    return res.json({ 'plan_id': planId });
+    const planId = await paypalHelpers.getPayPalPlanIdForAmountUsd(req.body.amountUsd);
+    return res.json({ 'paypalPlanId': planId });
   } catch (err) {
     errorHandler.handleError(err, "donate/getSubscriptionPlanId");
     return res.sendStatus(500);
   }
 }
 
-async function processSuccessfulSubscription(req, res) {
+async function createSubscription(req, res) {
+  // accept Stripe or PayPal
   try {
-    // TODO: WIP
     const subscriptionInfo = req.body;
     console.log(`donate/processSuccessfulSubscription subscriptionInfo: ${JSON.stringify(subscriptionInfo)}`);
-    // Add subscription to DB
-    const donationId = await subscriptionHelpers.insertSubscriptionIntoDB(
-      subscriptionInfo.email,
-      subscriptionInfo.firstName,
-      subscriptionInfo.lastName,
-      subscriptionInfo.amount,
-      subscriptionInfo.bankTransferFee,
-      subscriptionInfo.serviceFee,
-      subscriptionInfo.country,
-      subscriptionInfo.paypalSubscriptionId
-    );
-    console.log(`donate/processSuccessfulSubscription donationId: ${donationId}`);
+    let donationId;
+    
+    // paypal: using existing paypalSubscriptionId
+    if (subscriptionInfo.paymentMethod === 'paypal') {
+      // create DB entry
+      donationId = await donationHelpers.insertSubscriptionIntoDB(
+        subscriptionInfo.email,
+        subscriptionInfo.firstName,
+        subscriptionInfo.lastName,
+        subscriptionInfo.amount,
+        subscriptionInfo.bankTransferFee,
+        subscriptionInfo.serviceFee,
+        subscriptionInfo.country,
+        subscriptionInfo.paypalSubscriptionId,
+        stripeSubscription.id || null, // stripeSubscriptionId
+        subscriptionInfo.paymentMethod
+      );
+    }
+    // stripe: create new subscription
+    else if (subscriptionInfo.paymentMethod === 'stripe') {
+      // create stripe subscription
+      const stripeSubscription = await stripeHelpers.createStripeSubscriptionFromCustomerInfoAndAmountUsd(
+        subscriptionInfo.email, subscriptionInfo.stripePaymentMethodId, subscriptionInfo.amount
+      );
+      // create DB entry
+      donationId = await donationHelpers.insertSubscriptionIntoDB(
+        subscriptionInfo.email,
+        subscriptionInfo.firstName,
+        subscriptionInfo.lastName,
+        subscriptionInfo.amount,
+        subscriptionInfo.bankTransferFee || null,
+        subscriptionInfo.serviceFee || null,
+        subscriptionInfo.country,
+        subscriptionInfo.paypalSubscriptionId || null, //paypalSubscriptionId
+        stripeSubscription.id, // stripeSubscriptionId
+        subscriptionInfo.paymentMethod
+      );
+    }
+    else {
+      return res.sendStatus(500);
+    }
+    console.log(`donate/createSubscription donationId: ${donationId}`);
     // Send thank-you email to donor
     sendgridHelpers.sendSubscriptionThankYouEmail(donationId);
     return res.sendStatus(200);
   } catch (err) {
-    errorHandler.handleError(err, "donate/processSuccessfulSubscription");
+    errorHandler.handleError(err, "donate/createSubscription");
     return res.sendStatus(500);
   }
 }
@@ -197,7 +222,7 @@ async function sendDonationConfirmationEmail(req, res) {
     await sendgridHelpers.sendDonorThankYouEmailV2(donationId);
     return res.sendStatus(200);
   } catch (err) {
-    errorHandler.handleError(err, "donate/sendDonationConfirmationEmail");
+    errorHandler.handleError(err, "donate/createSubscription");
     return res.sendStatus(500);
   }
 }
@@ -213,8 +238,8 @@ export default {
   processSuccessfulTransaction,
 
   // subscriptions
+  createPayPalSubscription,
   createSubscription,
-  processSuccessfulSubscription,
 
   // emails
   sendDonationConfirmationEmail

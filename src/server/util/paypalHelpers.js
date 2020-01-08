@@ -1,9 +1,16 @@
+// imports
+require("dotenv").config();
 import config from "../util/config.js";
 import itemHelpers from '../util/itemHelpers.js';
 import sendgridHelpers from '../util/sendgridHelpers.js';
 import errorHandler from './errorHandler.js';
 const paypal = config.paypalInit(); // PayPal
 const paypalNVP = config.paypalNVPInit(); // PayPal NVP (legacy API)
+const rp = require('request-promise');
+
+const paypalSubscriptionProductId = "PROD-95548863PA9050738";
+
+// ---------- PAYOUTS ---------- //
 
 async function getPayPalPayoutInfoForItemIds(itemIds) {
   // Get stores' Payout info for list of items
@@ -81,6 +88,8 @@ async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   }
 }
 
+// ---------- BALANCES ---------- //
+
 async function getPayPalBalance(currencyCode) {
   try {
     const result = await paypalNVP.request('GetBalance', {
@@ -154,9 +163,112 @@ async function checkPayPalUsdBalanceAndSendEmailIfLow() {
   }
 }
 
+// ---------- SUBSCRIPTIONS ---------- //
+
+async function findPayPalPlanIdForAmountUsd(amountUsd) {
+  // find paypal subscription plan_id for a given amount_usd
+  // if not found, return null
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "SELECT paypal_plan_id from paypal_subscription_plans " +
+      "WHERE amount_usd=?",
+      [amountUsd]
+    );
+    if (results.length) {
+      return results[0].paypal_plan_id;
+    }
+    return null;
+  } catch (err) {
+    errorHandler.handleError(err, "subscriptionHelpers/findPayPalPlanIdForAmountUsd");
+    throw err;
+  }
+}
+
+async function createNewPayPalPlanIdForAmountUsd(amountUsd) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    // use PayPal API to create new plan_id
+    const paypalCreatePlanBody = {
+      "product_id": paypalSubscriptionProductId,
+      "name": "Duet Monthly Subscription",
+      "description": "Duet Monthly Subscription",
+      "billing_cycles": [
+        {
+          "frequency": {
+            "interval_unit": "MONTH",
+            "interval_count": 1
+          },
+          "tenure_type": "REGULAR",
+          "sequence": 1,
+          "total_cycles": 0,
+          "pricing_scheme": {
+            "fixed_price": {
+              "value": amountUsd.toFixed(2),
+              "currency_code": "USD"
+            }
+          }
+        }
+      ],
+      "payment_preferences": {
+        "auto_bill_outstanding": true,
+        "payment_failure_threshold": 3
+      }
+    };
+    const res = await rp(
+      `${process.env.PAYPAL_API_URL}/v1/billing/plans`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        auth: {
+          user: process.env.PAYPAL_CLIENT_ID,
+          password: process.env.PAYPAL_CLIENT_SECRET
+        },
+        body: paypalCreatePlanBody,
+        json: true
+      }
+    );
+    // insert plan_id into our DB (paypal_subscription_plans table)
+    const planId = res.id;
+    await conn.query(
+      "INSERT INTO paypal_subscription_plans " +
+      "(paypal_plan_id,amount_usd) " +
+      "VALUES (?,?)",
+      [planId, amountUsd]
+    );
+    return planId;
+  } catch (err) {
+    errorHandler.handleError(err, "subscriptionHelpers/createNewPayPalPlanIdForAmountUsd");
+    throw err;
+  }
+}
+
+async function getPayPalPlanIdForAmountUsd(amountUsd) {
+  try {
+    let planId = await findPayPalPlanIdForAmountUsd(amountUsd);
+    if (planId) {
+      return planId;
+    }
+    planId = await createNewPayPalPlanIdForAmountUsd(amountUsd);
+    return planId;
+  } catch (err) {
+    errorHandler.handleError(err, "subscriptionHelpers/getPayPalPlanIdForAmountUsd");
+  }
+}
+
 export default {
+  // payouts
   getPayPalPayoutInfoForItemIds,
   sendPayout,
+
+  // balances
   checkPayPalEuroBalanceAndSendEmailIfLow,
-  checkPayPalUsdBalanceAndSendEmailIfLow
+  checkPayPalUsdBalanceAndSendEmailIfLow,
+
+  // subscriptions
+  getPayPalPlanIdForAmountUsd,
 };

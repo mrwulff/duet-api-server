@@ -12,8 +12,8 @@ router.post("/paid", controller.processSuccessfulTransaction); //TODO: phase thi
 router.post("/chargeTransaction", controller.chargeTransaction);
 router.post("/processTransaction", controller.processSuccessfulTransaction);
 
-router.post("/createSubscription", controller.createSubscription); // TODO: WIP
-router.post("/subscribe", controller.processSuccessfulSubscription); // TODO: WIP
+// router.post("/createPayPalSubscription", controller.createPayPalSubscription);
+router.post("/subscribe", controller.createSubscription);
 
 // protected routes
 router.post("/sendDonationConfirmationEmail", passport.authenticate('basic', { session: false }), controller.sendDonationConfirmationEmail);
