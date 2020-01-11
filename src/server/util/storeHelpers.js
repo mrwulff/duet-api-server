@@ -39,7 +39,7 @@ async function getStoreObjFromStoreEmail(storeEmail) {
     }
     return sqlRowToStoreObj(results[0]);
   } catch (err) {
-    errorHandler.handleError(err, "storeHelpers/getStoreObjFromStoreId");
+    errorHandler.handleError(err, "storeHelpers/getStoreObjFromStoreEmail");
     throw err;
   }
 }
