@@ -1,52 +1,30 @@
 // Imports
 require("dotenv").config();
 import config from './config.js';
-const s3 = config.s3Init();
 import errorHandler from './errorHandler.js';
-const rp = require('request-promise');
-const path = require('path');
+const s3 = config.s3Init();
+const request = require('request');
 const mime = require('mime-types');
 const sharp = require('sharp');
 
 // S3 bucket settings
-const originalPhotosBucket = 'duet-web-assets'
+const originalPhotosBucket = 'duet-web-assets';
 
 // jpeg settings
 const jpgQuality = 80;
-const jpgExtension = '.jpg'
+const jpgExtension = '.jpg';
 const jpgMimeType = mime.contentType(jpgExtension);
-
-async function processImageBuffer(imageBuffer) {
-  // convert to jpeg and auto-rotate
-  try {
-    const processedImageBuffer = await sharp(imageBuffer)
-      .jpeg({
-        quality: jpgQuality
-      })
-      .rotate()
-      .toBuffer();
-    return processedImageBuffer;
-  } catch (err) {
-    errorHandler.handleError(err, "s3Helpers/processImageBuffer");
-    throw err;
-  }
-}
 
 async function uploadItemImageToS3(itemId, imageUrl) {
   try {
-    // download image from Typeform
-    let imageBuffer = await rp({
-      uri: imageUrl,
-      encoding: null
-    });
-
-    // image processing
-    imageBuffer = await processImageBuffer(imageBuffer);
+    // stream image from Typeform, convert to jpeg, auto-rotate
+    const imageTransformer = sharp().jpeg({ quality: jpgQuality }).rotate();
+    const imageStream = request(imageUrl).pipe(imageTransformer);
 
     // upload image to S3
     console.log("Uploading image to s3...");
     const data = await s3.upload({
-      Body: imageBuffer,
+      Body: imageStream,
       Key: process.env.AWS_S3_IMAGE_FOLDER + '/item-' + itemId + jpgExtension,
       Bucket: originalPhotosBucket,
       ACL: "public-read",
@@ -66,19 +44,14 @@ async function uploadItemImageToS3(itemId, imageUrl) {
 
 async function uploadPriceTagImageToS3(itemId, priceTagImageUrl) {
   try {
-    // download image from Typeform
-    let imageBuffer = await rp({
-      uri: priceTagImageUrl,
-      encoding: null
-    });
-
-    // image processing: convert to .jpg
-    imageBuffer = await processImageBuffer(imageBuffer);
+    // stream image from Typeform, convert to jpeg, auto-rotate
+    const imageTransformer = sharp().jpeg({ quality: jpgQuality }).rotate();
+    const imageStream = request(priceTagImageUrl).pipe(imageTransformer);
 
     // upload image to S3
     console.log("Uploading price-tag image to s3...");
     const data = await s3.upload({
-      Body: imageBuffer,
+      Body: imageStream,
       Key: process.env.AWS_S3_IMAGE_FOLDER + '/item-' + itemId + '-price-tag' + jpgExtension,
       Bucket: originalPhotosBucket,
       ACL: "public-read",
