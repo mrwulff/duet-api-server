@@ -30,12 +30,13 @@ async function createStripeChargeForAmountUsd(amountUsd, description, token) {
 
 // ---------- CUSTOMERS ---------- //
 
-async function createStripeCustomer(email, stripePaymentMethodId) {
+async function createStripeCustomer(email, name, stripePaymentMethodId) {
   // create a stripe customer: https://stripe.com/docs/api/customers
   try {
     const customer = await stripe.customers.create({
       payment_method: stripePaymentMethodId,
-      email: email,
+      email,
+      name, 
       invoice_settings: {
         default_payment_method: stripePaymentMethodId
       }
@@ -80,7 +81,7 @@ async function createNewStripePlanIdForAmountUsd(amountUsd) {
       interval: 'month',
       product: process.env.STRIPE_SUBSCRIPTION_PRODUCT_ID,
     })
-    // insert plan_id into our DB (paypal_subscription_plans table)
+    // insert plan_id into our DB (stripe_subscription_plans table)
     const planId = plan.id;
     await conn.query(
       "INSERT INTO stripe_subscription_plans " +
@@ -111,13 +112,14 @@ async function getOrCreateStripePlanIdForAmountUsd(amountUsd) {
 
 // ---------- SUBSCRIPTIONS ---------- //
 
-async function createStripeSubscriptionFromCustomerIdAndPlanId(customerId, planId) {
+async function createStripeSubscriptionFromCustomerIdAndPlanId(customerId, planId, metadata) {
   // create stripe subscription given customerId, planId
   try {
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ plan: planId }],
-      expand: ["latest_invoice.payment_intent"]
+      expand: ["latest_invoice.payment_intent"],
+      metadata,
     });
     return subscription;
   } catch (err) {
@@ -126,12 +128,16 @@ async function createStripeSubscriptionFromCustomerIdAndPlanId(customerId, planI
   }
 }
 
-async function createStripeSubscriptionFromCustomerInfoAndAmountUsd(email, stripePaymentMethodId, amountUsd) {
-  // create stripe subscription given customer email, paymentMethodId, amountUsd
+async function createStripeSubscription(metadata, stripePaymentMethodId) {
+  // create stripe subscription
   try {
-    const planId = await getOrCreateStripePlanIdForAmountUsd(amountUsd); // create new plan if necessary
-    const customer = await createStripeCustomer(email, stripePaymentMethodId);
-    const subscription = await createStripeSubscriptionFromCustomerIdAndPlanId(customer.id, planId);
+    const { firstName, lastName, amount, email} = metadata;
+    
+    const customerName = `${firstName} ${lastName}`;
+    
+    const planId = await getOrCreateStripePlanIdForAmountUsd(amount); // create new plan if necessary
+    const customer = await createStripeCustomer(email, customerName, stripePaymentMethodId);
+    const subscription = await createStripeSubscriptionFromCustomerIdAndPlanId(customer.id, planId, metadata);
     return subscription;
   } catch (err) {
     errorHandler.handleError(err, "stripeHelpers/createStripeSubscriptionFromCustomerInfoAndAmountUsd");
@@ -144,5 +150,5 @@ export default {
   createStripeChargeForAmountUsd,
 
   // subscriptions
-  createStripeSubscriptionFromCustomerInfoAndAmountUsd
+  createStripeSubscription
 };

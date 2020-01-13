@@ -15,6 +15,9 @@ router.post("/processTransaction", controller.processSuccessfulTransaction);
 // router.post("/createPayPalSubscription", controller.createPayPalSubscription);
 router.post("/subscribe", controller.createSubscription);
 
+// webhook for successful subscription invoice payments
+router.post("/stripeWebhook", controller.handleStripeWebhook);
+
 // protected routes
 router.post("/sendDonationConfirmationEmail", passport.authenticate('basic', { session: false }), controller.sendDonationConfirmationEmail);
 

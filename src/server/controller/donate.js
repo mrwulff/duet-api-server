@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 // imports
 require("dotenv").config();
 import paypalHelpers from "../util/paypalHelpers.js";
@@ -186,34 +187,75 @@ async function createSubscription(req, res) {
     // stripe: create new subscription
     else if (subscriptionInfo.paymentMethod === 'stripe') {
       // create stripe subscription
-      const stripeSubscription = await stripeHelpers.createStripeSubscriptionFromCustomerInfoAndAmountUsd(
-        subscriptionInfo.email, subscriptionInfo.stripePaymentMethodId, subscriptionInfo.amount
-      );
-      // create DB entry
-      donationId = await donationHelpers.insertSubscriptionIntoDB(
-        subscriptionInfo.email,
-        subscriptionInfo.firstName,
-        subscriptionInfo.lastName,
-        subscriptionInfo.amount,
-        subscriptionInfo.bankTransferFee || null,
-        subscriptionInfo.serviceFee || null,
-        subscriptionInfo.country,
-        subscriptionInfo.paypalSubscriptionId || null, //paypalSubscriptionId
-        stripeSubscription.id, // stripeSubscriptionId
-        subscriptionInfo.paymentMethod
+      const stripeSubscription = await stripeHelpers.createStripeSubscription(
+        {
+          email: subscriptionInfo.email,
+          firstName: subscriptionInfo.firstName,
+          lastName: subscriptionInfo.lastName,
+          serviceFee: subscriptionInfo.serviceFee,
+          country: subscriptionInfo.country,
+          amount: subscriptionInfo.amount,
+        }, 
+        subscriptionInfo.stripePaymentMethodId, 
       );
     }
     else {
       return res.sendStatus(500);
     }
-    console.log(`donate/createSubscription donationId: ${donationId}`);
-    // Send thank-you email to donor
-    sendgridHelpers.sendSubscriptionThankYouEmail(donationId);
+    console.log(`donate/createSubscription`);
+
+    
+    
     return res.sendStatus(200);
   } catch (err) {
     errorHandler.handleError(err, "donate/createSubscription");
     return res.sendStatus(500);
   }
+}
+
+async function handleStripeWebhook(req, res) {
+  let event;
+
+  try {
+    event = req.body;
+  } catch (err) {
+    res.status(400).send(`Webhook error: ${err.message}`);
+  }
+
+  // Handle the event:
+  switch(event.type) {
+    case 'invoice.payment_succeeded':
+      // recieved a payment tied to a subscription
+      const invoice = event.data.object;
+      const metadata = invoice.lines.data[0].metadata;
+
+      // create DB entry:
+      const donationId = donationHelpers.insertSubscriptionIntoDB(
+        metadata.email,
+        metadata.firstName,
+        metadata.lastName,
+        metadata.amount,
+        metadata.bankTransferFee || null,
+        metadata.serviceFee || null,
+        metadata.country,
+        metadata.paypalSubscriptionId || null, //paypalSubscriptionId
+        invoice.subscription, // stripeSubscriptionId
+        "stripe", //paymentMethod 
+      );
+      break;
+    case 'customer.subscription.created':
+      // subscription was created for the first time
+      const subscription = event.data.object;
+
+      // Send thank-you email to donor
+      sendgridHelpers.sendSubscriptionThankYouEmail(subscription);
+      break;
+    default:
+      // unexpected event type:
+      return res.status(400).end(); 
+  }
+
+  return res.status(200).send();
 }
 
 async function sendDonationConfirmationEmail(req, res) {
@@ -240,6 +282,9 @@ export default {
   // subscriptions
   createPayPalSubscription,
   createSubscription,
+
+  //stripe webhook
+  handleStripeWebhook,
 
   // emails
   sendDonationConfirmationEmail

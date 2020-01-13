@@ -87,11 +87,11 @@ async function markItemAsDonated(itemId, donationId) {
 }
 
 async function insertDonationIntoDB(
-    email, firstName, lastName, 
-    amount, bankTransferFee, serviceFee, 
-    country, paypalOrderId, stripeOrderId, paymentMethod,
-    onBehalfOfEmail, onBehalfOfFirst, onBehalfOfLast, onBehalfOfMessage
-  ) {
+  email, firstName, lastName, 
+  amount, bankTransferFee, serviceFee, 
+  country, paypalOrderId, stripeOrderId, paymentMethod,
+  onBehalfOfEmail, onBehalfOfFirst, onBehalfOfLast, onBehalfOfMessage
+) {
   // Insert donation info into DB, return insert ID
   try {
     const conn = await config.dbInitConnectPromise();
