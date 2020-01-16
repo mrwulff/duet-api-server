@@ -18,7 +18,7 @@ const jpgMimeType = mime.contentType(jpgExtension);
 async function uploadItemImageToS3(itemId, imageUrl) {
   try {
     // stream image from Typeform, convert to jpeg, auto-rotate
-    const imageTransformer = sharp().jpeg({ quality: jpgQuality }).rotate();
+    const imageTransformer = sharp(null, { failOnError: false }).jpeg({ quality: jpgQuality }).rotate();
     const imageStream = request(imageUrl).pipe(imageTransformer);
 
     // upload image to S3
@@ -45,7 +45,7 @@ async function uploadItemImageToS3(itemId, imageUrl) {
 async function uploadPriceTagImageToS3(itemId, priceTagImageUrl) {
   try {
     // stream image from Typeform, convert to jpeg, auto-rotate
-    const imageTransformer = sharp().jpeg({ quality: jpgQuality }).rotate();
+    const imageTransformer = sharp(null, { failOnError: false }).jpeg({ quality: jpgQuality }).rotate();
     const imageStream = request(priceTagImageUrl).pipe(imageTransformer);
 
     // upload image to S3
