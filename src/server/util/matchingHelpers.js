@@ -1,13 +1,17 @@
 // Imports
 import config from '../util/config.js';
+import beneficiaryHelpers from '../util/beneficiaryHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 
 // config vars
+const baselineScore = Number(process.env.BENEFICIARY_MATCHING_BASELINE_SCORE);
 const totalEurDonatedWeight = Number(process.env.BENEFICIARY_MATCHING_TOTAL_EUR_DONATED_WEIGHT);
 const recentEurDonatedWeight = Number(process.env.BENEFICIARY_MATCHING_RECENT_EUR_DONATED_WEIGHT);
-const baselineScore = Number(process.env.BENEFICIARY_MATCHING_BASELINE_SCORE);
+const minItemPriceWeight = Number(process.env.BENEFICIARY_MATCHING_MIN_ITEM_PRICE_WEIGHT);
 
 const precision = 0.001 // float precision
+
+// ---------- SCORING UTILS ---------- //
 
 function getTotalWeight(idToWeight) {
   // see: https://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
@@ -18,6 +22,94 @@ function getTotalWeight(idToWeight) {
     }
   }
   return totalWeight;
+}
+
+function inverseTransform(x) {
+  // Inverse transform: lower metric -> higher score (between 0-1)
+  return 1.0 / (1.0 + x);
+}
+
+function scoringFunctionForDonationMetric(beneficiaryObj, donationMetric) {
+  // scoring function: lower donation value (metric) --> higher score
+  return inverseTransform(beneficiaryObj[donationMetric]);
+}
+
+function getMinDonatableItemPrice(beneficiaryObj) {
+  // get beneficiary's minimum donatable item price
+  const donatableItems = beneficiaryObj.needs.filter(item => item.status === 'VERIFIED');
+  const itemPrices = donatableItems.map(item => item.price)
+  const minPrice = Math.min(...itemPrices);
+  return minPrice;
+}
+
+function getMinItemPriceScore(beneficiaryObj) {
+  // turn minItemPrice into a 0-1 score
+  return inverseTransform(getMinDonatableItemPrice(beneficiaryObj));
+}
+
+function getRawMatchingScoresForBeneficiary(beneficiaryObj, scoreWeights) {
+  // get raw (unnormalized) matching scores for beneficiary
+  const totalEurDonatedScore = scoringFunctionForDonationMetric(beneficiaryObj, "totalEurDonated");
+  const recentEurDonatedScore = scoringFunctionForDonationMetric(beneficiaryObj, "eurDonatedLastThirtyDays");
+  const minItemPriceScore = getMinItemPriceScore(beneficiaryObj);
+  let overallScore;
+  if (scoreWeights) {
+    // use custom score weights
+    const { baselineScore, totalEurDonatedWeight, recentEurDonatedWeight, minItemPriceWeight } = scoreWeights;
+    overallScore = baselineScore
+      + totalEurDonatedWeight * totalEurDonatedScore +
+      + recentEurDonatedWeight * recentEurDonatedScore +
+      + minItemPriceWeight * minItemPriceScore;
+  } else {
+    // use score weights from env vars
+    overallScore = baselineScore
+      + totalEurDonatedWeight * totalEurDonatedScore +
+      + recentEurDonatedWeight * recentEurDonatedScore +
+      + minItemPriceWeight * minItemPriceScore;
+  }
+  return { 
+    overallScore,
+    baselineScore,
+    totalEurDonatedScore,
+    recentEurDonatedScore,
+    minItemPriceScore 
+  };
+}
+
+function normalizeScores(beneficiaryScores) {
+  // make scores sum to 1, return new score assignments
+  const beneficiaryScoresNormalized = beneficiaryScores;
+  const totalScore = getTotalWeight(beneficiaryScores);
+  for (const beneficiaryId in beneficiaryScores) {
+    if (beneficiaryScores.hasOwnProperty(beneficiaryId)) {
+      beneficiaryScoresNormalized[beneficiaryId] = beneficiaryScores[beneficiaryId] / totalScore;
+    }
+  }
+  return beneficiaryScoresNormalized;
+}
+
+function getMatchingScoreDictFromBeneficiaryObjs(beneficiaryObjs, scoreWeights) {
+  // returns {beneficiaryId: 0.1, ...} --> feed into weightedRandSelection() to pick a beneficiary
+  let normalizedScoresDict = {};
+  let rawScoresDict = {};
+  beneficiaryObjs.forEach(beneficiary => {
+    const rawScores = getRawMatchingScoresForBeneficiary(beneficiary, scoreWeights);
+    normalizedScoresDict[beneficiary.beneficiaryId] = rawScores.overallScore;
+    rawScoresDict[beneficiary.beneficiaryId] = rawScores;
+  });
+  // normalize (sum to 1)
+  normalizedScoresDict = normalizeScores(normalizedScoresDict); 
+  return { 
+    normalizedScores: normalizedScoresDict,
+    rawScores: rawScoresDict
+  };
+}
+
+// ---------- SAMPLING/FILTERING UTILS ---------- //
+
+function filterDonatableBeneficiaries(beneficiaryObjs) {
+  // get visible beneficiaries with at least one donatable item
+  return beneficiaryObjs.filter(beneficiary => beneficiary.totalItemsDonatable > 0 && beneficiary.visible);
 }
 
 function weightedRandSelection(idToWeight) {
@@ -47,97 +139,61 @@ function shuffle(array) {
   return shuffled;
 }
 
-function inverseTransform(x) {
-  return 1.0 / (1.0 + x);
+// ---------- SCORING ---------- //
+
+async function getBeneficiaryScores(scoreWeights) {
+  // get normalizedScores and rawScores for all active beneficiaries
+  scoreWeights = scoreWeights || { baselineScore, totalEurDonatedWeight, recentEurDonatedWeight, minItemPriceWeight };
+  const allBeneficiaryObjs = await beneficiaryHelpers.getAllBeneficiaries({ withNeeds: true });
+  const donatableBeneficiaries = filterDonatableBeneficiaries(allBeneficiaryObjs);
+  const { normalizedScores, rawScores } = getMatchingScoreDictFromBeneficiaryObjs(donatableBeneficiaries, scoreWeights);
+  return { normalizedScores, rawScores, scoreWeights };
 }
 
-function scoringFunctionForDonationMetric(beneficiaryObj, donationMetric) {
-  // scoring function: lower donation value (metric) --> higher score
-  return inverseTransform(beneficiaryObj[donationMetric]);
-}
+// ---------- MATCHING ---------- //
 
-function getOverallScoreForBeneficiary(beneficiaryObj) {
-  const overallScore = baselineScore
-    + totalEurDonatedWeight * scoringFunctionForDonationMetric(beneficiaryObj, "totalEurDonated")
-    + recentEurDonatedWeight * scoringFunctionForDonationMetric(beneficiaryObj, "eurDonatedLastThirtyDays");
-  return overallScore;
-}
-
-function normalizeScores(beneficiaryScores) {
-  // make scores sum to 1, return new score assignments
-  const beneficiaryScoresNormalized = beneficiaryScores;
-  const totalScore = getTotalWeight(beneficiaryScores);
-  for (const beneficiaryId in beneficiaryScores) {
-    if (beneficiaryScores.hasOwnProperty(beneficiaryId)) {
-      beneficiaryScoresNormalized[beneficiaryId] = beneficiaryScores[beneficiaryId] / totalScore;
-    }
-  }
-  return beneficiaryScoresNormalized;
-}
-
-function assignScoresToBeneficiaries(beneficiaryObjs) {
-  // returns {beneficiaryId: 0.1, ...} --> feed into weightedRandSelection() to pick a beneficiary
-  let beneficiaryScores = {};
-  // calculate overall scores (weights) for each beneficiary
-  beneficiaryObjs.forEach(beneficiary => {
-    beneficiaryScores[beneficiary.beneficiaryId] = getOverallScoreForBeneficiary(beneficiary);
-  });
-  // normalize (sum to 1)
-  beneficiaryScores = normalizeScores(beneficiaryScores); 
-  return beneficiaryScores;
-}
-
-function filterActiveBeneficiaries(beneficiaryObjs) {
-  return beneficiaryObjs.filter(
-    beneficiary => (beneficiary.totalItemsDonatable > 0 || beneficiary.totalItemsDonated > 0) && beneficiary.visible
-  );
-}
-
-function filterDonatableBeneficiaries(beneficiaryObjs) {
-  return beneficiaryObjs.filter(beneficiary => beneficiary.totalItemsDonatable > 0 && beneficiary.visible);
-}
-
-function getMatchedBeneficiaryId(donatableBeneficiaries) {
+function getMatchedBeneficiary(donatableBeneficiaries) {
   // return next family, and the new array
-  const beneficiaryScores = assignScoresToBeneficiaries(donatableBeneficiaries);
-  const selectedBeneficiaryId = Number(weightedRandSelection(beneficiaryScores));
-  return selectedBeneficiaryId;
+  const { normalizedScores } = getMatchingScoreDictFromBeneficiaryObjs(donatableBeneficiaries);
+  const selectedBeneficiaryId = Number(weightedRandSelection(normalizedScores));
+  const matchedBeneficiary = donatableBeneficiaries.find(beneficiary => beneficiary.beneficiaryId === selectedBeneficiaryId)
+  return matchedBeneficiary;
 }
 
-function getMatchedAndAdditionalBeneficiaries(beneficiaryObjs, numAdditionalBeneficiaries) {
-  // get matched beneficiary, and N other additional beneficiaries (or all others, if numAdditionalBeneficiaries DNE)
-  let additionalBeneficiaries = [];
-  const donatableBeneficiaries = filterDonatableBeneficiaries(beneficiaryObjs);
+async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) {
+  // get donatable benefiaries
+  const allBeneficiaryObjs = await beneficiaryHelpers.getAllBeneficiaries({ withNeeds: true });
+  const donatableBeneficiaries = filterDonatableBeneficiaries(allBeneficiaryObjs);
   // get matched beneficiary
-  const selectedBeneficiaryId = getMatchedBeneficiaryId(donatableBeneficiaries);
-  const matchedBeneficiary = donatableBeneficiaries.find(beneficiary => beneficiary.beneficiaryId === selectedBeneficiaryId);
+  const matchedBeneficiary = getMatchedBeneficiary(donatableBeneficiaries);
   // randomly get N other additional beneficiaries
-  additionalBeneficiaries = donatableBeneficiaries.filter(beneficiary => beneficiary.beneficiaryId !== selectedBeneficiaryId);
+  let additionalBeneficiaries = donatableBeneficiaries.filter(beneficiary => beneficiary.beneficiaryId !== matchedBeneficiary.beneficiaryId);
   additionalBeneficiaries = shuffle(additionalBeneficiaries);
   if (numAdditionalBeneficiaries) {
     additionalBeneficiaries = additionalBeneficiaries.slice(0, numAdditionalBeneficiaries);
   }
-  return {
-    matchedBeneficiary: matchedBeneficiary,
-    additionalBeneficiaries: additionalBeneficiaries
-  };
+  return { matchedBeneficiary, additionalBeneficiaries };
 }
 
 async function logBeneficiaryMatchInDB(beneficiaryId) {
+  // log a single "match" in the database
   try {
     const conn = await config.dbInitConnectPromise();
     await conn.query("INSERT INTO beneficiary_matches (beneficiary_id) VALUES (?)", [beneficiaryId]);
   } catch (err) {
-    errorHandler.handleError(err, "itemHelpers/logBeneficiaryMatchInDB");
+    errorHandler.handleError(err, "matchingHelpers/logBeneficiaryMatchInDB");
     throw err;
   }
 }
 
 export default {
+  // scoring utils
   getTotalWeight,
-  assignScoresToBeneficiaries,
-  filterActiveBeneficiaries,
-  filterDonatableBeneficiaries,
+
+  // matching
+  getBeneficiaryScores,
   getMatchedAndAdditionalBeneficiaries,
-  logBeneficiaryMatchInDB
-}
+
+  // logging
+  logBeneficiaryMatchInDB,
+};

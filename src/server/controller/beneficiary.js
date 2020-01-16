@@ -47,7 +47,7 @@ async function getBeneficiary(req, res) {
 async function getBeneficiaryMatch(req, res) {
   try {
     // note: if req.query.numAdditionalBeneficiaries is undefined, then this will return all additional beneficiaries
-    const matchedAndAdditionalBeneficiaries = await beneficiaryHelpers.getMatchedAndAdditionalBeneficiaries(req.query.numAdditionalBeneficiaries);
+    const matchedAndAdditionalBeneficiaries = await matchingHelpers.getMatchedAndAdditionalBeneficiaries(req.query.numAdditionalBeneficiaries);
     matchingHelpers.logBeneficiaryMatchInDB(matchedAndAdditionalBeneficiaries.matchedBeneficiary.beneficiaryId);
     return res.json(matchedAndAdditionalBeneficiaries);
   } catch (err) {
@@ -58,7 +58,19 @@ async function getBeneficiaryMatch(req, res) {
 
 async function getBeneficiaryScores(req, res) {
   try {
-    const beneficiaryScores = await beneficiaryHelpers.getBeneficiaryScores();
+    if (req.body.baselineScore && 
+      req.body.totalEurDonatedWeight && 
+      req.body.recentEurDonatedWeight &&
+      req.body.minItemPriceWeight) {
+      // use custom weights
+      const scoreWeights = req.body;
+      console.log('getBeneficiaryScores: getting beneficiary scores with custom weights...');
+      const beneficiaryScores = await matchingHelpers.getBeneficiaryScores(scoreWeights);
+      return res.json(beneficiaryScores);
+    } 
+    // use weights from env vars
+    console.log('getBeneficiaryScores: getting beneficiary scores with custom weights...');
+    const beneficiaryScores = await matchingHelpers.getBeneficiaryScores();
     return res.json(beneficiaryScores);
   } catch (err) {
     errorHandler.handleError(err, "beneficiary/getBeneficiaryScores");

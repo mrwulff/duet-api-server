@@ -201,20 +201,6 @@ async function getTotalEurRequestedThisMonth(beneficiaryId) {
   }
 }
 
-async function getBeneficiaryScores() {
-  const allBeneficiaryObjs = await getAllBeneficiaries({withNeeds: true});
-  const donatableBeneficiaries = matchingHelpers.filterDonatableBeneficiaries(allBeneficiaryObjs);
-  const beneficiaryScores = matchingHelpers.assignScoresToBeneficiaries(donatableBeneficiaries);
-  return beneficiaryScores;
-}
-
-async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) {
-  // get matched beneficiary, and N other additional beneficiaries
-  const allBeneficiaryObjs = await getAllBeneficiaries({withNeeds: true});
-  const matchedAndAdditionalBeneficiaries = matchingHelpers.getMatchedAndAdditionalBeneficiaries(allBeneficiaryObjs, numAdditionalBeneficiaries);
-  return matchedAndAdditionalBeneficiaries;
-}
-
 export default {
   // Data model
   sqlRowToBeneficiaryObj,
@@ -227,11 +213,7 @@ export default {
   getBeneficiaryByUsername,
   getAllBeneficiaries,
 
-  // Matching
-  getBeneficiaryScores,
-  getMatchedAndAdditionalBeneficiaries,
-
   // Budgeting
   getMonthlyEurBudget,
   getTotalEurRequestedThisMonth
-}
+};
