@@ -1,6 +1,5 @@
 /* eslint-disable no-case-declarations */
 // imports
-require("dotenv").config();
 import paypalHelpers from "../util/paypalHelpers.js";
 import stripeHelpers from "../util/stripeHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";

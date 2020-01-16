@@ -16,8 +16,6 @@ import bodyParser from "body-parser";
 import { passport } from './util/auth.js';
 import morgan from 'morgan';
 
-require('dotenv').config();
-
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));

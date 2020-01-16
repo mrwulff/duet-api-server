@@ -1,5 +1,4 @@
 // Imports
-require('dotenv').config();
 import config from '../util/config.js';
 import errorHandler from '../util/errorHandler.js';
 

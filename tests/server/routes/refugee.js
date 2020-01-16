@@ -9,8 +9,6 @@ import sendgridHelpers from '../../../src/server/util/sendgridHelpers.js';
 import itemHelpers from '../../../src/server/util/itemHelpers.js'
 import s3Helpers from '../../../src/server/util/s3Helpers.js';
 
-require('dotenv').config();
-
 // /refugee/scores
 const precision = 0.001 // float precision
 test('get /refugee/scores: beneficiary scores add up to 1.00', async (t) => {

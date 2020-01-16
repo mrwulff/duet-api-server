@@ -1,5 +1,9 @@
+// imports
 import config from '../util/config.js';
+import itemHelpers from '../util/itemHelpers.js';
 import errorHandler from './errorHandler.js';
+import format from 'string-template';
+import rp from 'request-promise';
 
 async function insertItemFromTypeform(itemInfo) {
   // TODO: clean this up (use item object?)
@@ -23,6 +27,26 @@ async function insertItemFromTypeform(itemInfo) {
     return results.insertId;
   } catch (err) {
     errorHandler.handleError(err, "typeformHelpers/insertItemFromTypeform");
+    throw err;
+  }
+}
+
+async function sendNewItemRequestSlackMessage(itemId) {
+  try {
+    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+    const newItemSlackMessages = require('../assets/slack_messages/new_item_request_message.json');
+    const messageTemplate = itemObj.size ? newItemSlackMessages.newItemRequestMessageWithSize : newItemSlackMessages.newItemRequestMessageNoSize;
+    const messageText = format(messageTemplate, { ...itemObj, price: itemObj.price.toFixed(2) });
+    await rp({
+      method: 'POST',
+      uri: process.env.SLACK_NEW_ITEM_REQUEST_WEBHOOK,
+      headers: { 'Content-Type': 'application/json' },
+      body: { text: messageText },
+      json: true
+    });
+    console.log(`Successfully sent slack message for new item request: ${itemId}`);
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/sendNewItemRequestSlackMessage");
     throw err;
   }
 }
@@ -122,11 +146,19 @@ function processPriceInput(origPrice) {
 }
 
 export default {
+  // database updates
   insertItemFromTypeform,
   updateItemPickupCode,
   updateItemPhotoLink,
   updatePriceTagPhotoLink,
+
+  // translation
   getItemNameTranslation,
+
+  // typeform input processing
   getAnswerFromQuestionReference,
-  processPriceInput
-}
+  processPriceInput,
+
+  // notifications
+  sendNewItemRequestSlackMessage
+};

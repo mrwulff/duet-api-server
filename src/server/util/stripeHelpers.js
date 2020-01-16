@@ -1,5 +1,4 @@
 // imports
-require("dotenv").config();
 import config from "../util/config.js";
 import errorHandler from './errorHandler.js';
 import Stripe from 'stripe';

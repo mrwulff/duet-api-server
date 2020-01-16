@@ -1,5 +1,4 @@
 // Imports
-require("dotenv").config();
 import config from './config.js';
 import errorHandler from './errorHandler.js';
 const s3 = config.s3Init();

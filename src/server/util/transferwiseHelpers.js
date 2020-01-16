@@ -1,4 +1,4 @@
-require("dotenv").config();
+// imports
 import config from "../util/config.js";
 import rp from 'request-promise';
 import uuidv4 from 'uuid/v4';

@@ -1,4 +1,4 @@
-const rp = require('request-promise');
+import rp from 'request-promise';
 import errorHandler from '../util/errorHandler.js';
 
 // Cached currency rates

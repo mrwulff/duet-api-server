@@ -1,5 +1,4 @@
 // Imports
-require('dotenv').config();
 const CronJob = require('cron').CronJob;
 import storesCronFunctions from '../cronJobs/storesCronFunctions.js';
 import itemsCronFunctions from '../cronJobs/itemsCronFunctions.js';

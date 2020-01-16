@@ -1,5 +1,4 @@
 // Imports
-require("dotenv").config();
 import config from '../util/config.js';
 import beneficiaryHelpers from '../util/beneficiaryHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';

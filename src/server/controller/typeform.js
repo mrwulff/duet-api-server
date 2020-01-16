@@ -115,7 +115,7 @@ async function processTypeformV4(req, res) {
       await typeformHelpers.updatePriceTagPhotoLink(itemId, priceTagImageLink);
     }
 
-    // Confirmation message
+    // Confirmation message to refugee
     const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
     if (monthlyBudget) {
       // check if overbudget
@@ -134,6 +134,10 @@ async function processTypeformV4(req, res) {
       await fbHelpers.sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId);
     }
     
+    // Send slack message to Duet
+    if (process.env.NODE_ENV === 'production') {
+      await typeformHelpers.sendNewItemRequestSlackMessage(itemId);
+    }
 
     console.log("Successfully processed Typeform response");
     return res.sendStatus(200);

@@ -1,12 +1,11 @@
 // imports
-require("dotenv").config();
 import config from "../util/config.js";
 import itemHelpers from '../util/itemHelpers.js';
 import sendgridHelpers from '../util/sendgridHelpers.js';
 import errorHandler from './errorHandler.js';
 const paypal = config.paypalInit(); // PayPal
 const paypalNVP = config.paypalNVPInit(); // PayPal NVP (legacy API)
-const rp = require('request-promise');
+import rp from 'request-promise';
 
 const paypalSubscriptionProductId = "PROD-95548863PA9050738";
 

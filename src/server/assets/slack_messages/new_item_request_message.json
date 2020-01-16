@@ -1,0 +1,4 @@
+{
+  "newItemRequestMessageNoSize": "*itemId: {itemId}* ({pickupCode})\nname: {name}\nprice: {price}€\nbeneficiary: {beneficiaryLast} ({beneficiaryId})\nstore: {storeName}\nstatus: {status}\nimage: {image}\npriceTagImage: {priceTagImage}",
+  "newItemRequestMessageWithSize": "*itemId: {itemId}* ({pickupCode})\nname: {name}\nprice: {price}€\nsize: {size}\nbeneficiary: {beneficiaryLast} ({beneficiaryId})\nstore: {storeName}\nstatus: {status}\nimage: {image}\npriceTagImage: {priceTagImage}"
+}

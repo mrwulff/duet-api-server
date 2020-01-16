@@ -2,8 +2,6 @@ import test from 'ava';
 import app from '../../../src/server/app';
 import request from 'supertest';
 import nock from 'nock';
-require('dotenv').config()
-
 
 test('properly updates currency rates', async (t) => {
   const currencyRates = { rates: { "EUR": 3.673181 } }

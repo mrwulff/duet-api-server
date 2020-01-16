@@ -1,7 +1,6 @@
 // Imports
 import passport from 'passport';
 import { BasicStrategy } from 'passport-http';
-require('dotenv').config();
 
 // basic auth (admin only, for now)
 const duet_admin_username = process.env.DUET_API_ADMIN_USERNAME;

@@ -1,5 +1,5 @@
-require("dotenv").config();
-const rp = require('request-promise');
+// imports
+import rp from 'request-promise';
 
 // Standard error handler: console log, and send us a slack message
 async function handleError(err, functionName = 'unknownFunction') {

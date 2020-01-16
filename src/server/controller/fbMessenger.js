@@ -1,5 +1,4 @@
 // Imports
-require("dotenv").config();
 import errorHandler from '../util/errorHandler.js';
 import fbHelpers from '../util/fbHelpers.js';
 

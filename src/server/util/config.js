@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 // SQL, Promise version
 let connPromise;
 async function dbInitConnectPromise() {
