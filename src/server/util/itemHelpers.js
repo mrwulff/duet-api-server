@@ -30,6 +30,8 @@ function sqlRowToItemObj(row) {
     donorEmail: row.donor_email,
     donorCountry: row.donor_country,
     requestedTimestamp: row.requested_timestamp,
+    listedTimestamp: row.listed_timestamp,
+    verifiedTimestamp: row.verified_timestamp,
     donationTimestamp: row.donation_timestamp,
     storePaymentInitiatedTimestamp: row.store_payment_initiated_timestamp,
     readyForPickupTimestamp: row.ready_for_pickup_timestamp,
@@ -101,7 +103,17 @@ async function getItemObjsWithStatus(status) {
 async function updateSingleItemStatus(newStatus, itemId) {
   try {
     const conn = await config.dbInitConnectPromise();
-    if (newStatus === "PAID") {
+    if (newStatus === "LISTED") {
+      await conn.query(
+        `UPDATE items SET status=?, listed_timestamp=NOW() WHERE item_id = ?`,
+        [newStatus, itemId]
+      );
+    } else if (newStatus === "VERIFIED") {
+      await conn.query(
+        `UPDATE items SET status=?, verified_timestamp=NOW() WHERE item_id = ?`,
+        [newStatus, itemId]
+      );
+    } else if (newStatus === "PAID") {
       await conn.query(
         `UPDATE items SET status=?, in_notification=1 WHERE item_id = ?`,
         [newStatus, itemId]
