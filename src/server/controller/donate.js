@@ -199,12 +199,9 @@ async function createSubscription(req, res) {
       );
     }
     else {
-      return res.sendStatus(500);
+      throw new Error('No payment method declared');
     }
     console.log(`donate/createSubscription`);
-
-    
-    
     return res.sendStatus(200);
   } catch (err) {
     errorHandler.handleError(err, "donate/createSubscription");
