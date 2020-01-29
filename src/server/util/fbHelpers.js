@@ -3,10 +3,10 @@ import config from '../util/config.js';
 import beneficiaryHelpers from '../util/beneficiaryHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
 import errorHandler from './errorHandler.js';
-const messenger = config.fbMessengerInit(); // FB Messenger
 import format from 'string-template';
-const Url = require('url');
-const Path = require('path');
+import Url from 'url'
+import Path from 'path'
+const messenger = config.fbMessengerInit(); // FB Messenger
 
 // Insert message into database
 async function insertMessageIntoDB(message) {
@@ -231,6 +231,33 @@ async function sendFBMessageToAllVisibleBeneficiaries(messageTemplates) {
   }
 }
 
+async function sendFBMessageForItems(messageTemplates, itemIds) {
+  // messageTemplates: message templates for each language ('en', 'fa', 'ar')
+  try {
+    const items = await itemHelpers.getItemObjsFromItemIds(itemIds);
+    if (!items || !items.length) {
+      return;
+    }
+    await Promise.all(items.map(async item => {
+      // get beneficiary that requested this item
+      const beneficiary = await beneficiaryHelpers.getBeneficiaryById(item.beneficiaryId, {withNeeds: false});
+      // fill in message template using item fields
+      const messageTemplate = messageTemplates[beneficiary.language];
+      const messageFilled = format(messageTemplate, item);
+      // send message
+      await messenger.sendTextMessage({
+        id: beneficiary.fbPsid,
+        text: messageFilled,
+        messaging_type: "MESSAGE_TAG",
+        tag: "SHIPPING_UPDATE"
+      });
+    }));
+  } catch (err) {
+    errorHandler.handleError(err, "fbHelpers/sendFBMessageForItems");
+    throw err;
+  }
+}
+
 export default {
   // Data modeling
   insertMessageIntoDB,
@@ -244,5 +271,6 @@ export default {
   sendPickupNotification,
 
   // Announcements
-  sendFBMessageToAllVisibleBeneficiaries
+  sendFBMessageToAllVisibleBeneficiaries,
+  sendFBMessageForItems
 }
