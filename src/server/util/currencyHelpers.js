@@ -1,4 +1,6 @@
+// imports
 import rp from 'request-promise';
+import { fx } from 'money';
 import errorHandler from '../util/errorHandler.js';
 
 // Cached currency rates
@@ -43,7 +45,22 @@ async function getCurrencyRates() {
   }
 }
 
+async function convertCurrency(amt, from, to) {
+  // e.g. convertCurrency(20, "EUR", "USD")
+  try {
+    const currencyRates = await getCurrencyRates();
+    fx.rates = currencyRates.rates;
+    fx.base = currencyRates.base;
+    const convertedAmt = fx(amt).from(from).to(to);
+    return convertedAmt;
+  } catch (err) {
+    errorHandler.handleError(err, "currencyHelpers/convertCurrency");
+    throw err;
+  }
+}
+
 export default {
   updateCurrencyRates,
-  getCurrencyRates
+  getCurrencyRates,
+  convertCurrency
 };

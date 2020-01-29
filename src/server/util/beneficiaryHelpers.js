@@ -65,7 +65,7 @@ async function getItemObjsFromBeneficiaryId(beneficiaryId) {
   }
 }
 
-async function getBeneficiaryById(beneficiaryId, {withNeeds=true}) {
+async function getBeneficiaryById(beneficiaryId, {withNeeds=true}={}) {
   try {
     const conn = await config.dbInitConnectPromise();
     const [results, fields] = await conn.query(
@@ -88,7 +88,7 @@ async function getBeneficiaryById(beneficiaryId, {withNeeds=true}) {
   }
 }
 
-async function getBeneficiaryByUsername(username, {withNeeds=true}) {
+async function getBeneficiaryByUsername(username, {withNeeds=true}={}) {
   try {
     const conn = await config.dbInitConnectPromise();
     const [results, fields] = await conn.query(
@@ -111,7 +111,7 @@ async function getBeneficiaryByUsername(username, {withNeeds=true}) {
   }
 }
 
-async function getAllBeneficiaries({withNeeds=true}) {
+async function getAllBeneficiaries({withNeeds=true}={}) {
   try {
     const conn = await config.dbInitConnectPromise();
     // without needs

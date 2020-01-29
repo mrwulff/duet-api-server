@@ -19,6 +19,17 @@ function sqlRowToDonorObj(row) {
   return donationObj;
 }
 
+async function getAllDonorEmails() {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results] = await conn.query("SELECT donor_email from donors_view");
+    return results.map(row => row.donor_email);
+  } catch (err) {
+    errorHandler.handleError(err, "donorHelpers/getAllDonorEmails");
+    throw err;
+  }
+}
+
 async function getDonorObjFromDonorEmail(donorEmail) {
   try {
     const conn = await config.dbInitConnectPromise();
@@ -49,6 +60,7 @@ async function donorEmailExists(donorEmail) {
 export default {
   capitalizeAndTrimName,
   sqlRowToDonorObj,
+  getAllDonorEmails,
   getDonorObjFromDonorEmail,
   donorEmailExists,
-}
+};

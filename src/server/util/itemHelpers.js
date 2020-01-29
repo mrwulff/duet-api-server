@@ -17,6 +17,8 @@ function sqlRowToItemObj(row) {
     storeId: row.store_id,
     storeName: row.store_name,
     storeMapsLink: row.store_maps_link,
+    categoryId: row.category_id,
+    categoryName: row.category_name,
     icon: row.icon_url,
     status: row.status,
     pickupCode: row.pickup_code,
@@ -82,6 +84,19 @@ async function getAllItemObjs() {
     return results.map(sqlRowToItemObj);
   } catch (err) {
     errorHandler.handleError(err, "itemHelpers/getAllItemObjs");
+    throw err;
+  }
+}
+
+async function getDonatableItems() {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "SELECT * FROM items_view WHERE status='VERIFIED' and beneficiary_is_visible=1"
+    );
+    return results.map(sqlRowToItemObj);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/getDonatableItems");
     throw err;
   }
 }
@@ -318,6 +333,7 @@ export default {
   getItemObjFromItemId,
   getItemObjsFromItemIds,
   getAllItemObjs,
+  getDonatableItems,
 
   // item status
   getNextItemStatus,
