@@ -99,7 +99,7 @@ async function processSuccessfulTransaction(req, res) {
         donationInfo.onBehalfOfEmail, donationInfo.onBehalfOfFirst, donationInfo.onBehalfOfLast, donationInfo.onBehalfOfMessage
       );
 
-      // Mark items as donated; unset in_current_transaction
+      // Mark items as donated
       await Promise.all(donationInfo.itemIds.map(async itemId => {
         await donationHelpers.markItemAsDonated(itemId, donationId);
         const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
@@ -108,6 +108,14 @@ async function processSuccessfulTransaction(req, res) {
         }
       }));
 
+      // Store checkout prices (USD) in database
+      if (donationInfo.itemPricesUsd) {
+        await Promise.all(donationInfo.itemPricesUsd.map(async priceInfo => {
+          await itemHelpers.updateCheckoutPriceUsd(priceInfo.itemId, priceInfo.priceUsd);
+        }));
+      }
+
+      // Unset in_current_transaction flags
       await itemHelpers.unsetInCurrentTransactionFlagForItemIds(donationInfo.itemIds);
       console.log("Successfully marked items as donated: " + donationInfo.itemIds);
 

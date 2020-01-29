@@ -11,6 +11,7 @@ function sqlRowToItemObj(row) {
     name: row.item_name,
     size: row.size,
     price: Number(row.price_euros),
+    checkoutPriceUsd: row.checkout_price_usd ? Number(row.checkout_price_usd) : null,
     comment: row.comment,
     tooltipDescription: row.tooltip_description,
     storeId: row.store_id,
@@ -96,6 +97,20 @@ async function getItemObjsWithStatus(status) {
     return results.map(sqlRowToItemObj);
   } catch (err) {
     errorHandler.handleError(err, "itemHelpers/getItemObjsWithStatus");
+    throw err;
+  }
+}
+
+async function updateCheckoutPriceUsd(itemId, priceUsd) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      `UPDATE items set checkout_price_usd = ? where item_id = ?`,
+      [priceUsd, itemId]
+    );
+    console.log(`Successfully set checkout_price_usd to $${priceUsd} for item #${itemId}`);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/updateCheckoutPriceUsd");
     throw err;
   }
 }
@@ -307,6 +322,7 @@ export default {
   // item status
   getNextItemStatus,
   getItemObjsWithStatus,
+  updateCheckoutPriceUsd,
   updateSingleItemStatus,
   setStorePaymentInitiatedTimestampForItemIds,
 
