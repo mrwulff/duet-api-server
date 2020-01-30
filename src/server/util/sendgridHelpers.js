@@ -271,7 +271,7 @@ async function sendStoreItemVerificationEmail(storeObj, itemObjs) {
       templateId: "d-435a092f0be54b07b5135799ac7dfb01",
       dynamic_template_data: {
         store: storeObj,
-        items: itemObjs,
+        items: itemObjs.map(item => ({...item, price: item.price.toFixed(2)})),
         subject: subject
       }
     };
