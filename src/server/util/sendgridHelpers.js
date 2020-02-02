@@ -9,6 +9,7 @@ import currencyHelpers from "../util/currencyHelpers.js";
 const sgMail = config.sendgridInit(); // Sendgrid
 
 const unsubGroupId = 11371; // Automated Donation Updates unsub group
+const recommendationUnsubGroupId = 12670; // Recommendation Emails unsub group
 
 async function sendItemRecommendationEmail(donorEmail, itemIds) {
   try {
@@ -44,7 +45,7 @@ async function sendItemRecommendationEmail(donorEmail, itemIds) {
       from: "duet@giveduet.org",
       templateId: emailTemplateId,
       dynamic_template_data: { subjectTag, donor, items, familyImage },
-      asm: { groupId: unsubGroupId }
+      asm: { groupId: recommendationUnsubGroupId }
     };
     await sgMail.sendMultiple(msg);
     console.log(`Item recommendation email delivered successfully to ${recipientList}. donorEmail: ${donorEmail}, itemIds: ${itemIds}`);
