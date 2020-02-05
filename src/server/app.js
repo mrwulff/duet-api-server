@@ -12,6 +12,7 @@ import itemsRoutes from "./routes/items";
 import storeRoutes from "./routes/stores";
 import currencyRoutes from "./routes/currency";
 import recommendationRoutes from './routes/recommend';
+import metricsRoutes from './routes/metrics';
 import cors from "cors";
 import bodyParser from "body-parser";
 import { passport } from './util/auth.js';
@@ -56,5 +57,8 @@ app.use("/api/currency", currencyRoutes);
 
 // recommendation routes
 app.use("/api/recommend", recommendationRoutes);
+
+// metrics routes
+app.use("/api/metrics", metricsRoutes);
 
 export default app;
