@@ -143,7 +143,7 @@ async function processSuccessfulTransaction(req, res) {
       errorHandler.handleError(err, "donate/processSuccessfulTransaction");
       return res.sendStatus(500);
     }
-    return res.sendStatus(200);
+    return res.status(200).send({donationId});
   } 
   console.log('Item ids not found in request body for item donation');
   return res.sendStatus(200);

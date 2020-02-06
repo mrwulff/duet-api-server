@@ -24,6 +24,7 @@ function sqlRowToItemObj(row) {
     beneficiaryFirst: row.beneficiary_first,
     beneficiaryLast: row.beneficiary_last,
     beneficiaryIsVisible: row.beneficiary_is_visible,
+    beneficiaryImage: row.family_image_url,
     donationId: row.donation_id,
     donorFirst: row.donor_first,
     donorLast: row.donor_last,
@@ -147,7 +148,7 @@ async function setStorePaymentInitiatedTimestampForItemIds(itemIds) {
     await conn.query(
       "UPDATE items set store_payment_initiated_timestamp=NOW() WHERE item_id IN (?)",
       [itemIds]
-      );
+    );
     console.log(`Successfully set store_payment_initiated_timestamp for itemIds: ${itemIds}`);
   } catch (err) {
     errorHandler.handleError(err, "itemHelpers/setStorePaymentInitiatedTimestampForItemIds");
