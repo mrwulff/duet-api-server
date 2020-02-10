@@ -147,7 +147,7 @@ function processPriceInput(origPrice) {
     price = price.replace(/[€,$]/g, "."); // replace currency symbol with "."
   }
   // replace "," ":", "/" with "."
-  price = price.replace(",", '.').replace(":", ".").replace("/", ".");
+  price = price.replace(",", '.').replace(":", ".").replace("/", ".").replace("،", ".");
   price = price.replace(/[^\d.]/g, ''); // remove any remaining non-decimal characters
   return price;
 }
