@@ -24,6 +24,7 @@ function sqlRowToItemObj(row) {
     pickupCode: row.pickup_code,
     bankTransferSent: row.bank_transfer_sent,
     beneficiaryId: row.beneficiary_id,
+    beneficiaryUsername: row.beneficiary_username,
     beneficiaryFirst: row.beneficiary_first,
     beneficiaryLast: row.beneficiary_last,
     beneficiaryIsVisible: row.beneficiary_is_visible,
