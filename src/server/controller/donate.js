@@ -51,6 +51,16 @@ async function chargeTransaction(req, res) {
 
   if (chargeObj.paymentMethod === 'stripe') {
     try {
+      // make sure item statuses are all VERIFIED
+      const items = await itemHelpers.getItemObjsFromItemIds(chargeObj.itemIds);
+      if (items.some(item => item.status !== 'VERIFIED')) {
+        const warningMsg = `WARNING - chargeTransaction: one or more items is not VERIFIED: ${chargeObj.itemIds}`;
+        errorHandler.raiseWarning(warningMsg);
+        console.log(warningMsg);
+        const message = 'Whoops! We experienced an error. Please go back and try again in a few minutes. If the problem persists, please reach out to hello@giveduet.org to help us help you!';
+        return res.status(500).send({message});
+      }
+      // create stripe charge
       const description = `Donation for item ids: ${chargeObj.itemIds}`;
       const { payment_method_details, status, id } = await stripeHelpers.createStripeChargeForAmountUsd(chargeObj.amount, description, chargeObj.token);
       return res.status(200).send({id, status, donorCountry: payment_method_details.card.country });
@@ -77,6 +87,16 @@ async function processSuccessfulTransaction(req, res) {
   let donationId;
   if (donationInfo.itemIds) {
     try {
+      // make sure item statuses are all VERIFIED
+      const items = await itemHelpers.getItemObjsFromItemIds(donationInfo.itemIds);
+      if (items.some(item => item.status !== 'VERIFIED')) {
+        const warningMsg = `WARNING - processSuccessfulTransaction: one or more items is not VERIFIED: ${donationInfo.itemIds}`;
+        errorHandler.raiseWarning(warningMsg);
+        console.log(warningMsg);
+        const message = 'Whoops! We experienced an error. Please go back and try again in a few minutes. If the problem persists, please reach out to hello@giveduet.org to help us help you!';
+        return res.status(500).send({ message });
+      }
+
       // Using Paypal to process payment
       if (donationInfo.paymentMethod === 'paypal') {
         if (process.env.PAYPAL_MODE === "live" && !donationInfo.email) {
