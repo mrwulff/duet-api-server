@@ -54,8 +54,15 @@ async function updateItemStatus(req, res) {
         console.log(`Updating item statuses for itemIds: ${req.body.items.map(item => item.itemId)}`);
         const itemsUnique = itemHelpers.dedupItemsListById(req.body.items);
         await Promise.all(itemsUnique.map(async item => {
-          // Update item status in DB
+          // If item status is already up to date in the DB, then return
           const newStatus = itemHelpers.getNextItemStatus(item.status);
+          const itemFromDB = await itemHelpers.getItemObjFromItemId(item.itemId);
+          if (newStatus === itemFromDB.status) {
+            console.log(`updateItemStatus: item ${item.itemId} status (${newStatus}) already up to date`);
+            return;
+          }
+
+          // Update item status in DB
           await itemHelpers.updateSingleItemStatus(newStatus, item.itemId);
 
           // Send generic item status updated email
