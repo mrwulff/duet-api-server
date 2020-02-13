@@ -118,7 +118,7 @@ async function processTypeformV4(req, res) {
     } catch (err) {
       // If unable to upload image, set status to GRAVEYARD, and notify us
       await itemHelpers.updateSingleItemStatus("GRAVEYARD", itemId);
-      errorHandler.raiseWarning(`WARNING- processTypeformV4: unable to upload item ${itemId} photo to S3: ${photoUrl}`);
+      errorHandler.raiseWarning(`WARNING - processTypeformV4: unable to upload item ${itemId} photo to S3: ${photoUrl}`);
       return res.sendStatus(200); // send 200 so Typeform doesn't hit our webhook again
     }
 
