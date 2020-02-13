@@ -106,13 +106,20 @@ async function processTypeformV4(req, res) {
     const code = itemHelpers.generatePickupCode(itemId);
     await typeformHelpers.updateItemPickupCode(itemId, code);
 
-    // Rehost item photo in S3; update photo link in DB
-    const imageLink = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
-    await typeformHelpers.updateItemPhotoLink(itemId, imageLink);
-    // Rehost price-tag image in S3; update link in DB
-    if (priceTagPhotoUrl) {
-      const priceTagImageLink = await s3Helpers.uploadPriceTagImageToS3(itemId, priceTagPhotoUrl);
-      await typeformHelpers.updatePriceTagPhotoLink(itemId, priceTagImageLink);
+    try {
+      // Rehost item photo in S3; update photo link in DB
+      const imageLink = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
+      await typeformHelpers.updateItemPhotoLink(itemId, imageLink);
+      // Rehost price-tag image in S3; update link in DB
+      if (priceTagPhotoUrl) {
+        const priceTagImageLink = await s3Helpers.uploadPriceTagImageToS3(itemId, priceTagPhotoUrl);
+        await typeformHelpers.updatePriceTagPhotoLink(itemId, priceTagImageLink);
+      }
+    } catch (err) {
+      // If unable to upload image, set status to GRAVEYARD, and notify us
+      await itemHelpers.updateSingleItemStatus("GRAVEYARD", itemId);
+      errorHandler.raiseWarning(`WARNING- processTypeformV4: unable to upload item ${itemId} photo to S3: ${photoUrl}`);
+      return res.sendStatus(200); // send 200 so Typeform doesn't hit our webhook again
     }
 
     // Confirmation message to refugee
@@ -133,7 +140,7 @@ async function processTypeformV4(req, res) {
       console.log("Beneficiary has no budget: calling sendSuccessfulItemRequestMessageNoBudget")
       await fbHelpers.sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId);
     }
-    
+
     // Send slack message to Duet
     if (process.env.NODE_ENV === 'production') {
       await typeformHelpers.sendNewItemRequestSlackMessage(itemId);
