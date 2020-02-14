@@ -3,6 +3,7 @@ const CronJob = require('cron').CronJob;
 import storesCronFunctions from '../cronJobs/storesCronFunctions.js';
 import itemsCronFunctions from '../cronJobs/itemsCronFunctions.js';
 import currencyHelpers from '../util/currencyHelpers.js';
+import recommendationHelpers from '../util/recommendationHelpers.js';
 
 // CRON job to send notification email to storeowner every day at 8:00 AM if there are
 // novel items to that (1) need price approval or (2) need to be picked up.
@@ -39,5 +40,14 @@ new CronJob(process.env.CRON_INTERVAL_CURRENCY,
 new CronJob("* * * * *", 
   function () {
     itemsCronFunctions.unsetStaleInCurrentTransactionFlags();
+  }, null, true, 'America/Los_Angeles'
+);
+
+
+// CRON job to check for donors needing recommendation emails (and to send those emails)
+new CronJob(process.env.CRON_INTERVAL_RECOMMENDAION_EMAILS,
+  function () {
+    console.log('running cron job to send recommendation emails to donors needing email...');
+    recommendationHelpers.sendItemRecommendationEmailsToDonors();
   }, null, true, 'America/Los_Angeles'
 );

@@ -20,7 +20,7 @@ router.post("/typeformV4", typeformController.processTypeformV4);
 
 // protected routes
 router.get("/scores", passport.authenticate('basic', { session: false }), beneficiaryController.getBeneficiaryScores);
-router.post("/makeAnnouncement", passport.authenticate('basic', { session: false }), beneficiaryController.makeFBAnnouncementToVisibleBeneficiaries);
+router.post("/makeAnnouncement", passport.authenticate('basic', { session: false }), beneficiaryController.makeFBAnnouncement);
 
 // dynamic routes
 router.get("/:idOrUsername", beneficiaryController.getBeneficiary);

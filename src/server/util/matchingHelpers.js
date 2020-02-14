@@ -1,5 +1,6 @@
 // Imports
 import config from '../util/config.js';
+import jsUtils from '../util/jsUtils.js';
 import beneficiaryHelpers from '../util/beneficiaryHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 
@@ -168,7 +169,7 @@ async function getMatchedAndAdditionalBeneficiaries(numAdditionalBeneficiaries) 
   const matchedBeneficiary = getMatchedBeneficiary(donatableBeneficiaries);
   // randomly get N other additional beneficiaries
   let additionalBeneficiaries = donatableBeneficiaries.filter(beneficiary => beneficiary.beneficiaryId !== matchedBeneficiary.beneficiaryId);
-  additionalBeneficiaries = shuffle(additionalBeneficiaries);
+  jsUtils.shuffleInPlace(additionalBeneficiaries);
   if (numAdditionalBeneficiaries) {
     additionalBeneficiaries = additionalBeneficiaries.slice(0, numAdditionalBeneficiaries);
   }

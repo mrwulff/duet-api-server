@@ -5,9 +5,55 @@ import donorHelpers from "../util/donorHelpers.js";
 import itemHelpers from "../util/itemHelpers.js";
 import beneficiaryHelpers from "../util/beneficiaryHelpers.js";
 import storeHelpers from "../util/storeHelpers.js";
+import currencyHelpers from "../util/currencyHelpers.js";
 const sgMail = config.sendgridInit(); // Sendgrid
 
 const unsubGroupId = 11371; // Automated Donation Updates unsub group
+const recommendationUnsubGroupId = 12670; // Recommendation Emails unsub group
+
+async function sendItemRecommendationEmail(donorEmail, itemIds) {
+  try {
+    const donor = await donorHelpers.getDonorObjFromDonorEmail(donorEmail);
+    // if itemIds is a single number, convert it to a list
+    if (typeof(itemIds) === "number") {
+      itemIds = [itemIds];
+    }
+    let items = await itemHelpers.getItemObjsFromItemIds(itemIds);
+    // attach link, familyName, priceUsd to each item object
+    items = await Promise.all(items.map(async item => {
+      const beneficiary = await beneficiaryHelpers.getBeneficiaryById(item.beneficiaryId, { withNeeds: false });
+      item.link = `${process.env.DUET_WEBSITE}/give/${beneficiary.username}?preselect=${item.itemId}`;
+      item.familyName = beneficiary.lastName;
+      item.familyImage = beneficiary.familyImage;
+      const priceUsd = await currencyHelpers.convertCurrency(item.price, "EUR", "USD");
+      item.priceUsd = priceUsd.toFixed(2);
+      return item;
+    }));
+    const familyImage = items[0].familyImage; // use first item's family image for banner photo
+    let subjectTag = "";
+    let recipientList;
+    if (process.env.NODE_ENV === "production") {
+      // recipientList = [donorEmail, "duet.giving@gmail.com"];
+      recipientList = ["duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
+    const emailTemplateId = "d-ebbceb580dec494ab27b91d180ecb655";
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: emailTemplateId,
+      dynamic_template_data: { subjectTag, donor, items, familyImage },
+      asm: { groupId: recommendationUnsubGroupId }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Item recommendation email delivered successfully to ${recipientList}. donorEmail: ${donorEmail}, itemIds: ${itemIds}`);
+
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendItemRecommendationEmail");
+  }
+}
 
 async function sendDonorThankYouEmailV2(donationId) {
   try {
@@ -226,7 +272,7 @@ async function sendStoreItemVerificationEmail(storeObj, itemObjs) {
       templateId: "d-435a092f0be54b07b5135799ac7dfb01",
       dynamic_template_data: {
         store: storeObj,
-        items: itemObjs,
+        items: itemObjs.map(item => ({...item, price: item.price.toFixed(2)})),
         subject: subject
       }
     };
@@ -344,6 +390,7 @@ async function sendTypeformErrorEmail(formTitle, eventId, errMessage) {
 
 export default {
   // To donors
+  sendItemRecommendationEmail,
   sendDonorThankYouEmailV2,
   sendSubscriptionThankYouEmail,
   sendItemPickedUpEmailV2,

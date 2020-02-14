@@ -78,19 +78,26 @@ async function getBeneficiaryScores(req, res) {
   }
 }
 
-async function makeFBAnnouncementToVisibleBeneficiaries(req, res) {
+async function makeFBAnnouncement(req, res) {
   try {
-    const { messageTemplates } = req.body;
+    const { messageTemplates, itemIds } = req.body;
     // check to make sure all languages are accounted for
     if (!messageTemplates.en || !messageTemplates.fa || !messageTemplates.ar) {
       console.log(`Tried to make FB announcement, but not all languages were included! messageTemplates: ${JSON.stringify(messageTemplates)}`);
       return res.sendStatus(400);
     }
+    // send message for each item
+    if (itemIds) {
+      await fbHelpers.sendFBMessageForItems(messageTemplates, itemIds);
+      console.log(`Successfully sent FB messages for itemIds ${itemIds} using messageTemplates: ${JSON.stringify(messageTemplates)}`);
+      return res.sendStatus(200);
+    }
+    // send message to each visible beneficiary
     await fbHelpers.sendFBMessageToAllVisibleBeneficiaries(messageTemplates);
-    console.log(`Successfully made FB announcement using messageTemplates: ${JSON.stringify(messageTemplates)}`);
+    console.log(`Successfully sent FB announcement to visible beneficiaries using messageTemplates: ${JSON.stringify(messageTemplates)}`);
     return res.sendStatus(200);
   } catch (err) {
-    errorHandler.handleError(err, "beneficiary/makeFBAnnouncementToVisibleBeneficiaries");
+    errorHandler.handleError(err, "beneficiary/makeFBAnnouncement");
     return res.sendStatus(500);
   }
 }
@@ -99,5 +106,5 @@ export default {
   getBeneficiary,
   getBeneficiaryMatch,
   getBeneficiaryScores,
-  makeFBAnnouncementToVisibleBeneficiaries
+  makeFBAnnouncement
 };

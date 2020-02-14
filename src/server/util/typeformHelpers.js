@@ -44,6 +44,13 @@ async function sendNewItemRequestSlackMessage(itemId) {
       body: { text: messageText },
       json: true
     });
+    await rp({
+      method: 'POST',
+      uri: process.env.SLACK_NEW_ITEM_REQUEST_WEBHOOK_2,
+      headers: { 'Content-Type': 'application/json' },
+      body: { text: messageText },
+      json: true
+    });
     console.log(`Successfully sent slack message for new item request: ${itemId}`);
   } catch (err) {
     errorHandler.handleError(err, "typeformHelpers/sendNewItemRequestSlackMessage");

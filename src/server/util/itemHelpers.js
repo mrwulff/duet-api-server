@@ -11,11 +11,14 @@ function sqlRowToItemObj(row) {
     name: row.item_name,
     size: row.size,
     price: Number(row.price_euros),
+    checkoutPriceUsd: row.checkout_price_usd ? Number(row.checkout_price_usd) : null,
     comment: row.comment,
     tooltipDescription: row.tooltip_description,
     storeId: row.store_id,
     storeName: row.store_name,
     storeMapsLink: row.store_maps_link,
+    categoryId: row.category_id,
+    categoryName: row.category_name,
     icon: row.icon_url,
     status: row.status,
     pickupCode: row.pickup_code,
@@ -86,6 +89,19 @@ async function getAllItemObjs() {
   }
 }
 
+async function getDonatableItems() {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results, fields] = await conn.query(
+      "SELECT * FROM items_view WHERE status='VERIFIED' and beneficiary_is_visible=1"
+    );
+    return results.map(sqlRowToItemObj);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/getDonatableItems");
+    throw err;
+  }
+}
+
 async function getItemObjsWithStatus(status) {
   // Get all items associated with this store
   try {
@@ -97,6 +113,20 @@ async function getItemObjsWithStatus(status) {
     return results.map(sqlRowToItemObj);
   } catch (err) {
     errorHandler.handleError(err, "itemHelpers/getItemObjsWithStatus");
+    throw err;
+  }
+}
+
+async function updateCheckoutPriceUsd(itemId, priceUsd) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      `UPDATE items set checkout_price_usd = ? where item_id = ?`,
+      [priceUsd, itemId]
+    );
+    console.log(`Successfully set checkout_price_usd to $${priceUsd} for item #${itemId}`);
+  } catch (err) {
+    errorHandler.handleError(err, "itemHelpers/updateCheckoutPriceUsd");
     throw err;
   }
 }
@@ -304,10 +334,12 @@ export default {
   getItemObjFromItemId,
   getItemObjsFromItemIds,
   getAllItemObjs,
+  getDonatableItems,
 
   // item status
   getNextItemStatus,
   getItemObjsWithStatus,
+  updateCheckoutPriceUsd,
   updateSingleItemStatus,
   setStorePaymentInitiatedTimestampForItemIds,
 
