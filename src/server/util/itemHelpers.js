@@ -131,6 +131,19 @@ async function updateCheckoutPriceUsd(itemId, priceUsd) {
   }
 }
 
+async function updateDonorMessage(itemId, message) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      `UPDATE items set donor_message = ? where item_id = ?`, [message, itemId]
+    );
+    console.log(`Successfully set donor_message to ${message} for item #${itemId}`);
+  } catch (err) {
+    errorHandler.handleError(err, 'itemHelpers/updateDonorMessage');
+    throw err;
+  }
+}
+
 async function updateSingleItemStatus(newStatus, itemId) {
   try {
     const conn = await config.dbInitConnectPromise();
@@ -340,6 +353,7 @@ export default {
   getNextItemStatus,
   getItemObjsWithStatus,
   updateCheckoutPriceUsd,
+  updateDonorMessage,
   updateSingleItemStatus,
   setStorePaymentInitiatedTimestampForItemIds,
 

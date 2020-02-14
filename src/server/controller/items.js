@@ -87,7 +87,34 @@ async function updateItemStatus(req, res) {
   }
 }
 
+async function updateItemDonorMessage(req, res) {
+  // update the "donorMessage" column for item(s):
+  try {
+    if (Array.isArray(req.body.itemIds) && req.body.message) {
+      if (req.body.itemIds.length > 0) {
+        console.log(`Adding donor messages for itemIds: ${req.body.itemIds}`);
+
+        await Promise.all(req.body.itemIds.map(async itemId => {
+          // update donor message in DB:
+          await itemHelpers.updateDonorMessage(itemId, req.body.message);
+        }));
+
+        res.status(200).send();
+      }
+    } else {
+      res.status(400).json({
+        error: 'invalid request body'
+      });
+    }
+  } catch (err) {
+    errorHandler.handleError(err, "items/updateItemDonorMessage");
+    res.status(500).send();
+  }
+
+}
+
 export default {
   getItems,
   updateItemStatus,
+  updateItemDonorMessage,
 };
