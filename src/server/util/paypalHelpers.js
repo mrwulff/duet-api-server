@@ -151,7 +151,7 @@ async function checkPayPalUsdBalanceAndSendEmailIfLow() {
   try {
     const paypalUsdBalance = await getPayPalUsdBalance();
     console.log("Current PayPal USD balance: ", paypalUsdBalance);
-    if (paypalUsdBalance < process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
+    if (paypalUsdBalance < Number(process.env.PAYPAL_LOW_BALANCE_THRESHOLD)) {
       console.log("WARNING: Low PayPal USD balance! Sending warning email to duet.giving@gmail.com");
       sendgridHelpers.sendBalanceUpdateEmail("PayPal", "USD", paypalUsdBalance, "WARNING");
       errorHandler.raiseWarning(`WARNING - checkPayPalUsdBalanceAndSendEmailIfLow: Low PayPal USD balance of $${paypalUsdBalance}!`);

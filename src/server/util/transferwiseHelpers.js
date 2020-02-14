@@ -243,7 +243,7 @@ async function sendTransferwiseEuroBalanceUpdateEmail() {
     const eurBalanceInfo = await getEuroBalanceInfo(profileId);
     const availableEur = eurBalanceInfo.amount.value;
     let subjectTag;
-    if (availableEur <= process.env.TRANSFERWISE_LOW_BALANCE_THRESHOLD) {
+    if (availableEur <= Number(process.env.TRANSFERWISE_LOW_BALANCE_THRESHOLD)) {
       subjectTag = "WARNING";
       errorHandler.raiseWarning(`WARNING - sendTransferwiseEuroBalanceUpdateEmail: Low Transferwise EUR balance of ${availableEur}€!`);
     } else {
