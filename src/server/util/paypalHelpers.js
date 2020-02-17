@@ -131,7 +131,7 @@ async function capturePayPalOrder(paypalOrderId) {
           console.log(`paypalHelpers/capturePayPalOrder error: ${error.response}`);
           reject(error);
         } else {
-          console.log(`paypalHelpers/capturePayPalOrder success: ${captureResp}`);
+          console.log(`paypalHelpers/capturePayPalOrder success: ${JSON.stringify(captureResp)}`);
           resolve(captureResp);
         }
       });
