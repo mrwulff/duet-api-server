@@ -19,6 +19,111 @@ async function getDonation(req, res) {
   }
 }
 
+async function captureTransaction(req, res) {
+  try {
+    const { itemIds, amount, bankTransferFee, serviceFee, itemPricesUsd, paymentMethod, donorInfo, honoreeInfo } = req.body;
+    const { honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage } = honoreeInfo;
+    if (!itemIds || !amount || !bankTransferFee || !serviceFee || !paymentMethod) {
+      console.log(`captureTransaction - incomplete request body: ${JSON.stringify(req.body)}`);
+      return res.sendStatus(400);
+    }
+
+    // ---------- Stripe ---------- //
+    if (paymentMethod === 'stripe') {
+      // Validate input
+      const { stripeToken, donorInfo } = req.body;
+      if (!stripeToken) {
+        console.log(`captureTransaction (stripe): missing stripeToken from request body`);
+        return res.sendStatus(400);
+      }
+      if (!donorInfo || !donorInfo.email || !donorInfo.firstName || !donorInfo.lastName) {
+        console.log(`captureTransaction (stripe): donorInfo has missing fields: ${JSON.stringify(donorInfo)}`);
+        return res.sendStatus(400);
+      }
+      
+      // Verify items are ready for transaction
+      try {
+        await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
+      } catch (error) {
+        console.log(`DuetRaceCondition with itemIDs: ${itemIds}`);
+        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error });
+      }
+
+      // Create donation entry
+      donationId = await donationHelpers.insertDonationIntoDB(
+        donorInfo.email, donorInfo.firstName, donorInfo.lastName,
+        amount, bankTransferFee, serviceFee,
+        null, null, null, 'stripe',
+        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage
+      );
+
+      // Charge card
+      let stripeOrderId, donorCountry;
+      const chargeDescription = `Donation for item ids: ${itemIds}`;
+      try {
+        const { payment_method_details, status, id } = await stripeHelpers.createStripeChargeForAmountUsd(amount, chargeDescription, stripeToken);
+        stripeOrderId = id;
+        donorCountry = payment_method_details.card.country;
+      } catch (error) {
+        console.log(`chargeTransaction: stripe error: ${error}`);
+        return res.status(500).send({ duetErrorCode: 'StripeError', error });
+      }
+
+      // Update donor_country, stripeOrderId
+      await donationHelpers.setDonorCountry(donationId, donorCountry);
+      await donationHelpers.setStripeOrderId(donationId, stripeOrderId);
+
+      // Update items' donationId
+      await Promise.all(itemIds.map(async itemId => {
+        await donationHelpers.markItemAsDonated(itemId, donationId);
+        const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+        if (itemObj) {
+          sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
+        }
+      }));
+
+      // Store checkout prices (USD) in database
+      if (itemPricesUsd) {
+        await Promise.all(itemPricesUsd.map(async priceInfo => {
+          await itemHelpers.updateCheckoutPriceUsd(priceInfo.itemId, priceInfo.priceUsd);
+        }));
+      }
+
+      // Unset 'in_current_transaction' flags
+      await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+
+      // Send email to donor (don't await)
+      sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+
+      // Send PayPal payout to stores with payment_method='paypal' (don't await)
+      paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
+      
+      // Done!
+      return res.status(200).send({ donationId });
+    }
+
+    // ---------- PayPal ---------- //
+    else if (paymentMethod === 'paypal') {
+      // Validate input
+      const { paypalOrderId } = req.body;
+      if (!paypalOrderId) {
+        console.log(`captureTransaction (paypal) -  missing paypalOrderId from request body`);
+        return res.sendStatus(400);
+      }
+      // TODO: do paypal stuff
+    }
+    
+    // Unknown paymentMethod
+    else {
+      console.log(`captureTransaction - unknown paymentMethod: ${paymentMethod}`);
+      return res.sendStatus(400);
+    }
+  } catch (err) {
+    errorHandler.handleError(err, "donate/captureTransaction");
+    return res.sendStatus(500);
+  }
+}
+
 async function verifyNewTransaction(req, res) {
   // make sure items are not currently being donated (or have not already been donated)
   try {
@@ -298,6 +403,9 @@ export default {
   getDonation,
 
   // one-time donations
+  captureTransaction,
+
+  // TODO: deprecate these
   verifyNewTransaction,
   cancelTransaction,
   chargeTransaction,

@@ -87,6 +87,40 @@ async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   }
 }
 
+async function sendNecessaryPayoutsForItemIds(itemIds) {
+  // send necessary payouts for newly donated itemIds
+  try {
+    const payoutInfo = await getPayPalPayoutInfoForItemIds(itemIds);
+    if (!payoutInfo.length) {
+      console.log(`paypalHelpers/sendNecessaryPayoutsForItemIds: no paypal payouts necessary for itemIds: ${itemIds}`);
+      return;
+    }
+    await Promise.all(payoutInfo.map(async singleStoreResult => {
+      await sendPayout(
+        singleStoreResult.paypal,
+        singleStoreResult.payment_amount.toFixed(2),
+        "EUR",
+        singleStoreResult.item_ids
+      );
+      console.log("Successfully sent payout(s) for item IDs: " + singleStoreResult.item_ids);
+      await itemHelpers.setStorePaymentInitiatedTimestampForItemIds(singleStoreResult.item_ids);
+      // send "incoming payment" email to store
+      sendgridHelpers.sendStorePaymentEmail({
+        storeEmail: singleStoreResult.store_email,
+        storeName: singleStoreResult.store_name,
+        paymentAmountEuros: singleStoreResult.payment_amount.toFixed(2),
+        paymentMethod: "PayPal",
+        itemIds: itemHelpers.itemIdsListToString(singleStoreResult.item_ids),
+      });
+    }));
+    // Check remaining balances
+    checkPayPalUsdBalanceAndSendEmailIfLow();
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/sendPayoutForItemIds");
+    throw err;
+  }
+}
+
 // ---------- BALANCES ---------- //
 
 async function getPayPalBalance(currencyCode) {
@@ -263,6 +297,7 @@ export default {
   // payouts
   getPayPalPayoutInfoForItemIds,
   sendPayout,
+  sendNecessaryPayoutsForItemIds,
 
   // balances
   checkPayPalEuroBalanceAndSendEmailIfLow,
