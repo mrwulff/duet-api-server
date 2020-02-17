@@ -121,6 +121,27 @@ async function sendNecessaryPayoutsForItemIds(itemIds) {
   }
 }
 
+// ---------- ORDERS ---------- //
+
+async function capturePayPalOrder(paypalOrderId) {
+  try {
+    return new Promise(function (resolve, reject) {
+      paypal.order.capture(paypalOrderId, {}, function (error, captureResp) {
+        if (error) {
+          console.log(error.response);
+          reject(error);
+        } else {
+          console.log(captureResp);
+          resolve(captureResp);
+        }
+      });
+    });
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/capturePayPalOrder");
+    throw err;
+  }
+}
+
 // ---------- BALANCES ---------- //
 
 async function getPayPalBalance(currencyCode) {
@@ -298,6 +319,9 @@ export default {
   getPayPalPayoutInfoForItemIds,
   sendPayout,
   sendNecessaryPayoutsForItemIds,
+
+  // orders
+  capturePayPalOrder,
 
   // balances
   checkPayPalEuroBalanceAndSendEmailIfLow,

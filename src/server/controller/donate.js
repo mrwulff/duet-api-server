@@ -7,8 +7,6 @@ import errorHandler from "../util/errorHandler.js";
 import itemHelpers from "../util/itemHelpers.js";
 import donationHelpers from "../util/donationHelpers.js";
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
 async function getDonation(req, res) {
   try {
     const donationObj = await donationHelpers.getDonationObjFromDonationId(req.query.donation_id);
@@ -110,7 +108,50 @@ async function captureTransaction(req, res) {
         console.log(`captureTransaction (paypal) -  missing paypalOrderId from request body`);
         return res.sendStatus(400);
       }
-      // TODO: do paypal stuff
+      
+      // Verify items are ready for transaction
+      try {
+        await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
+      } catch (error) {
+        console.log(`DuetRaceCondition with itemIDs: ${itemIds}`);
+        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error });
+      }
+
+      // Capture paypal order
+      const details = await paypalHelpers.capturePayPalOrder(paypalOrderId);
+      const firstName = details.payer.name.given_name;
+      const lastName = details.payer.name.surname;
+      const email = details.payer.email_address;
+      const donorCountry = details.payer.address.country_code;
+
+      // Create donation entry
+      const donationId = await donationHelpers.insertDonationIntoDB(
+        email, firstName, lastName, 
+        amount, bankTransferFee, serviceFee, donorCountry,
+        paypalOrderId, null, 'paypal',
+        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage
+      );
+
+      // Set item donation IDs
+      await Promise.all(itemIds.map(async itemId => {
+        await donationHelpers.markItemAsDonated(itemId, donationId);
+        const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+        if (itemObj) {
+          sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
+        }
+      }));
+
+      // Unset flags
+      await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+
+      // Send email to donor (don't await)
+      sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+
+      // Send PayPal payout to stores with payment_method='paypal' (don't await)
+      paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
+
+      // Done!
+      return res.status(200).send({ donationId });
     }
     
     // Unknown paymentMethod
