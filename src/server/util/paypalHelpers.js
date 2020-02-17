@@ -128,10 +128,10 @@ async function capturePayPalOrder(paypalOrderId) {
     return new Promise(function (resolve, reject) {
       paypal.order.capture(paypalOrderId, {}, function (error, captureResp) {
         if (error) {
-          console.log(error.response);
+          console.log(`paypalHelpers/capturePayPalOrder error: ${error.response}`);
           reject(error);
         } else {
-          console.log(captureResp);
+          console.log(`paypalHelpers/capturePayPalOrder success: ${captureResp}`);
           resolve(captureResp);
         }
       });

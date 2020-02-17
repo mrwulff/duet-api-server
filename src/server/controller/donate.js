@@ -118,11 +118,17 @@ async function captureTransaction(req, res) {
       }
 
       // Capture paypal order
-      const details = await paypalHelpers.capturePayPalOrder(paypalOrderId);
-      const firstName = details.payer.name.given_name;
-      const lastName = details.payer.name.surname;
-      const email = details.payer.email_address;
-      const donorCountry = details.payer.address.country_code;
+      let paypalCaptureResp;
+      try {
+        paypalCaptureResp = await paypalHelpers.capturePayPalOrder(paypalOrderId);
+      } catch (error) {
+        console.log(`chargeTransaction: paypal error: ${error}`);
+        return res.status(500).send({ duetErrorCode: 'PayPalError', error });
+      }
+      const firstName = paypalCaptureResp.payer.name.given_name;
+      const lastName = paypalCaptureResp.payer.name.surname;
+      const email = paypalCaptureResp.payer.email_address;
+      const donorCountry = paypalCaptureResp.payer.address.country_code;
 
       // Create donation entry
       const donationId = await donationHelpers.insertDonationIntoDB(
