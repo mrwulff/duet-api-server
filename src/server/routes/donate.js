@@ -5,10 +5,12 @@ import { passport } from './../util/auth.js';
 const router = express.Router();
 
 router.get("/", controller.getDonation);
+
+router.post("/captureTransaction", controller.captureTransaction);
+
+// TODO: deprecate all these
 router.post("/verifyTransaction", controller.verifyNewTransaction);
 router.post("/cancelTransaction", controller.cancelTransaction);
-router.post("/paid", controller.processSuccessfulTransaction); //TODO: phase this out later
-
 router.post("/chargeTransaction", controller.chargeTransaction);
 router.post("/processTransaction", controller.processSuccessfulTransaction);
 

@@ -28,6 +28,7 @@ function sqlRowToItemObj(row) {
     beneficiaryFirst: row.beneficiary_first,
     beneficiaryLast: row.beneficiary_last,
     beneficiaryIsVisible: row.beneficiary_is_visible,
+    beneficiaryImage: row.family_image_url,
     donationId: row.donation_id,
     donorFirst: row.donor_first,
     donorLast: row.donor_last,
@@ -131,6 +132,19 @@ async function updateCheckoutPriceUsd(itemId, priceUsd) {
   }
 }
 
+async function updateDonorMessage(itemId, message) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      `UPDATE items set donor_message = ? where item_id = ?`, [message, itemId]
+    );
+    console.log(`Successfully set donor_message to ${message} for item #${itemId}`);
+  } catch (err) {
+    errorHandler.handleError(err, 'itemHelpers/updateDonorMessage');
+    throw err;
+  }
+}
+
 async function updateSingleItemStatus(newStatus, itemId) {
   try {
     const conn = await config.dbInitConnectPromise();
@@ -178,7 +192,7 @@ async function setStorePaymentInitiatedTimestampForItemIds(itemIds) {
     await conn.query(
       "UPDATE items set store_payment_initiated_timestamp=NOW() WHERE item_id IN (?)",
       [itemIds]
-      );
+    );
     console.log(`Successfully set store_payment_initiated_timestamp for itemIds: ${itemIds}`);
   } catch (err) {
     errorHandler.handleError(err, "itemHelpers/setStorePaymentInitiatedTimestampForItemIds");
@@ -340,6 +354,7 @@ export default {
   getNextItemStatus,
   getItemObjsWithStatus,
   updateCheckoutPriceUsd,
+  updateDonorMessage,
   updateSingleItemStatus,
   setStorePaymentInitiatedTimestampForItemIds,
 

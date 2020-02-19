@@ -126,6 +126,41 @@ async function insertDonationIntoDB(
   }
 }
 
+async function removeDonationFromDB(donationId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query("DELETE FROM donations where donation_id=?", [donationId]);
+    console.log(`Successfully removed donation ${donationId} from database`);
+  } catch (err) {
+    errorHandler.handleError(err, "donationHelpers/removeDonationFromDb");
+    throw err;
+  }
+}
+
+async function setDonorCountry(donationId, donorCountry) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query("UPDATE donations SET donor_country=? WHERE donation_id=?",
+      [donorCountry, donationId]);
+    console.log(`donationHelpers/setDonationDonorCountry: successfully set donorCountry to ${donorCountry} for donation ${donationId}`);
+  } catch (err) {
+    errorHandler.handleError(err, "donationHelpers/setDonationDonorCountry");
+    throw err;
+  }
+}
+
+async function setStripeOrderId(donationId, stripeOrderId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query("UPDATE donations SET stripe_order_id=? WHERE donation_id=?",
+      [stripeOrderId, donationId]);
+    console.log(`donationHelpers/setStripeOrderId: successfully set stripeOrderId to ${stripeOrderId} for donation ${donationId}`);
+  } catch (err) {
+    errorHandler.handleError(err, "donationHelpers/setStripeOrderId");
+    throw err;
+  }
+}
+
 async function insertSubscriptionIntoDB(email, firstName, lastName, amount, bankTransferFee, serviceFee, country, 
   paypalSubscriptionId, stripeSubscriptionId, paymentMethod) {
   // Insert subscription info into DB, return insert ID
@@ -162,9 +197,14 @@ export default {
   sqlRowToDonationObj,
   getDonationObjFromDonationId,
 
-  // insert donation/subscription
+  // insert/remove donation/subscription
   insertDonationIntoDB,
+  removeDonationFromDB,
   insertSubscriptionIntoDB,
+
+  // update existing donation
+  setDonorCountry,
+  setStripeOrderId,
 
   // other helpers
   markItemAsDonated,

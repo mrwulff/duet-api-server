@@ -87,6 +87,87 @@ async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   }
 }
 
+async function sendNecessaryPayoutsForItemIds(itemIds) {
+  // send necessary payouts for newly donated itemIds
+  try {
+    const payoutInfo = await getPayPalPayoutInfoForItemIds(itemIds);
+    if (!payoutInfo.length) {
+      console.log(`paypalHelpers/sendNecessaryPayoutsForItemIds: no paypal payouts necessary for itemIds: ${itemIds}`);
+      return;
+    }
+    await Promise.all(payoutInfo.map(async singleStoreResult => {
+      await sendPayout(
+        singleStoreResult.paypal,
+        singleStoreResult.payment_amount.toFixed(2),
+        "EUR",
+        singleStoreResult.item_ids
+      );
+      console.log("Successfully sent payout(s) for item IDs: " + singleStoreResult.item_ids);
+      await itemHelpers.setStorePaymentInitiatedTimestampForItemIds(singleStoreResult.item_ids);
+      // send "incoming payment" email to store
+      sendgridHelpers.sendStorePaymentEmail({
+        storeEmail: singleStoreResult.store_email,
+        storeName: singleStoreResult.store_name,
+        paymentAmountEuros: singleStoreResult.payment_amount.toFixed(2),
+        paymentMethod: "PayPal",
+        itemIds: itemHelpers.itemIdsListToString(singleStoreResult.item_ids),
+      });
+    }));
+    // Check remaining balances
+    checkPayPalUsdBalanceAndSendEmailIfLow();
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/sendPayoutForItemIds");
+    throw err;
+  }
+}
+
+// ---------- ORDERS ---------- //
+
+// async function capturePayPalOrder(paypalOrderId) {
+//   try {
+//     return new Promise(function (resolve, reject) {
+//       paypal.order.capture(paypalOrderId, {}, function (error, captureResp) {
+//         if (error) {
+//           console.log(`paypalHelpers/capturePayPalOrder error: ${error.response}`);
+//           reject(error);
+//         } else {
+//           console.log(`paypalHelpers/capturePayPalOrder success: ${JSON.stringify(captureResp)}`);
+//           resolve(captureResp);
+//         }
+//       });
+//     });
+//   } catch (err) {
+//     errorHandler.handleError(err, "paypalHelpers/capturePayPalOrder");
+//     throw err;
+//   }
+// }
+
+async function capturePayPalOrder(paypalOrderId) {
+  try {
+    const res = await rp(
+      `${process.env.PAYPAL_API_URL}/v2/checkout/orders/${paypalOrderId}/capture`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        auth: {
+          user: process.env.PAYPAL_CLIENT_ID,
+          password: process.env.PAYPAL_CLIENT_SECRET
+        },
+        json: true
+      }
+    );
+    console.log(`capturePayPalOrder response: ${JSON.stringify(res)}`);
+    return res;
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/capturePayPalOrder");
+    throw err;
+  }
+}
+
 // ---------- BALANCES ---------- //
 
 async function getPayPalBalance(currencyCode) {
@@ -263,6 +344,10 @@ export default {
   // payouts
   getPayPalPayoutInfoForItemIds,
   sendPayout,
+  sendNecessaryPayoutsForItemIds,
+
+  // orders
+  capturePayPalOrder,
 
   // balances
   checkPayPalEuroBalanceAndSendEmailIfLow,
