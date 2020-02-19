@@ -64,6 +64,7 @@ async function captureTransaction(req, res) {
         donorCountry = payment_method_details.card.country;
       } catch (error) {
         console.log(`chargeTransaction: stripe error: ${error}`);
+        await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
         donationHelpers.removeDonationFromDB(donationId);
         return res.status(500).send({ duetErrorCode: 'StripeError', error });
       }
@@ -124,6 +125,7 @@ async function captureTransaction(req, res) {
         paypalCaptureResp = await paypalHelpers.capturePayPalOrder(paypalOrderId, amount);
       } catch (error) {
         console.log(`chargeTransaction: paypal error: ${error}`);
+        await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
         donationHelpers.removeDonationFromDB(donationId);
         return res.status(500).send({ duetErrorCode: 'PayPalError', error });
       }
