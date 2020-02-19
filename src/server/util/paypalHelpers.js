@@ -160,6 +160,7 @@ async function capturePayPalOrder(paypalOrderId) {
         json: true
       }
     );
+    console.log(`capturePayPalOrder response: ${JSON.stringify(res)}`);
     return res;
   } catch (err) {
     errorHandler.handleError(err, "paypalHelpers/capturePayPalOrder");
