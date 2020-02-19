@@ -126,6 +126,17 @@ async function insertDonationIntoDB(
   }
 }
 
+async function removeDonationFromDB(donationId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query("DELETE FROM donations where donation_id=?", [donationId]);
+    console.log(`Successfully removed donation ${donationId} from database`);
+  } catch (err) {
+    errorHandler.handleError(err, "donationHelpers/removeDonationFromDb");
+    throw err;
+  }
+}
+
 async function setDonorCountry(donationId, donorCountry) {
   try {
     const conn = await config.dbInitConnectPromise();
@@ -186,8 +197,9 @@ export default {
   sqlRowToDonationObj,
   getDonationObjFromDonationId,
 
-  // insert donation/subscription
+  // insert/remove donation/subscription
   insertDonationIntoDB,
+  removeDonationFromDB,
   insertSubscriptionIntoDB,
 
   // update existing donation
