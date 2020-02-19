@@ -123,12 +123,20 @@ async function sendNecessaryPayoutsForItemIds(itemIds) {
 
 // ---------- ORDERS ---------- //
 
-async function capturePayPalOrder(paypalOrderId) {
+async function capturePayPalOrder(paypalOrderId, amount) {
+  const captureDetails = {
+    amount: {
+      currency: 'USD',
+      total: amount,
+    },
+    is_final_capture: true,
+  };
+
   try {
     return new Promise(function (resolve, reject) {
-      paypal.order.capture(paypalOrderId, {}, function (error, captureResp) {
+      paypal.order.capture(paypalOrderId, captureDetails, function (error, captureResp) {
         if (error) {
-          console.log(`paypalHelpers/capturePayPalOrder error: ${error.response}`);
+          console.log(`paypalHelpers/capturePayPalOrder error: ${error}`);
           reject(error);
         } else {
           console.log(`paypalHelpers/capturePayPalOrder success: ${JSON.stringify(captureResp)}`);

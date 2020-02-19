@@ -48,7 +48,7 @@ async function captureTransaction(req, res) {
       }
 
       // Create donation entry
-      donationId = await donationHelpers.insertDonationIntoDB(
+      const donationId = await donationHelpers.insertDonationIntoDB(
         donorInfo.email, donorInfo.firstName, donorInfo.lastName,
         amount, bankTransferFee, serviceFee,
         null, null, null, 'stripe',
@@ -101,7 +101,7 @@ async function captureTransaction(req, res) {
     }
 
     // ---------- PayPal ---------- //
-    else if (paymentMethod === 'paypal') {
+    if (paymentMethod === 'paypal') {
       // Validate input
       const { paypalOrderId } = req.body;
       if (!paypalOrderId) {
@@ -120,7 +120,7 @@ async function captureTransaction(req, res) {
       // Capture paypal order
       let paypalCaptureResp;
       try {
-        paypalCaptureResp = await paypalHelpers.capturePayPalOrder(paypalOrderId);
+        paypalCaptureResp = await paypalHelpers.capturePayPalOrder(paypalOrderId, amount);
       } catch (error) {
         console.log(`chargeTransaction: paypal error: ${error}`);
         return res.status(500).send({ duetErrorCode: 'PayPalError', error });
@@ -161,10 +161,9 @@ async function captureTransaction(req, res) {
     }
     
     // Unknown paymentMethod
-    else {
-      console.log(`captureTransaction - unknown paymentMethod: ${paymentMethod}`);
-      return res.sendStatus(400);
-    }
+    console.log(`captureTransaction - unknown paymentMethod: ${paymentMethod}`);
+    return res.sendStatus(400);
+    
   } catch (err) {
     errorHandler.handleError(err, "donate/captureTransaction");
     return res.sendStatus(500);
