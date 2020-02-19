@@ -123,19 +123,44 @@ async function sendNecessaryPayoutsForItemIds(itemIds) {
 
 // ---------- ORDERS ---------- //
 
+// async function capturePayPalOrder(paypalOrderId) {
+//   try {
+//     return new Promise(function (resolve, reject) {
+//       paypal.order.capture(paypalOrderId, {}, function (error, captureResp) {
+//         if (error) {
+//           console.log(`paypalHelpers/capturePayPalOrder error: ${error.response}`);
+//           reject(error);
+//         } else {
+//           console.log(`paypalHelpers/capturePayPalOrder success: ${JSON.stringify(captureResp)}`);
+//           resolve(captureResp);
+//         }
+//       });
+//     });
+//   } catch (err) {
+//     errorHandler.handleError(err, "paypalHelpers/capturePayPalOrder");
+//     throw err;
+//   }
+// }
+
 async function capturePayPalOrder(paypalOrderId) {
   try {
-    return new Promise(function (resolve, reject) {
-      paypal.order.capture(paypalOrderId, {}, function (error, captureResp) {
-        if (error) {
-          console.log(`paypalHelpers/capturePayPalOrder error: ${error.response}`);
-          reject(error);
-        } else {
-          console.log(`paypalHelpers/capturePayPalOrder success: ${JSON.stringify(captureResp)}`);
-          resolve(captureResp);
-        }
-      });
-    });
+    const res = await rp(
+      `${process.env.PAYPAL_API_URL}/v2/checkout/orders/${paypalOrderId}/capture`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        auth: {
+          user: process.env.PAYPAL_CLIENT_ID,
+          password: process.env.PAYPAL_CLIENT_SECRET
+        },
+        json: true
+      }
+    );
+    return res;
   } catch (err) {
     errorHandler.handleError(err, "paypalHelpers/capturePayPalOrder");
     throw err;
