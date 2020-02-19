@@ -92,7 +92,7 @@ async function captureTransaction(req, res) {
       await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
 
       // Send email to donor (don't await)
-      sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+      sendgridHelpers.sendDonorThankYouEmailV3(donationId);
 
       // Send PayPal payout to stores with payment_method='paypal' (don't await)
       paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
@@ -153,7 +153,7 @@ async function captureTransaction(req, res) {
       await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
 
       // Send email to donor (don't await)
-      sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+      sendgridHelpers.sendDonorThankYouEmailV3(donationId);
 
       // Send PayPal payout to stores with payment_method='paypal' (don't await)
       paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
@@ -294,7 +294,7 @@ async function processSuccessfulTransaction(req, res) {
 
       // Send email to donor (and "on behalf of" email, if applicable)
       if (donationInfo.email) {
-        sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+        sendgridHelpers.sendDonorThankYouEmailV3(donationId);
       }
 
       // Send PayPal payout to stores with payment_method='paypal'
@@ -438,7 +438,7 @@ async function handleStripeWebhook(req, res) {
 async function sendDonationConfirmationEmail(req, res) {
   try {
     const donationId = req.body.donationId;
-    await sendgridHelpers.sendDonorThankYouEmailV2(donationId);
+    await sendgridHelpers.sendDonorThankYouEmailV3(donationId);
     return res.sendStatus(200);
   } catch (err) {
     errorHandler.handleError(err, "donate/createSubscription");

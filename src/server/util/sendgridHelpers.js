@@ -55,6 +55,83 @@ async function sendItemRecommendationEmail(donorEmail, itemIds) {
   }
 }
 
+async function sendDonorThankYouEmailV3(donationId) {
+  try {
+    // get necessary data
+    const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
+    const { items } = donationObj;
+    let beneficiaries = [];
+    await Promise.all(items.map(async (item) => {
+      if (beneficiaries.find(beneficiary => beneficiary.beneficiaryId === item.beneficiaryId)) {
+        beneficiaries.push(item);
+      } else {
+        const beneficiary = await beneficiaryHelpers.getBeneficiaryById(item.beneficiaryId, { withNeeds: false });
+        beneficiary.items = [item];
+        beneficiaries.push(beneficiary);
+      }
+    }));
+    // create sendgrid message
+    const emailTemplateId = "d-4c6cdf6a0ce14937a8457a249d15843a";
+    let subjectTag = "";
+    let recipientList;
+    if (process.env.NODE_ENV === "production") {
+      recipientList = [donationObj.donor.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
+    const donationTrackerUrl = `${process.env.DUET_WEBSITE}/donation?donationId=${donationObj.donationId}`;
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: emailTemplateId,
+      dynamic_template_data: {
+        isToOnBehalfOfEmail: false,
+        subjectTag: subjectTag,
+        donation: { ...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2) },
+        beneficiaries,
+        donationTrackerUrl,
+      },
+      asm: {
+        groupId: unsubGroupId
+      }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Donation thank you v3 message delivered successfully to ${recipientList}. donationTrackerUrl: ${donationTrackerUrl}`);
+
+    // send email to person that the donation was made on behalf of
+    if (donationObj.onBehalfOfEmail) {
+      let subjectTag = "";
+      let recipientList;
+      if (process.env.NODE_ENV === "production") {
+        recipientList = [donationObj.onBehalfOfEmail, "duet.giving@gmail.com"];
+      } else {
+        recipientList = ["duet.giving@gmail.com"];
+        subjectTag = "[SANDBOX] ";
+      }
+      const msg = {
+        to: recipientList,
+        from: "duet@giveduet.org",
+        templateId: emailTemplateId,
+        dynamic_template_data: {
+          isToOnBehalfOfEmail: true,
+          subjectTag: subjectTag,
+          donation: { ...donationObj, donationAmtUsd: donationObj.donationAmtUsd.toFixed(2) },
+          beneficiaries,
+          donationTrackerUrl,
+        },
+        asm: {
+          groupId: unsubGroupId
+        }
+      };
+      await sgMail.sendMultiple(msg);
+      console.log(`Donation thank you v3 ("on behalf of") message delivered successfully to ${recipientList}. donationTrackerUrl: ${donationTrackerUrl}`);
+    }
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendDonorThankYouEmailV3");
+  }
+}
+
 async function sendDonorThankYouEmailV2(donationId) {
   try {
     // get necessary data
@@ -391,6 +468,7 @@ async function sendTypeformErrorEmail(formTitle, eventId, errMessage) {
 export default {
   // To donors
   sendItemRecommendationEmail,
+  sendDonorThankYouEmailV3,
   sendDonorThankYouEmailV2,
   sendSubscriptionThankYouEmail,
   sendItemPickedUpEmailV2,
