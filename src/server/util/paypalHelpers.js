@@ -87,6 +87,61 @@ async function sendPayout(payeeEmail, amount, currencyCode, itemIds) {
   }
 }
 
+async function sendNecessaryPayoutsForItemIds(itemIds) {
+  // send necessary payouts for newly donated itemIds
+  try {
+    const payoutInfo = await getPayPalPayoutInfoForItemIds(itemIds);
+    if (!payoutInfo.length) {
+      console.log(`paypalHelpers/sendNecessaryPayoutsForItemIds: no paypal payouts necessary for itemIds: ${itemIds}`);
+      return;
+    }
+    await Promise.all(payoutInfo.map(async singleStoreResult => {
+      await sendPayout(
+        singleStoreResult.paypal,
+        singleStoreResult.payment_amount.toFixed(2),
+        "EUR",
+        singleStoreResult.item_ids
+      );
+      console.log("Successfully sent payout(s) for item IDs: " + singleStoreResult.item_ids);
+      await itemHelpers.setStorePaymentInitiatedTimestampForItemIds(singleStoreResult.item_ids);
+      // send "incoming payment" email to store
+      sendgridHelpers.sendStorePaymentEmail({
+        storeEmail: singleStoreResult.store_email,
+        storeName: singleStoreResult.store_name,
+        paymentAmountEuros: singleStoreResult.payment_amount.toFixed(2),
+        paymentMethod: "PayPal",
+        itemIds: itemHelpers.itemIdsListToString(singleStoreResult.item_ids),
+      });
+    }));
+    // Check remaining balances
+    checkPayPalUsdBalanceAndSendEmailIfLow();
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/sendPayoutForItemIds");
+    throw err;
+  }
+}
+
+// ---------- ORDERS ---------- //
+
+async function capturePayPalOrder(paypalOrderId) {
+  try {
+    return new Promise(function (resolve, reject) {
+      paypal.order.capture(paypalOrderId, {}, function (error, captureResp) {
+        if (error) {
+          console.log(`paypalHelpers/capturePayPalOrder error: ${error.response}`);
+          reject(error);
+        } else {
+          console.log(`paypalHelpers/capturePayPalOrder success: ${JSON.stringify(captureResp)}`);
+          resolve(captureResp);
+        }
+      });
+    });
+  } catch (err) {
+    errorHandler.handleError(err, "paypalHelpers/capturePayPalOrder");
+    throw err;
+  }
+}
+
 // ---------- BALANCES ---------- //
 
 async function getPayPalBalance(currencyCode) {
@@ -151,7 +206,7 @@ async function checkPayPalUsdBalanceAndSendEmailIfLow() {
   try {
     const paypalUsdBalance = await getPayPalUsdBalance();
     console.log("Current PayPal USD balance: ", paypalUsdBalance);
-    if (paypalUsdBalance < process.env.PAYPAL_LOW_BALANCE_THRESHOLD) {
+    if (paypalUsdBalance < Number(process.env.PAYPAL_LOW_BALANCE_THRESHOLD)) {
       console.log("WARNING: Low PayPal USD balance! Sending warning email to duet.giving@gmail.com");
       sendgridHelpers.sendBalanceUpdateEmail("PayPal", "USD", paypalUsdBalance, "WARNING");
       errorHandler.raiseWarning(`WARNING - checkPayPalUsdBalanceAndSendEmailIfLow: Low PayPal USD balance of $${paypalUsdBalance}!`);
@@ -263,6 +318,10 @@ export default {
   // payouts
   getPayPalPayoutInfoForItemIds,
   sendPayout,
+  sendNecessaryPayoutsForItemIds,
+
+  // orders
+  capturePayPalOrder,
 
   // balances
   checkPayPalEuroBalanceAndSendEmailIfLow,
