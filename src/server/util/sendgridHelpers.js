@@ -59,17 +59,23 @@ async function sendDonorThankYouEmailV3(donationId) {
   try {
     // get necessary data
     const donationObj = await donationHelpers.getDonationObjFromDonationId(donationId);
-    const { items } = donationObj;
-    let beneficiaries = [];
-    await Promise.all(items.map(async (item) => {
-      if (beneficiaries.find(beneficiary => beneficiary.beneficiaryId === item.beneficiaryId)) {
-        beneficiaries.push(item);
-      } else {
-        const beneficiary = await beneficiaryHelpers.getBeneficiaryById(item.beneficiaryId, { withNeeds: false });
-        beneficiary.items = [item];
-        beneficiaries.push(beneficiary);
-      }
-    }));
+
+    // items array --> list of beneficiary objects with needs array
+    const items = donationObj.items.map(item => ({ ...item })); // deep copy
+    let beneficiaries = items.reduce((r, a) => {
+      // eslint-disable-next-line no-param-reassign
+      r[a.beneficiaryId] = r[a.beneficiaryId] || {
+        id: a.beneficiaryId,
+        firstName: a.beneficiaryFirst,
+        lastName: a.beneficiaryLast,
+        familyImage: a.beneficiaryImage,
+        items: [],
+      };
+      r[a.beneficiaryId].items.push(a);
+      return r;
+    }, {});
+    beneficiaries = Object.values(beneficiaries);
+
     // create sendgrid message
     const emailTemplateId = "d-4c6cdf6a0ce14937a8457a249d15843a";
     let subjectTag = "";
