@@ -33,10 +33,21 @@ async function insertItemFromTypeform(itemInfo) {
 
 async function sendNewItemRequestSlackMessage(itemId) {
   try {
-    const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
-    const newItemSlackMessages = require('../assets/slack_messages/new_item_request_message.json');
-    const messageTemplate = itemObj.size ? newItemSlackMessages.newItemRequestMessageWithSize : newItemSlackMessages.newItemRequestMessageNoSize;
-    const messageText = format(messageTemplate, { ...itemObj, price: itemObj.price.toFixed(2) });
+    const item = await itemHelpers.getItemObjFromItemId(itemId);
+    // format message
+    let messageText = `*itemId: ${itemId}* (${item.pickupCode})\n`;
+    messageText += `name: ${item.name}\nprice: ${item.price.toFixed(2)}€\n`;
+    messageText += `beneficiary: ${item.beneficiaryLast} (${item.beneficiaryId})\n`;
+    messageText += `store: ${item.storeName}\nstatus: ${item.status}\nimage: ${item.image}\n`;
+    if (item.priceTagImage) {
+      messageText += `priceTagImage: ${item.priceTagImage}\n`;
+    }
+    if (item.size) {
+      messageText += `size: ${item.size}\n`;
+    }
+    if (item.comment) {
+      messageText += `comment: ${item.comment}\n`;
+    }
     await rp({
       method: 'POST',
       uri: process.env.SLACK_NEW_ITEM_REQUEST_WEBHOOK,

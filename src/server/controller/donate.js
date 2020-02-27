@@ -21,7 +21,7 @@ async function captureTransaction(req, res) {
   try {
     const { itemIds, amount, bankTransferFee, serviceFee, itemPricesUsd, paymentMethod, donorInfo, honoreeInfo } = req.body;
     const { honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage } = honoreeInfo;
-    if (!itemIds || !amount || !bankTransferFee || serviceFee === null || serviceFee === undefined || !paymentMethod) {
+    if (!itemIds || !amount || !paymentMethod || bankTransferFee == null || bankTransferFee == undefined || serviceFee === null || serviceFee === undefined) {
       console.log(`captureTransaction - incomplete request body: ${JSON.stringify(req.body)}`);
       return res.sendStatus(400);
     }
