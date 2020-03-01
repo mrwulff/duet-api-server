@@ -5,6 +5,7 @@ import stripeHelpers from "../util/stripeHelpers.js";
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 import itemHelpers from "../util/itemHelpers.js";
+import slackHelpers from "../util/slackHelpers.js";
 import donationHelpers from "../util/donationHelpers.js";
 
 async function getDonation(req, res) {
@@ -76,6 +77,9 @@ async function captureTransaction(req, res) {
       // Update items' donationId
       await Promise.all(itemIds.map(async itemId => {
         await donationHelpers.markItemAsDonated(itemId, donationId);
+        if (process.env.NODE_ENV === 'production') {
+          slackHelpers.sendDonatedItemMessage(itemId);
+        }
         const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
         if (itemObj) {
           sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
@@ -145,6 +149,9 @@ async function captureTransaction(req, res) {
       // Set item donation IDs
       await Promise.all(itemIds.map(async itemId => {
         await donationHelpers.markItemAsDonated(itemId, donationId);
+        if (process.env.NODE_ENV === 'production') {
+          slackHelpers.sendDonatedItemMessage(itemId);
+        }
         const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
         if (itemObj) {
           sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
@@ -277,6 +284,9 @@ async function processSuccessfulTransaction(req, res) {
       // Mark items as donated
       await Promise.all(donationInfo.itemIds.map(async itemId => {
         await donationHelpers.markItemAsDonated(itemId, donationId);
+        if (process.env.NODE_ENV === 'production') {
+          slackHelpers.sendDonatedItemMessage(itemId);
+        }
         const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
         if (itemObj) {
           sendgridHelpers.sendItemStatusUpdateEmail(itemObj);

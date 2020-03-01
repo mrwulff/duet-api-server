@@ -7,6 +7,7 @@ import sendgridHelpers from '../util/sendgridHelpers.js';
 import errorHandler from '../util/errorHandler.js';
 import typeformHelpers from '../util/typeformHelpers.js';
 import fbHelpers from '../util/fbHelpers.js';
+import slackHelpers from '../util/slackHelpers.js';
 
 // function testUploadItemImageToS3(req, res) {
 //   try {
@@ -104,16 +105,16 @@ async function processTypeformV4(req, res) {
 
     // get code for item
     const code = itemHelpers.generatePickupCode(itemId);
-    await typeformHelpers.updateItemPickupCode(itemId, code);
+    await itemHelpers.updateItemPickupCode(itemId, code);
 
     try {
       // Rehost item photo in S3; update photo link in DB
       const imageLink = await s3Helpers.uploadItemImageToS3(itemId, photoUrl);
-      await typeformHelpers.updateItemPhotoLink(itemId, imageLink);
+      await itemHelpers.updateItemPhotoLink(itemId, imageLink);
       // Rehost price-tag image in S3; update link in DB
       if (priceTagPhotoUrl) {
         const priceTagImageLink = await s3Helpers.uploadPriceTagImageToS3(itemId, priceTagPhotoUrl);
-        await typeformHelpers.updatePriceTagPhotoLink(itemId, priceTagImageLink);
+        await itemHelpers.updatePriceTagPhotoLink(itemId, priceTagImageLink);
       }
     } catch (err) {
       // If unable to upload image, set status to GRAVEYARD, and notify us
@@ -143,7 +144,7 @@ async function processTypeformV4(req, res) {
 
     // Send slack message to Duet
     if (process.env.NODE_ENV === 'production') {
-      await typeformHelpers.sendNewItemRequestSlackMessage(itemId);
+      await slackHelpers.sendNewItemRequestSlackMessage(itemId);
     }
 
     console.log("Successfully processed Typeform response");

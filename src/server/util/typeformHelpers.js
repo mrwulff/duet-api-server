@@ -1,9 +1,6 @@
 // imports
 import config from '../util/config.js';
-import itemHelpers from '../util/itemHelpers.js';
 import errorHandler from './errorHandler.js';
-import format from 'string-template';
-import rp from 'request-promise';
 
 async function insertItemFromTypeform(itemInfo) {
   // TODO: clean this up (use item object?)
@@ -27,83 +24,6 @@ async function insertItemFromTypeform(itemInfo) {
     return results.insertId;
   } catch (err) {
     errorHandler.handleError(err, "typeformHelpers/insertItemFromTypeform");
-    throw err;
-  }
-}
-
-async function sendNewItemRequestSlackMessage(itemId) {
-  try {
-    const item = await itemHelpers.getItemObjFromItemId(itemId);
-    // format message
-    let messageText = `*itemId: ${itemId}* (${item.pickupCode})\n`;
-    messageText += `name: ${item.name}\nprice: ${item.price.toFixed(2)}€\n`;
-    messageText += `beneficiary: ${item.beneficiaryLast} (${item.beneficiaryId})\n`;
-    messageText += `store: ${item.storeName}\nstatus: ${item.status}\nimage: ${item.image}\n`;
-    if (item.priceTagImage) {
-      messageText += `priceTagImage: ${item.priceTagImage}\n`;
-    }
-    if (item.size) {
-      messageText += `size: ${item.size}\n`;
-    }
-    if (item.comment) {
-      messageText += `comment: ${item.comment}\n`;
-    }
-    await rp({
-      method: 'POST',
-      uri: process.env.SLACK_NEW_ITEM_REQUEST_WEBHOOK,
-      headers: { 'Content-Type': 'application/json' },
-      body: { text: messageText },
-      json: true
-    });
-    await rp({
-      method: 'POST',
-      uri: process.env.SLACK_NEW_ITEM_REQUEST_WEBHOOK_2,
-      headers: { 'Content-Type': 'application/json' },
-      body: { text: messageText },
-      json: true
-    });
-    console.log(`Successfully sent slack message for new item request: ${itemId}`);
-  } catch (err) {
-    errorHandler.handleError(err, "typeformHelpers/sendNewItemRequestSlackMessage");
-    throw err;
-  }
-}
-
-async function updateItemPickupCode(itemId, pickupCode) {
-  try {
-    const conn = await config.dbInitConnectPromise();
-    await conn.query(
-      "UPDATE items SET pickup_code=? WHERE item_id=?",
-      [pickupCode, itemId]
-    );
-  } catch (err) {
-    errorHandler.handleError(err, "typeformHelpers/updateItemPickupCode");
-    throw err;
-  }
-}
-
-async function updateItemPhotoLink(itemId, photoUrl) {
-  try {
-    const conn = await config.dbInitConnectPromise();
-    await conn.query(
-      "UPDATE items SET link=? WHERE item_id=?",
-      [photoUrl, itemId]
-    );
-  } catch (err) {
-    errorHandler.handleError(err, "typeformHelpers/updateItemPhotoLink");
-    throw err;
-  }
-}
-
-async function updatePriceTagPhotoLink(itemId, priceTagPhotoUrl) {
-  try {
-    const conn = await config.dbInitConnectPromise();
-    await conn.query(
-      "UPDATE items SET price_tag_photo_link=? WHERE item_id=?",
-      [priceTagPhotoUrl, itemId]
-    );
-  } catch (err) {
-    errorHandler.handleError(err, "typeformHelpers/updatePriceTagPhotoLink");
     throw err;
   }
 }
@@ -166,9 +86,6 @@ function processPriceInput(origPrice) {
 export default {
   // database updates
   insertItemFromTypeform,
-  updateItemPickupCode,
-  updateItemPhotoLink,
-  updatePriceTagPhotoLink,
 
   // translation
   getItemNameTranslation,
@@ -176,7 +93,4 @@ export default {
   // typeform input processing
   getAnswerFromQuestionReference,
   processPriceInput,
-
-  // notifications
-  sendNewItemRequestSlackMessage
 };

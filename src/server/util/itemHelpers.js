@@ -118,6 +118,45 @@ async function getItemObjsWithStatus(status) {
   }
 }
 
+async function updateItemPickupCode(itemId, pickupCode) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET pickup_code=? WHERE item_id=?",
+      [pickupCode, itemId]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/updateItemPickupCode");
+    throw err;
+  }
+}
+
+async function updateItemPhotoLink(itemId, photoUrl) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET link=? WHERE item_id=?",
+      [photoUrl, itemId]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/updateItemPhotoLink");
+    throw err;
+  }
+}
+
+async function updatePriceTagPhotoLink(itemId, priceTagPhotoUrl) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    await conn.query(
+      "UPDATE items SET price_tag_photo_link=? WHERE item_id=?",
+      [priceTagPhotoUrl, itemId]
+    );
+  } catch (err) {
+    errorHandler.handleError(err, "typeformHelpers/updatePriceTagPhotoLink");
+    throw err;
+  }
+}
+
 async function updateCheckoutPriceUsd(itemId, priceUsd) {
   try {
     const conn = await config.dbInitConnectPromise();
@@ -349,10 +388,12 @@ export default {
   getItemObjsFromItemIds,
   getAllItemObjs,
   getDonatableItems,
-
-  // item status
-  getNextItemStatus,
   getItemObjsWithStatus,
+
+  // updating
+  updateItemPickupCode,
+  updateItemPhotoLink,
+  updatePriceTagPhotoLink,
   updateCheckoutPriceUsd,
   updateDonorMessage,
   updateSingleItemStatus,
@@ -368,6 +409,7 @@ export default {
   setSingleItemNotificationFlag,
 
   // utilities
+  getNextItemStatus,
   generatePickupCode,
   itemIdsListToString,
   itemIdsGroupConcatStringToNumberList,
