@@ -14,6 +14,7 @@ function sqlRowToItemObj(row) {
     checkoutPriceUsd: row.checkout_price_usd ? Number(row.checkout_price_usd) : null,
     comment: row.comment,
     tooltipDescription: row.tooltip_description,
+    tags: row.tags ? row.tags.split(",") : [],
     storeId: row.store_id,
     storeName: row.store_name,
     storeMapsLink: row.store_maps_link,
