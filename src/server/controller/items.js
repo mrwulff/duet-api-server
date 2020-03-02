@@ -63,6 +63,7 @@ async function itemSearch(req, res) {
     // filter by status
     let items;
     if (status) {
+      console.log(`itemSearch: filtering by status = ${status}`);
       items = await itemHelpers.getItemObjsWithStatus(status);
     } else {
       items = await itemHelpers.getAllItemObjs();
