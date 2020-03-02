@@ -4,6 +4,7 @@ import itemHelpers from '../util/itemHelpers.js';
 import storeHelpers from '../util/storeHelpers.js';
 import sendgridHelpers from "../util/sendgridHelpers.js";
 import errorHandler from "../util/errorHandler.js";
+import requestPromise from 'request-promise';
 
 async function getItems(req, res) {
   // Get item info
@@ -42,6 +43,48 @@ async function getItems(req, res) {
   }
   catch (err) {
     errorHandler.handleError(err, "items/getItems");
+    return res.status(500).send();
+  }
+}
+
+async function itemSearch(req, res) {
+  // Search for item by query: e.g. api/items/search?itemInstanceTag=womens
+  try {
+    // check for query params
+    if (!req.query) {
+      console.log(`itemSearch received no query params!`);
+      return res.status(400).json({ msg: "No search parameters given!" });
+    }
+    const { status, itemInstanceTag, itemTypeTag } = req.query;
+    if (!status && !itemInstanceTag && !itemTypeTag) {
+      console.log(`itemSearch received no query params!`);
+      return res.status(400).json({ msg: "No search parameters given!" });
+    }
+    // filter by status
+    let items;
+    if (status) {
+      items = await itemHelpers.getItemObjsWithStatus(status);
+    } else {
+      items = await itemHelpers.getAllItemObjs();
+    }
+    // filter by itemInstanceTag
+    if (itemInstanceTag) {
+      console.log(`itemSearch: filtering by itemInstanceTag = ${itemInstanceTag}`);
+      items = items.filter(item => item.itemInstanceTags.includes(itemInstanceTag));
+    }
+    // filter by itemTypeTag
+    if (itemTypeTag) {
+      console.log(`itemSearch: filtering by itemTypeTag = ${itemTypeTag}`);
+      items = items.filter(item => item.itemTypeTags.includes(itemTypeTag));
+    }
+    // select a single item to return
+    if (!items.length) {
+      return res.status(400).json({ msg: "No items match search query!" });
+    }
+    const selectedItem = items[Math.floor(Math.random() * items.length)];
+    return res.status(200).json(selectedItem);
+  } catch (err) {
+    errorHandler.handleError(err, "items/itemSearch");
     return res.status(500).send();
   }
 }
@@ -122,6 +165,7 @@ async function updateItemDonorMessage(req, res) {
 
 export default {
   getItems,
+  itemSearch,
   updateItemStatus,
   updateItemDonorMessage,
 };

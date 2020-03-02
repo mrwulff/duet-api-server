@@ -9,6 +9,8 @@ router.post("/updateItemStatus", controller.updateItemStatus);
 
 router.post("/updateItemDonorMessage", controller.updateItemDonorMessage);
 
+router.get("/search", controller.itemSearch);
+
 router.get("/:itemId", controller.getItems);
 
 export default router;
