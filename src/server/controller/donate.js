@@ -19,9 +19,9 @@ async function getDonation(req, res) {
 
 async function captureTransaction(req, res) {
   try {
-    const { itemIds, amount, bankTransferFee, serviceFee, itemPricesUsd, paymentMethod, donorInfo, honoreeInfo } = req.body;
+    const { itemIds, amount, bankTransferFee, serviceFee, itemPricesUsd, paymentMethod, donorInfo, honoreeInfo, referralCode } = req.body;
     const { honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage } = honoreeInfo;
-    if (!itemIds || !amount || !paymentMethod || bankTransferFee == null || bankTransferFee == undefined || serviceFee === null || serviceFee === undefined) {
+    if (!itemIds || !amount || !paymentMethod || bankTransferFee == null || bankTransferFee === undefined || serviceFee === null || serviceFee === undefined) {
       console.log(`captureTransaction - incomplete request body: ${JSON.stringify(req.body)}`);
       return res.sendStatus(400);
     }
@@ -52,7 +52,7 @@ async function captureTransaction(req, res) {
         donorInfo.email, donorInfo.firstName, donorInfo.lastName,
         amount, bankTransferFee, serviceFee,
         null, null, null, 'stripe',
-        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage
+        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage, referralCode
       );
 
       // Charge card
@@ -139,7 +139,7 @@ async function captureTransaction(req, res) {
         email, firstName, lastName, 
         amount, bankTransferFee, serviceFee, donorCountry,
         paypalOrderId, null, 'paypal',
-        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage
+        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage, referralCode
       );
 
       // Set item donation IDs
