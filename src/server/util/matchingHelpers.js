@@ -221,7 +221,6 @@ async function sampleItemWithFairness(items) {
         itemsBeneficiaryScores[beneficiaryId] = normalizedScores[beneficiaryId];
       }
     }
-    console.log(`itemsBeneficiaryScores: ${JSON.stringify(itemsBeneficiaryScores)}`);
     itemsBeneficiaryScores = normalizeScores(itemsBeneficiaryScores);
     // select a beneficiary using normalized scores
     const selectedBeneficiaryId = weightedRandSelection(itemsBeneficiaryScores);

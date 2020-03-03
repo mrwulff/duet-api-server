@@ -97,6 +97,7 @@ async function itemSearch(req, res) {
       console.log(`itemSearch: selecting an item at random from ${items.length} filtered items...`);
       selectedItem = matchingHelpers.sampleFromListAtRandom(items);
     }
+    console.log(`itemSearch: returning item ${selectedItem.itemId} from beneficiary: ${selectedItem.beneficiaryLast} (${selectedItem.beneficiaryId})`);
     return res.status(200).json(selectedItem);
   } catch (err) {
     errorHandler.handleError(err, "items/itemSearch");
