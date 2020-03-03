@@ -3,6 +3,7 @@ import fbHelpers from '../util/fbHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
 import storeHelpers from '../util/storeHelpers.js';
 import sendgridHelpers from "../util/sendgridHelpers.js";
+import matchingHelpers from "../util/matchingHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 
 async function getItems(req, res) {
@@ -42,6 +43,64 @@ async function getItems(req, res) {
   }
   catch (err) {
     errorHandler.handleError(err, "items/getItems");
+    return res.status(500).send();
+  }
+}
+
+async function itemSearch(req, res) {
+  // Search for item by query: e.g. api/items/search?itemInstanceTag=womens
+  try {
+    // get search params
+    if (!req.query) {
+      console.log(`itemSearch received no query params!`);
+      return res.status(400).json({ msg: "No search parameters given!" });
+    }
+    const { status, itemInstanceTag, itemTypeTag } = req.query;
+    const fairness = req.query.fairness === 'true' ? true : false;
+    if (!status && !itemInstanceTag && !itemTypeTag) {
+      console.log(`itemSearch received no query params!`);
+      return res.status(400).json({ msg: "No search parameters given!" });
+    }
+    // filter by status
+    let items;
+    if (status) {
+      console.log(`itemSearch: filtering by status = ${status}`);
+      items = await itemHelpers.getItemObjsWithStatus(status);
+    } else {
+      items = await itemHelpers.getAllItemObjs();
+    }
+    // filter by beneficiaryIsVisible
+    items = items.filter(item => item.beneficiaryIsVisible);
+    // filter by itemInstanceTag
+    if (itemInstanceTag) {
+      console.log(`itemSearch: filtering by itemInstanceTag = ${itemInstanceTag}`);
+      items = items.filter(item => item.itemInstanceTags.includes(itemInstanceTag));
+    }
+    // filter by itemTypeTag
+    if (itemTypeTag) {
+      console.log(`itemSearch: filtering by itemTypeTag = ${itemTypeTag}`);
+      items = items.filter(item => item.itemTypeTags.includes(itemTypeTag));
+    }
+    // select a single item to return
+    if (!items.length) {
+      return res.status(400).json({ msg: "No items match search query!" });
+    }
+    let selectedItem;
+    if (items.length === 1) {
+      console.log(`itemSearch: returning only item remaining after filtering...`);
+      selectedItem = items[0];
+    }
+    else if (fairness) {
+      console.log(`itemSearch: selecting an item using matching algorithm from ${items.length} filtered items...`);
+      selectedItem = await matchingHelpers.sampleItemWithFairness(items);
+    } else {
+      console.log(`itemSearch: selecting an item at random from ${items.length} filtered items...`);
+      selectedItem = matchingHelpers.sampleFromListAtRandom(items);
+    }
+    console.log(`itemSearch: returning item ${selectedItem.itemId} from beneficiary: ${selectedItem.beneficiaryLast} (${selectedItem.beneficiaryId})`);
+    return res.status(200).json({ selectedItem, searchParams: { status, itemInstanceTag, itemTypeTag, fairness } });
+  } catch (err) {
+    errorHandler.handleError(err, "items/itemSearch");
     return res.status(500).send();
   }
 }
@@ -122,6 +181,7 @@ async function updateItemDonorMessage(req, res) {
 
 export default {
   getItems,
+  itemSearch,
   updateItemStatus,
   updateItemDonorMessage,
 };
