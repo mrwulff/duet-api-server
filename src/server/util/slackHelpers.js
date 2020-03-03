@@ -46,7 +46,7 @@ async function sendDonatedItemMessage(itemId) {
     const item = await itemHelpers.getItemObjFromItemId(itemId);
     // format message
     let messageText = `:tada: *${item.name} for ${item.beneficiaryLast} (${item.beneficiaryId})* :tada:\n`;
-    messageText += `donor: ${item.donorFirst} ${item.donorLast} (${item.donorCountry})\n`;
+    messageText += `donor: ${item.donorFirst} ${item.donorLast} (${item.donorEmail}, ${item.donorCountry})\n`;
     messageText += `itemId: ${itemId} (${item.pickupCode})\n`;
     messageText += `price: ${item.price.toFixed(2)}€\n`;
     messageText += `store: ${item.storeName}\n`;
