@@ -3,8 +3,8 @@ import fbHelpers from '../util/fbHelpers.js';
 import itemHelpers from '../util/itemHelpers.js';
 import storeHelpers from '../util/storeHelpers.js';
 import sendgridHelpers from "../util/sendgridHelpers.js";
+import matchingHelpers from "../util/matchingHelpers.js";
 import errorHandler from "../util/errorHandler.js";
-import requestPromise from 'request-promise';
 
 async function getItems(req, res) {
   // Get item info
@@ -50,12 +50,13 @@ async function getItems(req, res) {
 async function itemSearch(req, res) {
   // Search for item by query: e.g. api/items/search?itemInstanceTag=womens
   try {
-    // check for query params
+    // get search params
     if (!req.query) {
       console.log(`itemSearch received no query params!`);
       return res.status(400).json({ msg: "No search parameters given!" });
     }
     const { status, itemInstanceTag, itemTypeTag } = req.query;
+    const fairness = req.query.fairness === 'true' ? true : false;
     if (!status && !itemInstanceTag && !itemTypeTag) {
       console.log(`itemSearch received no query params!`);
       return res.status(400).json({ msg: "No search parameters given!" });
@@ -68,6 +69,8 @@ async function itemSearch(req, res) {
     } else {
       items = await itemHelpers.getAllItemObjs();
     }
+    // filter by beneficiaryIsVisible
+    items = items.filter(item => item.beneficiaryIsVisible);
     // filter by itemInstanceTag
     if (itemInstanceTag) {
       console.log(`itemSearch: filtering by itemInstanceTag = ${itemInstanceTag}`);
@@ -82,7 +85,18 @@ async function itemSearch(req, res) {
     if (!items.length) {
       return res.status(400).json({ msg: "No items match search query!" });
     }
-    const selectedItem = items[Math.floor(Math.random() * items.length)];
+    let selectedItem;
+    if (items.length === 1) {
+      console.log(`itemSearch: returning only item remaining after filtering...`);
+      selectedItem = items[0];
+    }
+    else if (fairness) {
+      console.log(`itemSearch: selecting an item using matching algorithm from ${items.length} filtered items...`);
+      selectedItem = await matchingHelpers.sampleItemWithFairness(items);
+    } else {
+      console.log(`itemSearch: selecting an item at random from ${items.length} filtered items...`);
+      selectedItem = matchingHelpers.sampleFromListAtRandom(items);
+    }
     return res.status(200).json(selectedItem);
   } catch (err) {
     errorHandler.handleError(err, "items/itemSearch");

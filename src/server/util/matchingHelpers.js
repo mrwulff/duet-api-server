@@ -108,6 +108,17 @@ function getMatchingScoreDictFromBeneficiaryObjs(beneficiaryObjs, scoreWeights) 
 
 // ---------- SAMPLING/FILTERING UTILS ---------- //
 
+function sampleFromListAtRandom(list) {
+  // sample an element from list at random
+  if (!list) {
+    return null;
+  }
+  if (list.length === 1) {
+    return list[0]
+  }
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 function filterDonatableBeneficiaries(beneficiaryObjs) {
   // get visible beneficiaries with at least one donatable item
   return beneficiaryObjs.filter(beneficiary => beneficiary.totalItemsDonatable > 0 && beneficiary.visible);
@@ -151,7 +162,7 @@ async function getBeneficiaryScores(scoreWeights) {
   return { normalizedScores, rawScores, scoreWeights };
 }
 
-// ---------- MATCHING ---------- //
+// ---------- BENEFICIARY MATCHING ---------- //
 
 function getMatchedBeneficiary(donatableBeneficiaries) {
   // return next family, and the new array
@@ -187,13 +198,56 @@ async function logBeneficiaryMatchInDB(beneficiaryId) {
   }
 }
 
+// ---------- ITEM SEARCH ---------- //
+
+async function sampleItemWithFairness(items) {
+  // get an item from "items" using beneficiary scoring algorithm
+  try {
+    // get dict of beneficiaryId --> list of items
+    let beneficiaryToItemsDict = {};
+    items.forEach(item => {
+      if (beneficiaryToItemsDict.hasOwnProperty(item.beneficiaryId)) {
+        beneficiaryToItemsDict[item.beneficiaryId].push(item);
+      } else {
+        beneficiaryToItemsDict[item.beneficiaryId] = [item];
+      }
+    });
+    // get normalized matching scores of beneficiaries associated with "items"
+    const { normalizedScores } = await getBeneficiaryScores(); // all scores
+    console.log(`matchingHelpers/sampleItemWithFairness: sampling from ${Object.keys(beneficiaryToItemsDict).length} of ${Object.keys(normalizedScores).length} beneficiaries...`);
+    let itemsBeneficiaryScores = {}; // scores of beneficiaries associated with "items"
+    for (const beneficiaryId in beneficiaryToItemsDict) {
+      if (beneficiaryToItemsDict.hasOwnProperty(beneficiaryId) && normalizedScores.hasOwnProperty(beneficiaryId)) {
+        itemsBeneficiaryScores[beneficiaryId] = normalizedScores[beneficiaryId];
+      }
+    }
+    console.log(`itemsBeneficiaryScores: ${JSON.stringify(itemsBeneficiaryScores)}`);
+    itemsBeneficiaryScores = normalizeScores(itemsBeneficiaryScores);
+    // select a beneficiary using normalized scores
+    const selectedBeneficiaryId = weightedRandSelection(itemsBeneficiaryScores);
+    // select an item from this beneficiary at random
+    const selectedBeneficiaryItems = beneficiaryToItemsDict[selectedBeneficiaryId];
+    const selectedItem = sampleFromListAtRandom(selectedBeneficiaryItems);
+    return selectedItem;
+  } catch (err) {
+    errorHandler.handleError(err, "matchingHelpers/itemSelectionWithFairness");
+    throw err;
+  }
+}
+
 export default {
   // scoring utils
   getTotalWeight,
 
+  // sampling
+  sampleFromListAtRandom,
+
   // matching
   getBeneficiaryScores,
   getMatchedAndAdditionalBeneficiaries,
+
+  // item search
+  sampleItemWithFairness,
 
   // logging
   logBeneficiaryMatchInDB,
