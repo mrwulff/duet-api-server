@@ -124,7 +124,7 @@ async function sendPickupNotification(itemId) {
       id: fbMessengerInfo.fb_psid,
       text: message,
       messaging_type: "MESSAGE_TAG",
-      tag: "SHIPPING_UPDATE"
+      tag: "POST_PURCHASE_UPDATE"
     });
 
     console.log('Sent pickup notification to ' + fbMessengerInfo.beneficiary_first + " " + fbMessengerInfo.beneficiary_last +
@@ -152,7 +152,7 @@ async function sendOverBudgetItemRequestMessage(beneficiaryId, itemId) {
       id: beneficiaryObj.fbPsid,
       text: messageFilled,
       messaging_type: "MESSAGE_TAG",
-      tag: "SHIPPING_UPDATE"
+      tag: "POST_PURCHASE_UPDATE"
     });
   } catch (err) {
     errorHandler.handleError(err, "fbHelpers/sendOverBudgetItemRequestMessage");
@@ -174,11 +174,11 @@ async function sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId)
       totalEurRequestedThisMonth: eurosRequested.toFixed(2),
       monthlyEurBudget: monthlyBudget.toFixed(2)
     });
-    await messenger.sendTextMessage({
+    const response = await messenger.sendTextMessage({
       id: beneficiaryObj.fbPsid,
       text: messageFilled,
       messaging_type: "MESSAGE_TAG",
-      tag: "SHIPPING_UPDATE"
+      tag: "POST_PURCHASE_UPDATE"
     });
   } catch (err) {
     errorHandler.handleError(err, "fbHelpers/sendSuccessfulItemRequestMessage");
@@ -200,7 +200,7 @@ async function sendSuccessfulItemRequestMessageNoBudget(beneficiaryId, itemId) {
       id: beneficiaryObj.fbPsid,
       text: messageFilled,
       messaging_type: "MESSAGE_TAG",
-      tag: "SHIPPING_UPDATE"
+      tag: "POST_PURCHASE_UPDATE"
     });
   } catch (err) {
     errorHandler.handleError(err, "fbHelpers/sendSuccessfulItemRequestMessageNoBudget");
@@ -222,7 +222,7 @@ async function sendFBMessageToAllVisibleBeneficiaries(messageTemplates) {
         id: beneficiaryObj.fbPsid,
         text: messageFilled,
         messaging_type: "MESSAGE_TAG",
-        tag: "SHIPPING_UPDATE"
+        tag: "POST_PURCHASE_UPDATE"
       });
     }));
   } catch (err) {
@@ -249,7 +249,7 @@ async function sendFBMessageForItems(messageTemplates, itemIds) {
         id: beneficiary.fbPsid,
         text: messageFilled,
         messaging_type: "MESSAGE_TAG",
-        tag: "SHIPPING_UPDATE"
+        tag: "POST_PURCHASE_UPDATE"
       });
     }));
   } catch (err) {
