@@ -6,6 +6,9 @@ import { passport } from './../util/auth.js';
 
 const router = express.Router();
 
+// beneficiary login
+router.post("/login", beneficiaryController.login);
+
 // beneficiary info routes
 router.get("/", beneficiaryController.getBeneficiary);
 router.get("/needs", beneficiaryController.getBeneficiary);

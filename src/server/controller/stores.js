@@ -9,21 +9,21 @@ async function login(req, res) {
     if (email) {
       const storeObj = await storeHelpers.getStoreObjFromStoreEmail(email);
       if (!storeObj) {
-        res.status(400).send({ err: "Store email does not exist" });
+        return res.status(400).send({ err: "Store email does not exist" });
       }
       else {
-        res.status(200).send({
+        return res.status(200).send({
           storeId: storeObj.storeId,
           name: storeObj.storeName,
           email: storeObj.storeEmail
         });
       }
     } else {
-      res.status(400).send({ err: "Missing email in request body " });
+      return res.status(400).send({ err: "Missing email in request body " });
     }
   } catch (err) {
     errorHandler.handleError(err, "stores/login");
-    res.status(500).send();
+    return res.status(500).send();
   }
 }
 
