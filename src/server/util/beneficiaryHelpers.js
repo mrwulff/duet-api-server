@@ -23,6 +23,7 @@ function sqlRowToBeneficiaryObj(row) {
     hasFamilyPhoto: Number(row.has_family_photo),
     visible: Number(row.beneficiary_is_visible),
     monthlyBudgetEur: row.monthly_budget_eur,
+    totalEurRequestedThisMonth: Number(row.total_eur_requested_this_month),
     totalEurDonated: Number(row.total_eur_donated),
     totalItemsDonated: Number(row.total_items_donated),
     eurDonatedLastThirtyDays: Number(row.eur_donated_last_thirty_days),
