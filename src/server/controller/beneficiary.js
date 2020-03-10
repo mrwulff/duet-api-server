@@ -14,10 +14,9 @@ async function login(req, res) {
         res.status(400).send({ err: "Beneficiary passcode does not exist" });
       }
       else {
+        const beneficiary = await beneficiaryHelpers.getBeneficiaryById(beneficiaryId);
         console.log(`beneficiary/login: Successfully logged in beneficiaryId ${beneficiaryId}`);
-        return res.status(200).send({
-          beneficiaryId: beneficiaryId
-        });
+        return res.status(200).send({ beneficiary });
       }
     } else {
       return res.status(400).send({ err: "Missing passcode in request body" });
