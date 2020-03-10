@@ -141,11 +141,10 @@ async function sendOverBudgetItemRequestMessage(beneficiaryId, itemId) {
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
     const itemRequestMessages = require('../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.overbudgetMessages[beneficiaryObj.language];
-    const eurosRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
     const messageFilled = format(messageTemplate, {
       itemPhotoLink: itemObj.image,
       itemPrice: itemObj.price.toFixed(2),
-      totalEurRequestedThisMonth: eurosRequested.toFixed(2),
+      totalEurRequestedThisMonth: beneficiaryObj.totalEurRequestedThisMonth.toFixed(2),
       monthlyEurBudget: beneficiaryObj.monthlyBudgetEur.toFixed(2)
     });
     await messenger.sendTextMessage({
@@ -166,12 +165,11 @@ async function sendSuccessfulItemRequestMessageWithBudget(beneficiaryId, itemId)
     const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
     const itemRequestMessages = require('../assets/fb_messages/item_request_messages.json');
     const messageTemplate = itemRequestMessages.successfulMessagesWithBudget[beneficiaryObj.language];
-    const eurosRequested = await beneficiaryHelpers.getTotalEurRequestedThisMonth(beneficiaryId);
     const monthlyBudget = await beneficiaryHelpers.getMonthlyEurBudget(beneficiaryId);
     const messageFilled = format(messageTemplate, {
       itemPhotoLink: itemObj.image,
       itemPrice: itemObj.price.toFixed(2),
-      totalEurRequestedThisMonth: eurosRequested.toFixed(2),
+      totalEurRequestedThisMonth: beneficiaryObj.totalEurRequestedThisMonth.toFixed(2),
       monthlyEurBudget: monthlyBudget.toFixed(2)
     });
     const response = await messenger.sendTextMessage({

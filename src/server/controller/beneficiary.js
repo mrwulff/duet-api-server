@@ -4,6 +4,29 @@ import matchingHelpers from "../util/matchingHelpers.js";
 import fbHelpers from "../util/fbHelpers.js";
 import errorHandler from "../util/errorHandler.js";
 
+async function login(req, res) {
+  try {
+    const passcode = req.body.passcode;
+    if (passcode) {
+      const beneficiaryId = await beneficiaryHelpers.getBeneficiaryIdFromPasscode(passcode);
+      if (!beneficiaryId) {
+        console.log(`beneficiary/login: Login failed! Attempted passcode: ${passcode}`);
+        res.status(400).send({ err: "Beneficiary passcode does not exist" });
+      }
+      else {
+        const beneficiary = await beneficiaryHelpers.getBeneficiaryById(beneficiaryId);
+        console.log(`beneficiary/login: Successfully logged in beneficiaryId ${beneficiaryId}`);
+        return res.status(200).send({ beneficiary });
+      }
+    } else {
+      return res.status(400).send({ err: "Missing passcode in request body" });
+    }
+  } catch (err) {
+    errorHandler.handleError(err, "beneficiaries/login");
+    return res.status(500).send();
+  }
+}
+
 // Get needs for either 1 or all beneficiaries
 async function getBeneficiary(req, res) {
   try {
@@ -103,6 +126,7 @@ async function makeFBAnnouncement(req, res) {
 }
 
 export default { 
+  login,
   getBeneficiary,
   getBeneficiaryMatch,
   getBeneficiaryScores,
