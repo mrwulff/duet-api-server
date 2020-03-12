@@ -246,16 +246,28 @@ async function verifyItemsReadyForTransactionAndSetFlagsIfVerified(itemIds) {
   const conn = await connPool.getConnection();
   try {
     await conn.beginTransaction();
-    // check in_current_transaction flags, throw error if already set
-    const [results, fields] = await conn.query(
-      "SELECT " +
-      "MAX(in_current_transaction) AS any_item_in_transaction, " +
-      "SUM(CASE WHEN status != 'VERIFIED' THEN 1 ELSE 0 END) AS num_non_verified " +
-      "FROM items WHERE item_id IN (?)",
-      [itemIds]
-    );
-    if (results[0].any_item_in_transaction || results[0].num_non_verified > 0) {
-      throw new Error(`DuetRaceConditionError detected for itemIds: ${itemIds}`);
+    // check if any items cause a race condition
+    const raceConds = await Promise.all(itemIds.map(async itemId => {
+      const [rows] = await conn.query(`
+        SELECT in_current_transaction, status != 'VERIFIED' as non_verified FROM items WHERE item_id=?
+      `,
+      [itemId]);
+      return {
+        itemId,
+        raceCond: (rows[0].in_current_transaction || rows[0].non_verified) ? true : false
+      };
+    }));
+    let raceCondItems = [];
+    await Promise.all(raceConds.map(async raceCond => {
+      if (raceCond.raceCond) {
+        const item = await getItemObjFromItemId(raceCond.itemId);
+        raceCondItems.push(item);
+      }
+    }));
+    if (raceCondItems.length > 0) {
+      const error = new Error(`DuetRaceConditionError detected with raceCondItemIds: ${raceCondItems.map(item => item.itemId)}`);
+      error.raceCondItems = raceCondItems;
+      throw error;
     }
     // set in_current_transaction flags and commit transaction
     await conn.query(
