@@ -247,25 +247,21 @@ async function verifyItemsReadyForTransactionAndSetFlagsIfVerified(itemIds) {
   try {
     await conn.beginTransaction();
     // check if any items cause a race condition
-    const raceConds = await Promise.all(itemIds.map(async itemId => {
+    let raceCondItems = [];
+    await Promise.all(itemIds.map(async itemId => {
       const [rows] = await conn.query(`
         SELECT in_current_transaction, status != 'VERIFIED' as non_verified FROM items WHERE item_id=?
       `,
       [itemId]);
-      return {
-        itemId,
-        raceCond: (rows[0].in_current_transaction || rows[0].non_verified) ? true : false
-      };
-    }));
-    let raceCondItems = [];
-    await Promise.all(raceConds.map(async raceCond => {
-      if (raceCond.raceCond) {
-        const item = await getItemObjFromItemId(raceCond.itemId);
+      const raceCond = (rows[0].in_current_transaction || rows[0].non_verified) ? true : false;
+      if (raceCond) {
+        const item = await getItemObjFromItemId(itemId);
         raceCondItems.push(item);
       }
     }));
     if (raceCondItems.length > 0) {
-      const error = new Error(`DuetRaceConditionError detected with raceCondItemIds: ${raceCondItems.map(item => item.itemId)}`);
+      const raceCondItemIds = raceCondItems.map(item => item.itemId);
+      const error = new Error(`DuetRaceConditionError detected with raceCondItemIds: ${raceCondItemIds}`);
       error.raceCondItems = raceCondItems;
       throw error;
     }
