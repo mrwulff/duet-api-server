@@ -44,8 +44,10 @@ async function captureTransaction(req, res) {
       try {
         await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
       } catch (error) {
-        console.log(`DuetRaceCondition with itemIDs: ${itemIds}`);
-        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error });
+        const raceCondItems = error.raceCondItems ? error.raceCondItems : [];
+        const raceCondItemIds = raceCondItems.map(item => item.itemId);
+        console.log(`DuetRaceCondition with raceCondItemIds: ${raceCondItemIds}`);
+        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error, raceCondItems });
       }
 
       // Create donation entry
@@ -119,8 +121,10 @@ async function captureTransaction(req, res) {
       try {
         await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
       } catch (error) {
-        console.log(`DuetRaceCondition with itemIDs: ${itemIds}`);
-        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error });
+        const raceCondItems = error.raceCondItems ? error.raceCondItems : [];
+        const raceCondItemIds = raceCondItems.map(item => item.itemId);
+        console.log(`DuetRaceCondition with raceCondItemIds: ${raceCondItemIds}`);
+        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error, raceCondItems });
       }
 
       // Capture paypal order
@@ -188,10 +192,11 @@ async function verifyNewTransaction(req, res) {
     await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
     console.log(`verifyNewTransaction succeeded for itemIds: ${req.body.itemIds}`);
     return res.sendStatus(200);
-  } catch (err) {
-    console.log(`verifyNewTransaction failed: items are currently in transaction, or have already been donated: ${req.body.itemIds}`);
-    errorHandler.handleError(err, "donate/verifyTransaction"); // let us know a race condition has occurred
-    return res.sendStatus(409);
+  } catch (error) {
+    const raceCondItems = error.raceCondItems ? error.raceCondItems : [];
+    const raceCondItemIds = raceCondItems.map(item => item.itemId);
+    console.log(`DuetRaceCondition with raceCondItemIds: ${raceCondItemIds}`);
+    return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error, raceCondItems });
   }
 }
 
