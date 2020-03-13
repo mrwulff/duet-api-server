@@ -188,6 +188,7 @@ async function getTotalEurRequestedThisMonth(beneficiaryId) {
       "SELECT SUM(price_euros) as total_eur_requested_this_month " +
       "FROM beneficiaries_and_items_view " +
       "WHERE MONTH(requested_timestamp) = MONTH(CURRENT_TIMESTAMP) " +
+      "AND YEAR(requested_timestamp) = YEAR(CURRENT_TIMESTAMP) " +
       "AND status != 'GRAVEYARD' " +
       "AND beneficiary_id = ?",
       [beneficiaryId]
