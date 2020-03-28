@@ -324,7 +324,7 @@ async function getItemsBeneficiaryScoresForDonorEmail(donorEmail) {
     }
     // get number of times this donorEmail has donated to each beneficiary
     let donorsBeneficiaryCounts = await getDonorsBeneficiaryCounts();
-    donorsBeneficiaryCounts = donorsBeneficiaryCounts.filter(count => count.donor_email === donorEmail);
+    donorsBeneficiaryCounts = donorsBeneficiaryCounts.filter(count => count.donor_email.toLowerCase() === donorEmail.toLowerCase());
     if (!donorsBeneficiaryCounts.length) {
       return null; // donor not found
     }
@@ -355,7 +355,7 @@ async function getItemsCategoryScoresForDonorEmail(donorEmail) {
     }
     // get number of times this donorEmail has donated to each category
     let donorsCategoryCounts = await getDonorsCategoryCounts();
-    donorsCategoryCounts = donorsCategoryCounts.filter(count => count.donor_email === donorEmail);
+    donorsCategoryCounts = donorsCategoryCounts.filter(count => count.donor_email.toLowerCase() === donorEmail.toLowerCase());
     if (!donorsCategoryCounts.length) {
       return null; // donor not found
     }
@@ -386,7 +386,7 @@ async function getItemsPriceScoresForDonorEmail(donorEmail) {
     }
     // get this donorEmail's past {min, max} item prices
     const allDonorsPriceMetrics = await getDonorsPriceMetrics();
-    const donorsPriceMetrics = allDonorsPriceMetrics.find(row => row.donor_email === donorEmail);
+    const donorsPriceMetrics = allDonorsPriceMetrics.find(row => row.donor_email.toLowerCase() === donorEmail.toLowerCase());
     if (!donorsPriceMetrics) {
       console.log(`getItemsPriceScoresForDonorEmail: donor ${donorEmail} not found!`);
       return null; // donor not found
@@ -513,9 +513,9 @@ async function sendRecommendationEmailToDonor(donorEmail) {
   try {
     // get items to recommend
     const selectedItemScores = await selectItemsToRecommendToDonor(donorEmail, numItemsToRecommend);
-    if (!selectedItemScores) {
+    if (!selectedItemScores || !selectedItemScores.length) {
       console.log(`sendRecommendationEmailToDonor: ${donorEmail} has no recommendable items!`);
-      return null;
+      return { donorEmail, selectedItemScores: [] };
     }
     const selectedItemIds = selectedItemScores.map(selectedItemScore => selectedItemScore.itemId);
     // send recommendation email
@@ -561,7 +561,6 @@ async function sendItemRecommendationEmailsToDonors() {
     return recommendationEmailResult;
   } catch (err) {
     errorHandler.handleError(err, "recommendationHelpers/sendItemRecommendationEmailsToDonors");
-    throw err;
   }
 }
 
