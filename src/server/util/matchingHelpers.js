@@ -25,14 +25,14 @@ function getTotalWeight(idToWeight) {
   return totalWeight;
 }
 
-function inverseTransform(x) {
-  // Inverse transform: lower metric -> higher score (between 0-1)
-  return 1.0 / (1.0 + x);
+function inverseRankScoreLinear(rankIndex, N) {
+  // Linear scorer: rank 0 gets a score of 1; rank (n-1) gets a score of 0
+  return 1.0 - (1.0 / (N - 1)) * rankIndex;
 }
 
-function scoringFunctionForDonationMetric(beneficiaryObj, donationMetric) {
-  // scoring function: lower donation value (metric) --> higher score
-  return inverseTransform(beneficiaryObj[donationMetric]);
+function inverseRankScorePower(rankIndex, N) {
+  // Power-law scorer: rank 0 gets a score of 1; others get 1 / (rankIndex + 1)
+  return 1.0 / (rankIndex + 1);
 }
 
 function getMinDonatableItemPrice(beneficiaryObj) {
@@ -43,16 +43,12 @@ function getMinDonatableItemPrice(beneficiaryObj) {
   return minPrice;
 }
 
-function getMinItemPriceScore(beneficiaryObj) {
-  // turn minItemPrice into a 0-1 score
-  return inverseTransform(getMinDonatableItemPrice(beneficiaryObj));
-}
-
-function getRawMatchingScoresForBeneficiary(beneficiaryObj, scoreWeights) {
+function getRawMatchingScoresForBeneficiary(beneficiaryId, scoreDicts, scoreWeights) {
   // get raw (unnormalized) matching scores for beneficiary
-  const totalEurDonatedScore = scoringFunctionForDonationMetric(beneficiaryObj, "totalEurDonated");
-  const recentEurDonatedScore = scoringFunctionForDonationMetric(beneficiaryObj, "eurDonatedLastThirtyDays");
-  const minItemPriceScore = getMinItemPriceScore(beneficiaryObj);
+  const { totalEurDonatedScoreDict, recentEurDonatedScoreDict, minItemPriceScoreDict } = scoreDicts;
+  const totalEurDonatedScore = totalEurDonatedScoreDict[beneficiaryId];
+  const recentEurDonatedScore = recentEurDonatedScoreDict[beneficiaryId];
+  const minItemPriceScore = minItemPriceScoreDict[beneficiaryId];
   let overallScore;
   if (scoreWeights) {
     // use custom score weights
@@ -68,13 +64,33 @@ function getRawMatchingScoresForBeneficiary(beneficiaryObj, scoreWeights) {
       + recentEurDonatedWeight * recentEurDonatedScore +
       + minItemPriceWeight * minItemPriceScore;
   }
-  return { 
+  return {
     overallScore,
     baselineScore,
     totalEurDonatedScore,
     recentEurDonatedScore,
-    minItemPriceScore 
+    minItemPriceScore
   };
+}
+
+function getScoreDictForMetric(beneficiariesDict, metric) {
+  // given: beneficiariesDict (id --> beneficiary), metric name (string)
+  // return: id --> score
+  const scoreDict = {};
+  const beneficiaryIds = Object.keys(beneficiariesDict);
+  // sort beneficiaryIds according to metric
+  beneficiaryIds.sort((a, b) => { return beneficiariesDict[a][metric] - beneficiariesDict[b][metric] });
+  // calculate score according to rank
+  let rankIndex = 0;
+  for (let i = 0; i < beneficiaryIds.length; i++) {
+    // increment rankIndex only if current beneficiary's metric is strictly greater than previous beneficiary's metric
+    // this way, a tie results in the same component score for 2 beneficiaries
+    if (i > 0 && beneficiariesDict[beneficiaryIds[i]][metric] > beneficiariesDict[beneficiaryIds[i-1]][metric]) {
+      rankIndex += 1;
+    }
+    scoreDict[beneficiaryIds[i]] = inverseRankScorePower(rankIndex, beneficiaryIds.length);
+  }
+  return scoreDict;
 }
 
 function normalizeScores(beneficiaryScores) {
@@ -89,20 +105,39 @@ function normalizeScores(beneficiaryScores) {
   return beneficiaryScoresNormalized;
 }
 
-function getMatchingScoreDictFromBeneficiaryObjs(beneficiaryObjs, scoreWeights) {
+function getMatchingScoreDictFromBeneficiaryObjs(beneficiaries, scoreWeights) {
   // returns {beneficiaryId: 0.1, ...} --> feed into weightedRandSelection() to pick a beneficiary
-  let normalizedScoresDict = {};
-  let rawScoresDict = {};
-  beneficiaryObjs.forEach(beneficiary => {
-    const rawScores = getRawMatchingScoresForBeneficiary(beneficiary, scoreWeights);
-    normalizedScoresDict[beneficiary.beneficiaryId] = rawScores.overallScore;
-    rawScoresDict[beneficiary.beneficiaryId] = rawScores;
+  let normalizedScoreDict = {};
+  let rawScoreDict = {};
+  beneficiaries = beneficiaries.map(beneficiary => {
+    beneficiary.minItemPrice = getMinDonatableItemPrice(beneficiary);
+    return beneficiary;
   });
-  // normalize (sum to 1)
-  normalizedScoresDict = normalizeScores(normalizedScoresDict); 
+
+  // create beneficiary dict: id --> beneficiary object
+  let beneficiariesDict = {};
+  beneficiaries.forEach(beneficiary => {
+    beneficiariesDict[beneficiary.beneficiaryId] = beneficiary;
+  });
+  
+  // get each beneficiary's score for each metric
+  const totalEurDonatedScoreDict = getScoreDictForMetric(beneficiariesDict, "totalEurDonated");
+  const recentEurDonatedScoreDict = getScoreDictForMetric(beneficiariesDict, "eurDonatedLastThirtyDays");
+  const minItemPriceScoreDict = getScoreDictForMetric(beneficiariesDict, "minItemPrice");
+  const scoreDicts = { totalEurDonatedScoreDict, recentEurDonatedScoreDict, minItemPriceScoreDict };
+
+  // get overall score for each beneficiary
+  beneficiaries.forEach(beneficiary => {
+    const rawScores = getRawMatchingScoresForBeneficiary(beneficiary.beneficiaryId, scoreDicts, scoreWeights);
+    rawScoreDict[beneficiary.beneficiaryId] = rawScores;
+    normalizedScoreDict[beneficiary.beneficiaryId] = rawScores.overallScore;
+  });
+
+  // normalize overall scores (sum to 1)
+  normalizedScoreDict = normalizeScores(normalizedScoreDict); 
   return { 
-    normalizedScores: normalizedScoresDict,
-    rawScores: rawScoresDict
+    normalizedScores: normalizedScoreDict,
+    rawScores: rawScoreDict
   };
 }
 

@@ -81,10 +81,10 @@ async function getBeneficiaryMatch(req, res) {
 
 async function getBeneficiaryScores(req, res) {
   try {
-    if (req.body.baselineScore && 
-      req.body.totalEurDonatedWeight && 
-      req.body.recentEurDonatedWeight &&
-      req.body.minItemPriceWeight) {
+    if (typeof(req.body.baselineScore) === "number" &&
+      typeof(req.body.totalEurDonatedWeight) === "number" &&
+      typeof(req.body.recentEurDonatedWeight) === "number" &&
+      typeof(req.body.minItemPriceWeight) === "number") {
       // use custom weights
       const scoreWeights = req.body;
       console.log('getBeneficiaryScores: getting beneficiary scores with custom weights...');
