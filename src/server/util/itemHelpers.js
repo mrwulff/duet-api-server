@@ -13,7 +13,7 @@ function sqlRowToItemObj(row) {
     price: Number(row.price_euros),
     checkoutPriceUsd: row.checkout_price_usd ? Number(row.checkout_price_usd) : null,
     comment: row.comment,
-    tooltipDescription: row.tooltip_description,
+    tooltipDescription: row.instance_tooltip || row.tooltip_description,
     itemInstanceTags: row.item_instance_tags ? row.item_instance_tags.split(",") : [],
     itemTypeTags: row.item_type_tags ? row.item_type_tags.split(",") : [],
     storeId: row.store_id,
