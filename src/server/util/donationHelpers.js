@@ -91,7 +91,7 @@ async function insertDonationIntoDB({
     amount, bankTransferFee, serviceFee,
     paypalOrderId, stripeOrderId, paymentMethod,
     honoreeInfo, referralCode, campaignInfo
-  } = {}) {
+  }) {
   // Insert donation info into DB, return insert ID
   // donorInfo: { email, firstName, lastName }
   // honoreeInfo (optional): { honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage }

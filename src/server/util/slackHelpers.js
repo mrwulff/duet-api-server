@@ -68,9 +68,18 @@ async function sendDonatedItemMessage(itemId) {
   }
 }
 
-async function sendCampaignDonationMessage(campaignInfo) {
+async function sendCampaignDonationMessage({ donorInfo, campaignInfo, campaign }) {
   try {
-    // TODO
+    let messageText = `:tada: *+${campaignInfo.quantity} for ${campaign.campaignHandle} campaign* :tada:\n`;
+    messageText += `donor: ${donorInfo.firstName} ${donorInfo.lastName} (${donorInfo.email})\n`;
+    await rp({
+      method: 'POST',
+      uri: process.env.SLACK_DONATED_ITEM_WEBHOOK,
+      headers: { 'Content-Type': 'application/json' },
+      body: { text: messageText },
+      json: true
+    });
+    console.log(`Successfully sent slack message for campaign: ${campaign.campaignHandle}`);
   } catch (err) {
     errorHandler.handleError(err, "slackHelpers/sendCampaignDonationMessage");
     throw err;

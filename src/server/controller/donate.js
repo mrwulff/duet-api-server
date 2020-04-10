@@ -164,7 +164,9 @@ async function captureTransaction(req, res) {
         await campaignHelpers.incrementQuantityDonated(campaignId, quantity);
 
         // Send celebratory Slack message
-        slackHelpers.sendCampaignDonationMessage(campaignInfo);
+        if (process.env.NODE_ENV === 'production') {
+          slackHelpers.sendCampaignDonationMessage({ donorInfo, campaignInfo, campaign });
+        }
         // Send email to donor (don't await)
         sendgridHelpers.sendCampaignThankYouEmail(donationId);
 
@@ -297,7 +299,9 @@ async function captureTransaction(req, res) {
         await campaignHelpers.incrementQuantityDonated(campaignId, quantity);
 
         // Send celebratory Slack message
-        slackHelpers.sendCampaignDonationMessage(campaignInfo);
+        if (process.env.NODE_ENV === 'production') {
+          slackHelpers.sendCampaignDonationMessage({ donorInfo, campaignInfo, campaign });
+        }
         // Send email to donor (don't await)
         sendgridHelpers.sendCampaignThankYouEmail(donationId);
 
