@@ -136,48 +136,6 @@ async function insertDonationIntoDB({
   }
 }
 
-// TODO: delete this
-// async function insertDonationIntoDB(
-//   email, firstName, lastName, 
-//   amount, bankTransferFee, serviceFee, 
-//   country, paypalOrderId, stripeOrderId, paymentMethod,
-//   onBehalfOfEmail, onBehalfOfFirst, onBehalfOfLast, onBehalfOfMessage, referralCode
-// ) {
-//   // Insert donation info into DB, return insert ID
-//   try {
-//     const conn = await config.dbInitConnectPromise();
-//     const [results, fields] = await conn.query(
-//       "INSERT INTO donations (timestamp,donor_email,donor_fname,donor_lname,donation_amt_usd," +
-//       "bank_transfer_fee_usd,service_fee_usd,donor_country,paypal_order_id,stripe_order_id,payment_method," +
-//       "on_behalf_of_email,on_behalf_of_fname,on_behalf_of_lname,on_behalf_of_message, referral_code) " +
-//       "VALUES (NOW(),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-//       [
-//         email,
-//         firstName,
-//         lastName,
-//         amount,
-//         bankTransferFee,
-//         serviceFee,
-//         country,
-//         paypalOrderId,
-//         stripeOrderId,
-//         paymentMethod,
-//         onBehalfOfEmail,
-//         onBehalfOfFirst,
-//         onBehalfOfLast,
-//         onBehalfOfMessage,
-//         referralCode,
-//       ]
-//     );
-//     const donationId = results.insertId;
-//     console.log(`Successfully entered donation into DB: donationId: ${donationId}`);
-//     return donationId;
-//   } catch (err) {
-//     errorHandler.handleError(err, "donationHelpers/insertDonationIntoDB");
-//     throw err;
-//   }
-// }
-
 async function removeDonationFromDB(donationId) {
   try {
     const conn = await config.dbInitConnectPromise();
