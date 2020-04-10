@@ -7,6 +7,7 @@ import errorHandler from "../util/errorHandler.js";
 import itemHelpers from "../util/itemHelpers.js";
 import slackHelpers from "../util/slackHelpers.js";
 import donationHelpers from "../util/donationHelpers.js";
+import campaignHelpers from "../util/campaignHelpers.js";
 
 async function getDonation(req, res) {
   try {
@@ -20,9 +21,11 @@ async function getDonation(req, res) {
 
 async function captureTransaction(req, res) {
   try {
-    const { itemIds, amount, bankTransferFee, serviceFee, itemPricesUsd, paymentMethod, donorInfo, honoreeInfo, referralCode } = req.body;
-    const { honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage } = honoreeInfo;
-    if (!itemIds || !amount || !paymentMethod || bankTransferFee == null || bankTransferFee === undefined || serviceFee === null || serviceFee === undefined) {
+    const { itemIds, campaignInfo, amount, bankTransferFee, serviceFee, itemPricesUsd, paymentMethod, honoreeInfo, referralCode } = req.body;
+    if ((!itemIds && !campaignInfo) || 
+      !amount || !paymentMethod || 
+      bankTransferFee == null || bankTransferFee === undefined || 
+      serviceFee === null || serviceFee === undefined) {
       console.log(`captureTransaction - incomplete request body: ${JSON.stringify(req.body)}`);
       return res.sendStatus(400);
     }
@@ -39,73 +42,135 @@ async function captureTransaction(req, res) {
         console.log(`captureTransaction (stripe): donorInfo has missing fields: ${JSON.stringify(donorInfo)}`);
         return res.sendStatus(400);
       }
-      
-      // Verify items are ready for transaction
-      try {
-        await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
-      } catch (error) {
-        const raceCondItems = error.raceCondItems ? error.raceCondItems : [];
-        const raceCondItemIds = raceCondItems.map(item => item.itemId);
-        console.log(`DuetRaceCondition with raceCondItemIds: ${raceCondItemIds}`);
-        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error, raceCondItems });
-      }
 
-      // Create donation entry
-      const donationId = await donationHelpers.insertDonationIntoDB(
-        donorInfo.email, donorInfo.firstName, donorInfo.lastName,
-        amount, bankTransferFee, serviceFee,
-        null, null, null, 'stripe',
-        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage, referralCode
-      );
-
-      // Charge card
-      let stripeOrderId, donorCountry;
-      const chargeDescription = `Donation for item ids: ${itemIds}`;
-      try {
-        const { payment_method_details, status, id } = await stripeHelpers.createStripeChargeForAmountUsd(amount, chargeDescription, stripeToken);
-        stripeOrderId = id;
-        donorCountry = payment_method_details.card.country;
-      } catch (error) {
-        console.log(`chargeTransaction: stripe error: ${error}`);
-        await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
-        donationHelpers.removeDonationFromDB(donationId);
-        return res.status(500).send({ duetErrorCode: 'StripeError', error });
-      }
-
-      // Update donor_country, stripeOrderId
-      await donationHelpers.setDonorCountry(donationId, donorCountry);
-      await donationHelpers.setStripeOrderId(donationId, stripeOrderId);
-
-      // Update items' donationId
-      await Promise.all(itemIds.map(async itemId => {
-        await donationHelpers.markItemAsDonated(itemId, donationId);
-        if (process.env.NODE_ENV === 'production') {
-          slackHelpers.sendDonatedItemMessage(itemId);
+      // ---------- Stripe: Regular Item Donation ---------- //
+      if (itemIds) {
+        // Verify items are ready for transaction
+        try {
+          await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(itemIds);
+        } catch (error) {
+          const raceCondItems = error.raceCondItems ? error.raceCondItems : [];
+          const raceCondItemIds = raceCondItems.map(item => item.itemId);
+          console.log(`DuetRaceCondition with raceCondItemIds: ${raceCondItemIds}`);
+          return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error, raceCondItems });
         }
-        const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
-        if (itemObj) {
-          sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
-        }
-      }));
 
-      // Store checkout prices (USD) in database
-      if (itemPricesUsd) {
-        await Promise.all(itemPricesUsd.map(async priceInfo => {
-          await itemHelpers.updateCheckoutPriceUsd(priceInfo.itemId, priceInfo.priceUsd);
+        // Create donation entry
+        const donationId = await donationHelpers.insertDonationIntoDB({
+          donorInfo,
+          amount, bankTransferFee, serviceFee, paymentMethod,
+          honoreeInfo, referralCode
+        });
+
+        // Charge card
+        let stripeOrderId, donorCountry;
+        const chargeDescription = `Donation for item ids: ${itemIds}`;
+        try {
+          const { payment_method_details, status, id } = await stripeHelpers.createStripeChargeForAmountUsd(amount, chargeDescription, stripeToken);
+          stripeOrderId = id;
+          donorCountry = payment_method_details.card.country;
+        } catch (error) {
+          console.log(`chargeTransaction: stripe error: ${error}`);
+          await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+          donationHelpers.removeDonationFromDB(donationId);
+          return res.status(500).send({ duetErrorCode: 'StripeError', error });
+        }
+
+        // Update donor_country, stripeOrderId
+        await donationHelpers.setDonorCountry(donationId, donorCountry);
+        await donationHelpers.setStripeOrderId(donationId, stripeOrderId);
+
+        // Update items' donationId
+        await Promise.all(itemIds.map(async itemId => {
+          await donationHelpers.markItemAsDonated(itemId, donationId);
+          if (process.env.NODE_ENV === 'production') {
+            slackHelpers.sendDonatedItemMessage(itemId);
+          }
+          const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+          if (itemObj) {
+            sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
+          }
         }));
+
+        // Store checkout prices (USD) in database
+        if (itemPricesUsd) {
+          await Promise.all(itemPricesUsd.map(async priceInfo => {
+            await itemHelpers.updateCheckoutPriceUsd(priceInfo.itemId, priceInfo.priceUsd);
+          }));
+        }
+
+        // Unset 'in_current_transaction' flags
+        await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+
+        // Send email to donor (don't await)
+        sendgridHelpers.sendDonorThankYouEmailV3(donationId);
+        // Send PayPal payout to stores with payment_method='paypal' (don't await)
+        paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
+
+        // Done!
+        return res.status(200).send({ donationId });
       }
 
-      // Unset 'in_current_transaction' flags
-      await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+      // ---------- Stripe: Campaign Donation ---------- //
+      else if (campaignInfo) {
+        // Validate campaign info
+        const { campaignId, quantity } = campaignInfo;
+        const campaign = await campaignHelpers.getCampaignById(campaignId);
+        if (!campaign) {
+          console.log(`captureTransaction: could not find campaign with campaignId: ${campaignId}`);
+          return res.sendStatus(404);
+        }
+        if (!quantity) {
+          console.log(`captureTransaction: missing quantity from request body`);
+          return res.status(400).send({ msg: `captureTransaction: missing quantity from request body` });
+        }
 
-      // Send email to donor (don't await)
-      sendgridHelpers.sendDonorThankYouEmailV3(donationId);
+        // Verify that campaign is still donatable
+        if (campaign.quantityDonated >= campaign.quantityRequested) {
+          const msg = `captureTransaction: full quantity (${campaign.quantityRequested}) for campaignHandle ${campaign.campaignHandle} already donated!`
+          console.log(msg);
+          return res.status(500).send({ msg });
+        }
+        if (quantity + campaign.quantityDonated > campaign.quantityRequested) {
+          const msg = `captureTransaction: trying to donate too many items to campaignHandle ${campaign.campaignHandle}! 
+            attempted quantity: ${quantity}. ${campaign.quantityDonated} out of ${campaign.quantityRequested} already donated`;
+          console.log(msg);
+          return res.status(500).send({ msg });
+        }
 
-      // Send PayPal payout to stores with payment_method='paypal' (don't await)
-      paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
-      
-      // Done!
-      return res.status(200).send({ donationId });
+        // Create donation entry
+        const donationId = await donationHelpers.insertDonationIntoDB({
+          donorInfo, campaignInfo,
+          amount, bankTransferFee, serviceFee, paymentMethod
+        });
+
+        // Charge card
+        let stripeOrderId, donorCountry;
+        const chargeDescription = `Donation for campaignHandle: ${campaign.campaignHandle}`;
+        try {
+          const { payment_method_details, status, id } = await stripeHelpers.createStripeChargeForAmountUsd(amount, chargeDescription, stripeToken);
+          stripeOrderId = id;
+          donorCountry = payment_method_details.card.country;
+        } catch (error) {
+          console.log(`chargeTransaction: stripe error: ${error}`);
+          donationHelpers.removeDonationFromDB(donationId);
+          return res.status(500).send({ duetErrorCode: 'StripeError', error });
+        }
+        // Update donor_country, stripeOrderId
+        await donationHelpers.setDonorCountry(donationId, donorCountry);
+        await donationHelpers.setStripeOrderId(donationId, stripeOrderId);
+
+        // Update quantity donated
+        await campaignHelpers.incrementQuantityDonated(campaignId, quantity);
+
+        // Send celebratory Slack message
+        slackHelpers.sendCampaignDonationMessage(campaignInfo);
+        // Send email to donor (don't await)
+        sendgridHelpers.sendCampaignThankYouEmail(donationId);
+
+        // Done!
+        return res.status(200).send({ donationId });
+      }
     }
 
     // ---------- PayPal ---------- //
@@ -116,63 +181,129 @@ async function captureTransaction(req, res) {
         console.log(`captureTransaction (paypal) -  missing paypalOrderId from request body`);
         return res.sendStatus(400);
       }
-      
-      // Verify items are ready for transaction
-      try {
-        await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(req.body.itemIds);
-      } catch (error) {
-        const raceCondItems = error.raceCondItems ? error.raceCondItems : [];
-        const raceCondItemIds = raceCondItems.map(item => item.itemId);
-        console.log(`DuetRaceCondition with raceCondItemIds: ${raceCondItemIds}`);
-        return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error, raceCondItems });
-      }
 
-      // Capture paypal order
-      let paypalCaptureResp;
-      try {
-        paypalCaptureResp = await paypalHelpers.capturePayPalOrder(paypalOrderId, amount);
-      } catch (error) {
-        console.log(`chargeTransaction: paypal error: ${error}`);
+      // ---------- PayPal: Regular Item Donation ---------- //
+      if (itemIds) {
+        // Verify items are ready for transaction
+        try {
+          await itemHelpers.verifyItemsReadyForTransactionAndSetFlagsIfVerified(itemIds);
+        } catch (error) {
+          const raceCondItems = error.raceCondItems ? error.raceCondItems : [];
+          const raceCondItemIds = raceCondItems.map(item => item.itemId);
+          console.log(`DuetRaceCondition with raceCondItemIds: ${raceCondItemIds}`);
+          return res.status(500).send({ duetErrorCode: "DuetRaceConditionError", error, raceCondItems });
+        }
+
+        // Capture paypal order
+        let paypalCaptureResp;
+        try {
+          paypalCaptureResp = await paypalHelpers.capturePayPalOrder(paypalOrderId, amount);
+        } catch (error) {
+          console.log(`chargeTransaction: paypal error: ${error}`);
+          await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+          donationHelpers.removeDonationFromDB(donationId);
+          return res.status(500).send({ duetErrorCode: 'PayPalError', error });
+        }
+        const firstName = paypalCaptureResp.payer.name.given_name;
+        const lastName = paypalCaptureResp.payer.name.surname;
+        const email = paypalCaptureResp.payer.email_address;
+        const donorInfo = { email, firstName, lastName };
+        const donorCountry = paypalCaptureResp.payer.address.country_code;
+
+        // Create donation entry
+        const donationId = await donationHelpers.insertDonationIntoDB({
+          donorInfo, donorCountry,
+          amount, bankTransferFee, serviceFee,
+          paymentMethod, paypalOrderId,
+          honoreeInfo, referralCode
+        });
+
+        // Set item donation IDs
+        await Promise.all(itemIds.map(async itemId => {
+          await donationHelpers.markItemAsDonated(itemId, donationId);
+          if (process.env.NODE_ENV === 'production') {
+            slackHelpers.sendDonatedItemMessage(itemId);
+          }
+          const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
+          if (itemObj) {
+            sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
+          }
+        }));
+
+        // Unset flags
         await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
-        donationHelpers.removeDonationFromDB(donationId);
-        return res.status(500).send({ duetErrorCode: 'PayPalError', error });
+
+        // Send email to donor (don't await)
+        sendgridHelpers.sendDonorThankYouEmailV3(donationId);
+
+        // Send PayPal payout to stores with payment_method='paypal' (don't await)
+        paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
+
+        // Done!
+        return res.status(200).send({ donationId });
       }
-      const firstName = paypalCaptureResp.payer.name.given_name;
-      const lastName = paypalCaptureResp.payer.name.surname;
-      const email = paypalCaptureResp.payer.email_address;
-      const donorCountry = paypalCaptureResp.payer.address.country_code;
-
-      // Create donation entry
-      const donationId = await donationHelpers.insertDonationIntoDB(
-        email, firstName, lastName, 
-        amount, bankTransferFee, serviceFee, donorCountry,
-        paypalOrderId, null, 'paypal',
-        honoreeEmail, honoreeFirst, honoreeLast, honoreeMessage, referralCode
-      );
-
-      // Set item donation IDs
-      await Promise.all(itemIds.map(async itemId => {
-        await donationHelpers.markItemAsDonated(itemId, donationId);
-        if (process.env.NODE_ENV === 'production') {
-          slackHelpers.sendDonatedItemMessage(itemId);
+      
+      // ---------- PayPal: Campaign Donation ---------- //
+      else if (campaignInfo) {
+        // Validate campaign info
+        const { campaignId, quantity } = campaignInfo;
+        const campaign = await campaignHelpers.getCampaignById(campaignId);
+        if (!campaign) {
+          console.log(`captureTransaction: could not find campaign with campaignId: ${campaignId}`);
+          return res.sendStatus(404);
         }
-        const itemObj = await itemHelpers.getItemObjFromItemId(itemId);
-        if (itemObj) {
-          sendgridHelpers.sendItemStatusUpdateEmail(itemObj);
+        if (!quantity) {
+          console.log(`captureTransaction: missing quantity from request body`);
+          return res.status(400).send({ msg: `captureTransaction: missing quantity from request body` });
         }
-      }));
 
-      // Unset flags
-      await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+        // Verify that campaign is still donatable
+        if (campaign.quantityDonated >= campaign.quantityRequested) {
+          const msg = `captureTransaction: full quantity (${campaign.quantityRequested}) for campaignHandle ${campaign.campaignHandle} already donated!`
+          console.log(msg);
+          return res.status(500).send({ msg });
+        }
+        if (quantity + campaign.quantityDonated > campaign.quantityRequested) {
+          const msg = `captureTransaction: trying to donate too many items to campaignHandle ${campaign.campaignHandle}! 
+            attempted quantity: ${quantity}. ${campaign.quantityDonated} out of ${campaign.quantityRequested} already donated`;
+          console.log(msg);
+          return res.status(500).send({ msg });
+        }
 
-      // Send email to donor (don't await)
-      sendgridHelpers.sendDonorThankYouEmailV3(donationId);
+        // Capture paypal order
+        let paypalCaptureResp;
+        try {
+          paypalCaptureResp = await paypalHelpers.capturePayPalOrder(paypalOrderId, amount);
+        } catch (error) {
+          console.log(`chargeTransaction: paypal error: ${error}`);
+          await itemHelpers.unsetInCurrentTransactionFlagForItemIds(itemIds);
+          donationHelpers.removeDonationFromDB(donationId);
+          return res.status(500).send({ duetErrorCode: 'PayPalError', error });
+        }
+        const firstName = paypalCaptureResp.payer.name.given_name;
+        const lastName = paypalCaptureResp.payer.name.surname;
+        const email = paypalCaptureResp.payer.email_address;
+        const donorInfo = { email, firstName, lastName };
+        const donorCountry = paypalCaptureResp.payer.address.country_code;
 
-      // Send PayPal payout to stores with payment_method='paypal' (don't await)
-      paypalHelpers.sendNecessaryPayoutsForItemIds(itemIds);
+        // Create donation entry
+        const donationId = await donationHelpers.insertDonationIntoDB({
+          donorInfo, donorCountry, campaignInfo,
+          amount, bankTransferFee, serviceFee,
+          paymentMethod, paypalOrderId
+        });
 
-      // Done!
-      return res.status(200).send({ donationId });
+        // Update quantity donated
+        await campaignHelpers.incrementQuantityDonated(campaignId, quantity);
+
+        // Send celebratory Slack message
+        slackHelpers.sendCampaignDonationMessage(campaignInfo);
+        // Send email to donor (don't await)
+        sendgridHelpers.sendCampaignThankYouEmail(donationId);
+
+        // Done!
+        return res.status(200).send({ donationId });
+      }
     }
     
     // Unknown paymentMethod
@@ -185,6 +316,7 @@ async function captureTransaction(req, res) {
   }
 }
 
+// TODO: Deprecate
 async function verifyNewTransaction(req, res) {
   // make sure items are not currently being donated (or have not already been donated)
   try {
@@ -200,6 +332,7 @@ async function verifyNewTransaction(req, res) {
   }
 }
 
+// TODO: Deprecate
 async function cancelTransaction(req, res) {
   // onError --> cancel transaction: unset in_current_transaction flags
   try {
@@ -212,6 +345,7 @@ async function cancelTransaction(req, res) {
   }
 }
 
+// TODO: Deprecate
 async function chargeTransaction(req, res) {
   const chargeObj = req.body;
   console.log(`Attempting to charge transaction object: ${JSON.stringify(chargeObj)}`);
@@ -247,6 +381,7 @@ async function chargeTransaction(req, res) {
   return res.sendStatus(500);
 }
 
+// TODO: Deprecate
 async function processSuccessfulTransaction(req, res) {
   const donationInfo = req.body;
   console.log(`processSuccessfulTransaction donation info: ${JSON.stringify(donationInfo)}`);

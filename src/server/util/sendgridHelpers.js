@@ -258,6 +258,14 @@ async function sendSubscriptionThankYouEmail(subscription) {
   }
 }
 
+async function sendCampaignThankYouEmail(donationId) {
+  try {
+    // TODO
+  } catch (err) {
+    errorHandler.handleError(err, "sendgridHelpers/sendCampaignThankYouEmail");
+  }
+}
+
 async function sendItemPickedUpEmailV2(itemId) {
   try {
     // get necessary objects
@@ -477,6 +485,7 @@ export default {
   sendDonorThankYouEmailV3,
   sendDonorThankYouEmailV2,
   sendSubscriptionThankYouEmail,
+  sendCampaignThankYouEmail,
   sendItemPickedUpEmailV2,
 
   // To stores

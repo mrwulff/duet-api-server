@@ -36,7 +36,7 @@ async function sendNewItemRequestSlackMessage(itemId) {
     });
     console.log(`Successfully sent slack message for new item request: ${itemId}`);
   } catch (err) {
-    errorHandler.handleError(err, "typeformHelpers/sendNewItemRequestSlackMessage");
+    errorHandler.handleError(err, "slackHelpers/sendNewItemRequestSlackMessage");
     throw err;
   }
 }
@@ -63,12 +63,22 @@ async function sendDonatedItemMessage(itemId) {
     });
     console.log(`Successfully sent slack message for donated item: ${itemId}`);
   } catch (err) {
-    errorHandler.handleError(err, "typeformHelpers/sendDonatedItemMessage");
+    errorHandler.handleError(err, "slackHelpers/sendDonatedItemMessage");
+    throw err;
+  }
+}
+
+async function sendCampaignDonationMessage(campaignInfo) {
+  try {
+    // TODO
+  } catch (err) {
+    errorHandler.handleError(err, "slackHelpers/sendCampaignDonationMessage");
     throw err;
   }
 }
 
 export default {
   sendNewItemRequestSlackMessage,
-  sendDonatedItemMessage
+  sendDonatedItemMessage,
+  sendCampaignDonationMessage
 };

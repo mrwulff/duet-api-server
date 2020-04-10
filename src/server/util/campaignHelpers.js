@@ -3,15 +3,23 @@ import config from '../util/config.js';
 import errorHandler from '../util/errorHandler.js';
 
 function campaignRowToCampaignObj(row) {
-  // TODO
-  const campaignObj = null;
+  const campaignObj = {
+    campaignId: Number(row.campaign_id),
+    campaignHandle: row.campaign_handle,
+    quantityRequested: Number(row.quantity_requested),
+    quantityDonated: Number(row.quantity_donated),
+    unitPrice: {
+      amount: Number(row.item_unit_price),
+      currency: row.item_currency
+    }
+  };
   return campaignObj;
 }
 
 async function getAllCampaigns() {
   try {
     const conn = await config.dbInitConnectPromise();
-    const results = []; // TODO
+    const [results] = await conn.query("SELECT * from campaigns");
     return results.map(campaignRowToCampaignObj);
   } catch (err) {
     errorHandler.handleError(err, "campaignHelpers/getAllCampaigns");
@@ -19,10 +27,30 @@ async function getAllCampaigns() {
   }
 }
 
+async function getCampaignById(campaignId) {
+  try {
+    const conn = await config.dbInitConnectPromise();
+    const [results] = await conn.query(
+      "SELECT * from campaigns where campaign_id = ?",
+      [campaignId]
+    );
+    if (!results.length) {
+      return null;
+    }
+    return campaignRowToCampaignObj(results[0]);
+  } catch (err) {
+    errorHandler.handleError(err, "campaignHelpers/getCampaignById");
+    throw err;
+  }
+}
+
 async function getCampaignByHandle(campaignHandle) {
   try {
     const conn = await config.dbInitConnectPromise();
-    const results = []; // TODO
+    const [results] = await conn.query(
+      "SELECT * from campaigns where campaign_handle = ?",
+      [campaignHandle]
+      );
     if (!results.length) {
       return null;
     }
@@ -33,27 +61,28 @@ async function getCampaignByHandle(campaignHandle) {
   }
 }
 
-async function incrementQuantityDonated(campaignHandle, quantity) {
+async function incrementQuantityDonated(campaignId, quantity) {
   // Increment quantity donated by 'quantity'
   try {
     const conn = await config.dbInitConnectPromise();
-    // TODO: increment, return new quantity
+    await conn.query(
+      `UPDATE campaigns 
+      SET quantity_donated = quantity_donated + ? 
+      WHERE campaign_id = ?`,
+      [quantity, campaignId]);
+    console.log(`campaignHelpers/incrementQuantityDonated: increased quantity donated by ${quantity} for campaignId ${campaignId}`);
   } catch (err) {
     errorHandler.handleError(err, "campaignHelpers/incrementQuantityDonated");
     throw err;
   }
 }
 
-async function insertCampaignDonationIntoDB() {
-  // TODO: do we need this?
-}
-
 export default {
   // getters
   getAllCampaigns,
-  getCampaign,
+  getCampaignById,
+  getCampaignByHandle,
 
-  // donations
-  incrementQuantityDonated,
-  insertCampaignDonationIntoDB
+  // updaters
+  incrementQuantityDonated
 };
