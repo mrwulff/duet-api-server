@@ -2,6 +2,7 @@ import config from "../util/config.js";
 import errorHandler from "../util/errorHandler.js";
 import donationHelpers from "../util/donationHelpers.js";
 import donorHelpers from "../util/donorHelpers.js";
+import campaignHelpers from "../util/campaignHelpers.js";
 import itemHelpers from "../util/itemHelpers.js";
 import beneficiaryHelpers from "../util/beneficiaryHelpers.js";
 import storeHelpers from "../util/storeHelpers.js";
@@ -260,7 +261,47 @@ async function sendSubscriptionThankYouEmail(subscription) {
 
 async function sendCampaignThankYouEmail(donationId) {
   try {
-    // TODO
+    const donation = await donationHelpers.getDonationObjFromDonationId(donationId);
+    const campaign = await campaignHelpers.getCampaignById(donation.campaignId);
+    // get emailTemplateId depending on campaignId
+    let emailTemplateId;
+    if (donation.campaignId === 1) {
+      emailTemplateId = "d-2bf28f8923b5476a990e7702e1b8511b";
+    } else {
+      errorHandler.raiseWarning(`sendgridHelpers/sendCampaignThankYouEmail: Unknown campaignId: ${donation.campaignId}`);
+      return;
+    }
+    // get recipientList, subjectTag
+    let subjectTag = "";
+    let recipientList;
+    if (process.env.NODE_ENV === "production") {
+      recipientList = [donation.donor.donorEmail, "duet.giving@gmail.com"];
+    } else {
+      recipientList = ["duet.giving@gmail.com"];
+      subjectTag = "[SANDBOX] ";
+    }
+    // get message info
+    const campaignDonationAmtUsd = (campaign.unitPrice.amount * donation.campaignItemQuantity).toFixed(2);
+    const msg = {
+      to: recipientList,
+      from: "duet@giveduet.org",
+      templateId: emailTemplateId,
+      dynamic_template_data: {
+        subjectTag: subjectTag,
+        donation: {
+          ...donation,
+          serviceFeeUsd: donation.serviceFeeUsd.toFixed(2),
+          donationAmtUsd: donation.donationAmtUsd.toFixed(2),
+          campaignDonationAmtUsd
+        },
+        campaign
+      },
+      asm: {
+        groupId: unsubGroupId
+      }
+    };
+    await sgMail.sendMultiple(msg);
+    console.log(`Campaign (${campaign.campaignHandle}) thank-you email delivered successfully to ${recipientList}`);
   } catch (err) {
     errorHandler.handleError(err, "sendgridHelpers/sendCampaignThankYouEmail");
   }

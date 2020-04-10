@@ -13,6 +13,8 @@ function sqlRowToDonationObj(donationRow, donorObj, itemObjs) {
     isSubscription: donationRow.is_subscription,
     donor: donorObj,
     items: itemObjs,
+    campaignId: Number(donationRow.campaign_id),
+    campaignItemQuantity: Number(donationRow.campaign_item_quantity),
     onBehalfOfEmail: donationRow.on_behalf_of_email,
     onBehalfOfFirst: donorHelpers.capitalizeAndTrimName(donationRow.on_behalf_of_fname),
     onBehalfOfLast: donorHelpers.capitalizeAndTrimName(donationRow.on_behalf_of_lname),
