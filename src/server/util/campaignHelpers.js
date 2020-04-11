@@ -8,6 +8,8 @@ function campaignRowToCampaignObj(row) {
     campaignHandle: row.campaign_handle,
     quantityRequested: Number(row.quantity_requested),
     quantityDonated: Number(row.quantity_donated),
+    beneficiaryName: row.beneficiary_name,
+    itemName: row.item_name,
     unitPrice: {
       amount: Number(row.item_unit_price),
       currency: row.item_currency
