@@ -23,9 +23,7 @@ async function captureTransaction(req, res) {
   try {
     const { itemIds, campaignInfo, amount, bankTransferFee, serviceFee, itemPricesUsd, paymentMethod, honoreeInfo, referralCode } = req.body;
     if ((!itemIds && !campaignInfo) || 
-      !amount || !paymentMethod || 
-      bankTransferFee == null || bankTransferFee === undefined || 
-      serviceFee === null || serviceFee === undefined) {
+      !amount || !paymentMethod) {
       console.log(`captureTransaction - incomplete request body: ${JSON.stringify(req.body)}`);
       return res.sendStatus(400);
     }
@@ -112,7 +110,7 @@ async function captureTransaction(req, res) {
       }
 
       // ---------- Stripe: Campaign Donation ---------- //
-      else if (campaignInfo) {
+      if (campaignInfo) {
         // Validate campaign info
         const { campaignId, quantity } = campaignInfo;
         const campaign = await campaignHelpers.getCampaignById(campaignId);
@@ -246,7 +244,7 @@ async function captureTransaction(req, res) {
       }
       
       // ---------- PayPal: Campaign Donation ---------- //
-      else if (campaignInfo) {
+      if (campaignInfo) {
         // Validate campaign info
         const { campaignId, quantity } = campaignInfo;
         const campaign = await campaignHelpers.getCampaignById(campaignId);
