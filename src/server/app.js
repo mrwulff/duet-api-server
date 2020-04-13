@@ -8,6 +8,7 @@ import express from "express";
 import routes from "./routes/index";
 import beneficiaryRoutes from "./routes/beneficiary";
 import donateRoutes from "./routes/donate";
+import campaignRoutes from "./routes/campaigns";
 import itemsRoutes from "./routes/items";
 import storeRoutes from "./routes/stores";
 import currencyRoutes from "./routes/currency";
@@ -48,6 +49,9 @@ app.use("/api/stores", storeRoutes);
 
 // donate routes
 app.use("/api/donate", donateRoutes);
+
+// campaign routes
+app.use("/api/campaigns", campaignRoutes);
 
 // item routes
 app.use("/api/items", itemsRoutes);

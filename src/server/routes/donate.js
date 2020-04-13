@@ -8,12 +8,6 @@ router.get("/", controller.getDonation);
 
 router.post("/captureTransaction", controller.captureTransaction);
 
-// TODO: deprecate all these
-router.post("/verifyTransaction", controller.verifyNewTransaction);
-router.post("/cancelTransaction", controller.cancelTransaction);
-router.post("/chargeTransaction", controller.chargeTransaction);
-router.post("/processTransaction", controller.processSuccessfulTransaction);
-
 // router.post("/createPayPalSubscription", controller.createPayPalSubscription);
 router.post("/subscribe", controller.createSubscription);
 
